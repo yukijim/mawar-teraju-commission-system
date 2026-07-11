@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mawar Teraju - Regression Test Runner</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            margin: 0 0 0.5rem 0;
+            color: #10b981;
+            font-size: 2.25rem;
+        }
+        .summary-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+        .stat-val.pass { color: #10b981; }
+        .stat-val.fail { color: #ef4444; }
+        .stat-val.total { color: #3b82f6; }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .test-case {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-case.pass-case {
+            border-left: 4px solid #10b981;
+        }
+        .test-case.fail-case {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.02);
+        }
+        .test-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .test-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .test-desc {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-pass {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .badge-fail {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .btn-run {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-run:hover {
+            background: #059669;
+        }
+        .toast-container {
+            display: none;
+        }
+    </style>
+
+    <!-- SheetJS Excel Library -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Hidden DOM Elements for mock selector caching test -->
+    <div style="display: none;">
+        <div id="toast-container" class="toast-container"></div>
+        <div id="password-modal"></div>
+        <div id="audit-modal"></div>
+        <div id="audit-table-body"></div>
+        <div id="header-actions-area"></div>
+        <div id="role-selection-view" class="view"></div>
+        <div id="login-view" class="view"></div>
+        <div id="admin-dashboard-view" class="view"></div>
+        <div id="dispatch-search-view" class="view"></div>
+        <div id="stats-total-records"></div>
+        <div id="stats-total-uploads"></div>
+        <div id="stats-last-updated"></div>
+        <div id="history-table-body"></div>
+        <div id="dispatch-ic-input"></div>
+        <div id="search-results-area"></div>
+        <div id="search-empty-area"></div>
+        <div id="searched-ic-number"></div>
+        <div id="result-rider-name"></div>
+        <div id="result-rider-ic"></div>
+        <div id="result-total-commission"></div>
+        <div id="result-records-count"></div>
+        <div id="search-details-container"></div>
+        <div id="logo-btn"></div>
+    </div>
+
+    <!-- Script References under test -->
+    <script src="auth.js"></script>
+    <script src="db.js"></script>
+    <script src="excel.js"></script>
+    <script src="ui.js"></script>
+    <script src="router.js"></script>
+    <script src="dispatch.js"></script>
+    <script src="admin.js"></script>
+    <script src="upload.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="app.js"></script>
+
+    <div class="container">
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>Suite Ujian Regresi (Regression Tests)</h1>
+                <p style="color: #9ca3af; margin: 0;">Mawar Teraju Commission Lookup System - Modular Validation</p>
+            </div>
+            <button id="run-tests-btn" class="btn-run">Mula Ujian</button>
+        </header>
+
+        <div class="summary-card">
+            <div>
+                <div id="total-tests" class="stat-val total">-</div>
+                <div class="stat-label">Jumlah Ujian</div>
+            </div>
+            <div>
+                <div id="passed-tests" class="stat-val pass">-</div>
+                <div class="stat-label">Lulus (Passed)</div>
+            </div>
+            <div>
+                <div id="failed-tests" class="stat-val fail">-</div>
+                <div class="stat-label">Gagal (Failed)</div>
+            </div>
+            <div>
+                <div id="pass-rate" class="stat-val total">-</div>
+                <div class="stat-label">Kadar Kelulusan</div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 1rem;">Perincian Keputusan Ujian:</h3>
+        <div id="results-area">
+            <!-- Results will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        const assert = {
+            equal(a, b, msg) {
+                if (a !== b) throw new Error(`${msg || 'Assert equal failed'}: Dijangka "${b}", tetapi mendapat "${a}"`);
+            },
+            ok(val, msg) {
+                if (!val) throw new Error(`${msg || 'Assert ok failed'}: Bernilai palsu`);
+            },
+            throws(fn, msg) {
+                let threw = false;
+                try {
+                    fn();
+                } catch(e) {
+                    threw = true;
+                }
+                if (!threw) throw new Error(`${msg || 'Assert throws failed'}: Tiada ralat yang dilontar`);
+            }
+        };
+
+        const testSuite = [];
+        function test(name, description, fn) {
+            testSuite.push({ name, description, fn });
+        }
+
+        // =====================================================================
+        // TEST CASES DEFINITIONS
+        // =====================================================================
+
+        // 1. Auth Module Tests
+        test('Auth.initAuth', 'Sistem init hash kata laluan lalai', async () => {
+            localStorage.removeItem('mt_commission_admin_hash');
+            await window.Auth.initAuth();
+            const stored = localStorage.getItem('mt_commission_admin_hash');
+            assert.ok(stored, 'Hash disimpan');
+            assert.equal(stored.length, 64, 'Hash adalah SHA-256 (64 hex characters)');
+        });
+
+        test('Auth.verifyAdminPassword', 'Sistem mengesahkan kata laluan admin', async () => {
+            localStorage.removeItem('mt_commission_admin_hash');
+            await window.Auth.initAuth();
+            const correct = await window.Auth.verifyAdminPassword('mawar123');
+            assert.equal(correct, true, 'mawar123 adalah kata laluan betul');
+            
+            const incorrect = await window.Auth.verifyAdminPassword('salah123');
+            assert.equal(incorrect, false, 'salah123 adalah kata laluan salah');
+        });
+
+        test('Auth.changeAdminPassword', 'Sistem boleh menukar kata laluan admin', async () => {
+            localStorage.removeItem('mt_commission_admin_hash');
+            await window.Auth.initAuth();
+            
+            const changeRes = await window.Auth.changeAdminPassword('mawar123', 'baru123');
+            assert.equal(changeRes.success, true, 'Penukaran kata laluan berjaya');
+            
+            const oldVerify = await window.Auth.verifyAdminPassword('mawar123');
+            assert.equal(oldVerify, false, 'Kata laluan lama dinyahaktifkan');
+            
+            const newVerify = await window.Auth.verifyAdminPassword('baru123');
+            assert.equal(newVerify, true, 'Kata laluan baru diaktifkan');
+            
+            // Restore password
+            await window.Auth.changeAdminPassword('baru123', 'mawar123');
+        });
+
+        // 2. Database Module Migration & Abstraction Tests
+        test('DB.open & DB.log', 'Menghubungkan IndexedDB dan menulis log', async () => {
+            const db = await window.DB.open();
+            assert.ok(db, 'Koneksi DB dibuka');
+            
+            const logId = await window.DB.log('Ujian Regresi', 'Menjalankan suite ujian regresi sistem.', 'Sistem');
+            assert.ok(logId > 0, 'Log berjaya ditulis dan mengembalikan ID auto increment');
+            
+            const logs = await window.DB.getLogs();
+            assert.ok(logs.length > 0, 'Mengambil logs');
+            assert.equal(logs[0].action, 'Ujian Regresi', 'Aktiviti sepadan');
+        });
+
+        test('DB Schema Migration (v3 to v4)', 'Mengesahkan skema pangkalan data ditingkatkan ke v4 dengan store baru dispatcher_mappings', async () => {
+            const db = await window.DB.open();
+            assert.equal(db.version, 4, 'Versi pangkalan data ialah 4');
+            assert.ok(db.objectStoreNames.contains('dispatcher_mappings'), 'Store "dispatcher_mappings" wujud');
+            
+            const tx = db.transaction(['dispatcher_mappings'], 'readonly');
+            const store = tx.objectStore('dispatcher_mappings');
+            assert.ok(store.indexNames.contains('ic_number'), 'Index "ic_number" wujud dalam dispatcher_mappings');
+        });
+
+        test('DB Transaction Rollback', 'Mengesahkan rollback jika ralat berlaku semasa saveBatchData', async () => {
+            await window.DB.clearAllRecords();
+
+            const batchId = 999;
+            const batchMeta = {
+                id: batchId,
+                name: 'Batch Rollback Test',
+                status: 'draft',
+                active: 0,
+                createdTime: Date.now()
+            };
+
+            // Test abort rollback
+            try {
+                await window.DB.transaction([
+                    'batches',
+                    'commission_records',
+                    'deduction_records',
+                    'dispatcher_mappings'
+                ], 'readwrite', async (tx) => {
+                    const batchStore = tx.objectStore('batches');
+                    const commStore = tx.objectStore('commission_records');
+
+                    batchStore.put(batchMeta);
+                    commStore.put({ dispatcher_id: 'DSP999', ic_number: '990101149999', name: 'Rider Rollback', final_amount_to_pay: 100, batchId });
+
+                    // Force rollback via transaction abort
+                    tx.abort();
+                });
+            } catch (err) {
+                // Ignore transaction aborted exception
+            }
+
+            // Verify that nothing was written
+            const batch = await window.DB.getBatch(batchId);
+            assert.equal(batch, null, 'Metadata batch tidak disimpan (dirollback)');
+            const found = await window.DB.searchByIc('990101149999');
+            assert.equal(found.length, 0, 'Rekod komisen tidak disimpan (dirollback)');
+        });
+
+        // 3. ExcelParser Tests (using camelCase functions)
+        test('ExcelParser.normalizeHeader', 'Membetulkan dan menormalkan nama kolum Excel', () => {
+            const h1 = window.ExcelParser.normalizeHeader('  Delivery Dispatcher ID\r\n ');
+            assert.equal(h1, 'delivery dispatcher id', 'Memotong ruang kosong dan menukar huruf kecil');
+            
+            const h2 = window.ExcelParser.normalizeHeader('No. KP');
+            assert.equal(h2, 'no. kp', 'Kekalkan dot dan normalize');
+        });
+
+        test('ExcelParser.validateAndMapWorkbook (UAT Passive Extraction)', 'Memastikan enjin secara pasif membaca nilai akhir yang dihitung oleh Excel', () => {
+            const wb = XLSX.utils.book_new();
+            
+            // Create Commission sheet data (with pre-calculated Excel formula results)
+            const commData = [
+                // Title Row
+                ["Dispatcher Commission(RM1.11 + New Weight Comm)"],
+                // Header Row
+                ["Delivery Dispatcher ID", "Delivery Dispatcher Name", "Parcel Quantity", "Net Parcel", "Exclude Extra Weight YOYI", "RM1.11/Parcel Commission", "DIFF RATE NEW JOINER", "Count of Pick Up Dispatcher Name", "Extra Weight Commission (=>5.01kg, Add RM0.10/kg)", "Total Commission", "DEDUCTION: ADVANCE", "DEDUCTION: PENDING COD", "DEDUCTION: HQ PENALTY", "DEDUCTION: DUITNOW PENALTY", "DEDUCTION: LATE COD PENALTY", "DEDUCTION: LOST INDIVIDUAL", "DEDUCTION: LOST PARCEL HUB", "ADD: PICKUP COMMISSION", "ADD: FUEL ALLOWANCE", "ADD: SORTER", "NETT COMMISSION", "FINAL AMOUNT TO PAY", "SYSTEM REG", "COUNT DIGIT", "STATUS", "DATE PAYMENT", "REMARK FARISHA"],
+                // Row 1 (Pre-calculated by Excel formula/Finance calculations)
+                ["DSP001", "Rider UAT", 150, 140, 10, 166.50, 10.00, 2, 50.00, 206.50, 20.00, 5.00, 20.00, 0.00, 0.00, 10.00, 20.00, 15.00, 10.00, 5.00, 161.50, 161.50, "MT001", "900101-14-1234", "DRAFT", "", ""]
+            ];
+            const wsComm = XLSX.utils.aoa_to_sheet(commData);
+            XLSX.utils.book_append_sheet(wb, wsComm, "Dispatcher Comm");
+
+            // Create Penalty sheet data
+            const penaltyData = [
+                ["Title Row"],
+                ["Delivery Dispatcher ID", "Delivery Dispatcher Name", "LOST PIC SIGNED", "LOST RATE", "TOTAL ALL LOST SHARED", "LOST PARCEL PIC SIGNED", "ARBI INDIVIDUAL", "RCGEN 03.07.26", "QC", "TOTAL HQ PENALTY"],
+                ["DSP001", "Rider UAT", 2, 5, 20.00, 10.00, 0.00, 15.00, 5.00, 20.00]
+            ];
+            const wsPenalty = XLSX.utils.aoa_to_sheet(penaltyData);
+            XLSX.utils.book_append_sheet(wb, wsPenalty, "Details Penalty");
+
+            const analysis = window.ExcelParser.validateAndMapWorkbook(wb);
+            assert.equal(analysis.isValid, true, 'Workbook UAT disahkan sah');
+            assert.equal(analysis.commissionRecords.length, 1, 'Mempunyai 1 rekod komisen');
+            
+            const rec = analysis.commissionRecords[0];
+            // Verify that the parser extracted the pre-calculated cell values directly
+            assert.equal(rec.exclude_extra_weight_yoyi, 10, 'Exclude Extra Weight YOYI = 10');
+            assert.equal(rec.commission_rate, 166.50, 'Commission Rate = 166.50');
+            assert.equal(rec.total_commission, 206.50, 'Total Commission = 206.50');
+            assert.equal(rec.deduction_hq_penalty, 20.00, 'Deduction HQ Penalty = 20.00');
+            assert.equal(rec.deduction_lost_individual, 10.00, 'Deduction Lost Individual = 10.00');
+            assert.equal(rec.deduction_lost_parcel_hub, 20.00, 'Deduction Lost Hub = 20.00');
+            assert.equal(rec.nett_commission, 161.50, 'Nett Commission = 161.50');
+            assert.equal(rec.final_amount_to_pay, 161.50, 'Final Amount to Pay = 161.50');
+        });
+
+        // 4. DomCache element caching tests
+        test('DomCache Caching', 'Menyimpan elemen DOM untuk mengelakkan pencarian berulang', () => {
+            const el1 = window.DomCache.get('toast-container');
+            assert.ok(el1, 'Elemen diambil dari DOM');
+            assert.ok(window.DomCache.elements['toast-container'], 'Elemen disimpan di dalam cache');
+            const el2 = window.DomCache.get('toast-container');
+            assert.equal(el1, el2, 'Elemen yang dikembalikan adalah rujukan objek yang sama');
+        });
+
+        // 5. Router view navigation tests
+        test('Router navigation & activation', 'Menukar paparan aktif dan menetapkan viewId', () => {
+            window.Router.activateView('login');
+            assert.equal(window.App.currentView, 'login', 'currentView dikemaskini');
+            
+            const loginView = window.DomCache.get('login-view');
+            const dispatchView = window.DomCache.get('dispatch-search-view');
+            
+            assert.ok(loginView.classList.contains('active'), 'Paparan login aktif');
+            assert.ok(!dispatchView.classList.contains('active'), 'Paparan carian dispatch disembunyikan');
+        });
+
+        // 6. Centralized ErrorHandler tests
+        test('ErrorHandler execution', 'Menangkap ralat, mengeluarkan visual toast, dan mencatat log DB', async () => {
+            let toastShown = false;
+            const origShowToast = window.UI.showToast;
+            window.UI.showToast = (title, desc, type) => {
+                if (title === 'Ralat Sistem' && type === 'danger') {
+                    toastShown = true;
+                }
+            };
+
+            window.ErrorHandler.handle(new Error('Ujian Ralat Regresi'), 'Sistem Pengujian');
+            window.UI.showToast = origShowToast;
+            
+            assert.equal(toastShown, true, 'Toast makluman ralat ditunjukkan');
+            const logs = await window.DB.getLogs();
+            assert.ok(logs.some(l => l.action === 'Ralat (Sistem Pengujian)' && l.details === 'Ujian Ralat Regresi'), 'Ralat direkodkan ke DB log audit');
+        });
+
+        // 7. Commission Batch DB Operations
+        test('DB.createBatch & DB.getActiveBatch', 'Sistem boleh mencipta draf batch, menerbitkan, dan mengaktifkan batch', async () => {
+            await window.DB.clearAllRecords();
+
+            const batchId = await window.DB.createBatch('Batch Ujian Jun 2026', 'draft');
+            assert.ok(batchId > 0, 'Batch draf berjaya dicipta');
+
+            let active = await window.DB.getActiveBatch();
+            assert.equal(active, null, 'Tiada batch aktif secara lalai');
+
+            // Force status publish for batch to be active
+            const batch = await window.DB.getBatch(batchId);
+            batch.status = 'published';
+            await window.DB.updateBatch(batch);
+
+            await window.DB.setActiveBatch(batchId);
+            active = await window.DB.getActiveBatch();
+            assert.ok(active !== null, 'Batch aktif dijumpai');
+            assert.equal(active.name, 'Batch Ujian Jun 2026', 'Nama batch aktif sepadan');
+        });
+
+        // 8. Relational Search by IC
+        test('DB.searchByIc Relational Joins', 'Pencarian IC menggabungkan rekod komisen dan potongan menggunakan Master Mapping', async () => {
+            await window.DB.clearAllRecords();
+
+            const batchId = await window.DB.createBatch('Batch Jun 2026', 'published');
+            await window.DB.setActiveBatch(batchId);
+
+            const commRecord = {
+                dispatcher_id: 'DSP123',
+                ic_number: '900101141234',
+                name: 'Ahmad Bin Ali',
+                parcel_qty: 150,
+                net_parcel: 140,
+                exclude_extra_weight_yoyi: 10,
+                commission_rate: 166.50,
+                diff_rate_new_joiner: 0,
+                count_pickup: 0,
+                extra_weight_commission: 0,
+                total_commission: 166.50,
+                addition_pickup_commission: 0,
+                addition_fuel_allowance: 0,
+                addition_sorter: 0,
+                deduction_advance: 20,
+                deduction_pending_cod: 0,
+                deduction_hq_penalty: 20,
+                deduction_duitnow_penalty: 0,
+                deduction_late_cod_penalty: 0,
+                deduction_lost_individual: 10,
+                deduction_lost_parcel_hub: 20,
+                nett_commission: 96.50,
+                final_amount_to_pay: 96.50
+            };
+
+            const dedRecord = {
+                dispatcher_id: 'DSP123',
+                ic_number: '900101141234',
+                name: 'Ahmad Bin Ali',
+                deduction_advance: 20,
+                deduction_pending_cod: 0,
+                deduction_duitnow_penalty: 0,
+                deduction_late_cod_penalty: 0,
+                deduction_hq_penalty: 20,
+                deduction_lost_individual: 10,
+                deduction_lost_parcel_hub: 20,
+                lost_pic_signed: 2,
+                lost_rate: 5,
+                total_all_lost_shared: 20,
+                lost_parcel_pic_signed: 10,
+                arbi_individual: 0,
+                rcgen_penalty: 15,
+                qc_penalty: 5,
+                total_hq_penalty_detail: 20
+            };
+
+            // Save records transactional
+            const batch = await window.DB.getBatch(batchId);
+            batch.status = 'published';
+            batch.active = 1;
+            
+            await window.DB.saveBatchData(batchId, batch, [commRecord], [dedRecord], [{ dispatcher_id: 'DSP123', ic_number: '900101141234', name: 'Ahmad Bin Ali' }]);
+
+            const found = await window.DB.searchByIc('900101141234');
+            assert.equal(found.length, 1, 'Menemui satu rekod gabungan');
+            assert.equal(found[0].dispatcher_id, 'DSP123', 'ID Dispatcher sepadan');
+            assert.equal(found[0].name, 'Ahmad Bin Ali', 'Nama dispatcher sepadan');
+            assert.equal(found[0].final_amount_to_pay, 96.50, 'Kadar komisen bersih sepadan');
+            assert.equal(found[0].deduction_hq_penalty, 20.00, 'Denda HQ sepadan');
+            assert.equal(found[0].qc_penalty, 5, 'Denda QC sepadan');
+        });
+
+        // =====================================================================
+        // TEST RUNNER PROCESSOR
+        // =====================================================================
+        document.getElementById('run-tests-btn').addEventListener('click', runAllTests);
+
+        async function runAllTests() {
+            console.log('Memulakan ujian regresi...');
+            document.getElementById('run-tests-btn').disabled = true;
+            
+            const resultsArea = document.getElementById('results-area');
+            resultsArea.innerHTML = '';
+
+            let passCount = 0;
+            let failCount = 0;
+            const total = testSuite.length;
+
+            // Backup live database before executing destructive tests
+            let backupData = null;
+            try {
+                if (window.DB) {
+                    backupData = await window.DB.exportBackup();
+                }
+            } catch(e) {
+                console.warn('DB backup failed before tests. Database might be empty.', e);
+            }
+
+            for (let i = 0; i < total; i++) {
+                const tc = testSuite[i];
+                const tcDiv = document.createElement('div');
+                tcDiv.className = 'test-case';
+                
+                try {
+                    await tc.fn();
+                    passCount++;
+                    tcDiv.classList.add('pass-case');
+                    tcDiv.innerHTML = `
+                        <div class="test-info">
+                            <span class="test-name">${i+1}. ${tc.name}</span>
+                            <span class="test-desc">${tc.description}</span>
+                        </div>
+                        <span class="badge badge-pass">Pass</span>
+                    `;
+                } catch(err) {
+                    failCount++;
+                    tcDiv.classList.add('fail-case');
+                    tcDiv.innerHTML = `
+                        <div class="test-info">
+                            <span class="test-name" style="color: #ef4444;">${i+1}. ${tc.name}</span>
+                            <span class="test-desc" style="color: #fca5a5;">Ralat: ${err.message}</span>
+                        </div>
+                        <span class="badge badge-fail">Fail</span>
+                    `;
+                    console.error(`Gagal Ujian "${tc.name}":`, err);
+                }
+                
+                resultsArea.appendChild(tcDiv);
+            }
+
+            // Restore live database data
+            if (backupData && window.DB) {
+                try {
+                    await window.DB.restoreBackup(backupData);
+                    console.log('Database sedia ada dipulihkan.');
+                } catch(e) {
+                    console.error('Gagal memulihkan database asal selepas ujian:', e);
+                }
+            }
+
+            // Render stats summaries
+            document.getElementById('total-tests').textContent = total;
+            document.getElementById('passed-tests').textContent = passCount;
+            document.getElementById('failed-tests').textContent = failCount;
+            
+            const rate = total > 0 ? Math.round((passCount / total) * 100) : 0;
+            document.getElementById('pass-rate').textContent = `${rate}%`;
+            
+            if (failCount === 0) {
+                document.getElementById('pass-rate').className = 'stat-val pass';
+            } else {
+                document.getElementById('pass-rate').className = 'stat-val fail';
+            }
+
+            document.getElementById('run-tests-btn').disabled = false;
+            console.log(`Ujian selesai. Lulus: ${passCount}, Gagal: ${failCount}`);
+        }
+    </script>
+</body>
+</html>

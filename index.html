@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistem Carian Komisen untuk Mawar Teraju - Pilihan Admin dan Dispatch">
+    <title>Mawar Teraju - Commission Lookup System</title>
+    <!-- Favicon Assets -->
+    <link rel="icon" type="image/x-icon" href="assets/images/branding/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/branding/favicon-32x32.png">
+    <!-- Custom styling -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- SheetJS Excel Library -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Lucide Icons CDN for beautiful typography and icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF and jsPDF-AutoTable for client-side PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="logo-container" id="logo-btn" style="cursor: pointer; display: flex; align-items: center;">
+            <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 38px; width: auto; object-fit: contain; background: white; padding: 2px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div class="logo-text" style="margin-left: 0.75rem;">Mawar <span>Teraju</span></div>
+        </div>
+        <div class="header-actions" id="header-actions-area">
+            <!-- Dynamic header controls will be injected here -->
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main>
+        <!-- Print View Header (Visible during page printing only) -->
+        <div class="print-only-header" style="display: none; align-items: center; justify-content: space-between; border-bottom: 2px solid #8E1B32; padding-bottom: 1rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 60px; width: auto; object-fit: contain; background: white; padding: 3px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                <div>
+                    <h2 style="margin: 0; color: #8E1B32; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.05em;">MAWAR TERAJU</h2>
+                    <p style="margin: 0.15rem 0 0 0; color: #4b5563; font-size: 0.8rem; font-family: 'Plus Jakarta Sans', sans-serif;">Commission Management System</p>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 0.8rem; color: #4b5563; font-family: 'Plus Jakarta Sans', sans-serif;">
+                <strong>Laporan Carian Komisen Dispatch</strong><br>
+                Dicetak pada: <span id="print-timestamp">-</span>
+            </div>
+        </div>
+        
+        <!-- SECTION 1: Role Selection Screen -->
+        <div id="role-selection-view" class="view active fade-in">
+            <div class="role-selection-container" style="text-align: center;">
+                <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 100px; width: auto; object-fit: contain; background: white; padding: 6px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-bottom: 2rem; display: inline-block;">
+                <h1 class="welcome-title">Mawar Teraju Commission Management System</h1>
+                <p class="welcome-subtitle">Sila pilih peranan anda untuk memulakan sesi carian atau pengurusan data.</p>
+                
+                <div class="role-grid">
+                    <!-- Dispatch Role Card -->
+                    <div class="card role-card" onclick="App.navigateTo('dispatch-search')">
+                        <div class="icon-box">
+                            <i data-lucide="search"></i>
+                        </div>
+                        <h3>Dispatch</h3>
+                        <p>Akses pantas untuk mencari maklumat komisen menggunakan nombor IC pelanggan.</p>
+                        <button class="btn btn-secondary" style="width: 100%;">
+                            Mula Carian <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Admin Role Card -->
+                    <div class="card role-card" onclick="App.navigateTo('login')">
+                        <div class="icon-box">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <h3>Admin</h3>
+                        <p>Mengurus data komisen, muat naik fail Excel, pantau log carian dan sejarah kemasukan data.</p>
+                        <button class="btn btn-primary" style="width: 100%;">
+                            Log Masuk Admin <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Admin Login Screen -->
+        <div id="login-view" class="view fade-in">
+            <div class="card login-container" style="text-align: center;">
+                <div class="login-header">
+                    <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 70px; width: auto; object-fit: contain; background: white; padding: 4px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 1rem; display: inline-block;">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Mawar Teraju Commission Management System</p>
+                    <h2>Log Masuk Admin</h2>
+                    <p>Sila masukkan kata laluan pentadbir</p>
+                </div>
+                
+                <form id="login-form" onsubmit="App.handleLogin(event)">
+                    <div class="form-group">
+                        <label for="admin-password">Kata Laluan</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="admin-password" class="form-control" placeholder="••••••••" required>
+                            <span class="input-icon">
+                                <i data-lucide="lock"></i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            Log Masuk <i data-lucide="log-in"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="App.navigateTo('role-selection')" style="width: 100%;">
+                            Kembali
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Admin Dashboard -->
+        <div id="admin-dashboard-view" class="view fade-in">
+            <div class="view-header">
+                <div class="view-title">
+                    <h2>Panel Pentadbir (Admin Dashboard)</h2>
+                    <p>Urus fail data komisen dan pantau aktiviti sistem.</p>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="database"></i></div>
+                    <div class="stat-info">
+                        <h4>Jumlah Rekod</h4>
+                        <p id="stats-total-records">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--info); background: rgba(59, 130, 246, 0.1);"><i data-lucide="file-spreadsheet"></i></div>
+                    <div class="stat-info">
+                        <h4>Fail Dimuat Naik</h4>
+                        <p id="stats-total-uploads">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--accent); background: rgba(245, 158, 11, 0.1);"><i data-lucide="history"></i></div>
+                    <div class="stat-info">
+                        <h4>Kemas Kini Terakhir</h4>
+                        <p id="stats-last-updated" style="font-size: 0.95rem; margin-top: 0.5rem; word-break: break-all;">Tiada rekod</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Left: Batch Management & Upload Setup -->
+                <div>
+                    <!-- Tab Switcher -->
+                    <div class="tabs-container" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <button class="btn btn-secondary tab-btn active" id="tab-batch-list-btn" onclick="Upload.switchTab('batch-list')">
+                            <i data-lucide="list"></i> Senarai Batch
+                        </button>
+                        <button class="btn btn-secondary tab-btn" id="tab-create-batch-btn" onclick="Upload.switchTab('create-batch')">
+                            <i data-lucide="plus-circle"></i> Cipta Batch Baharu
+                        </button>
+                    </div>
+
+                    <!-- TAB 1: Batch List View -->
+                    <div id="batch-list-tab" class="tab-content card" style="margin-bottom: 2rem; display: block;">
+                        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="folder" style="color: var(--primary);"></i> Pengurusan Batch Komisen
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                            Aktifkan tempoh komisen semasa yang boleh disemak oleh dispatch. Hanya satu batch boleh aktif pada satu masa.
+                        </p>
+                        
+                        <div id="batches-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Batch items dynamically injected here -->
+                            <div class="empty-table-state" style="padding: 2rem;">
+                                <i data-lucide="folder-open"></i>
+                                <span>Tiada batch commission ditemui. Sila cipta batch baru.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Create/Edit Batch View -->
+                    <div id="create-batch-tab" class="tab-content card" style="margin-bottom: 2rem; display: none;">
+                        <h3 id="create-batch-title" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="upload-cloud" style="color: var(--primary);"></i> Muat Naik Fail Batch Baharu
+                        </h3>
+
+                        <input type="hidden" id="edit-batch-id" value="">
+
+                        <!-- Batch Name Form Field -->
+                        <div class="form-group">
+                            <label for="batch-name-input">Nama Batch (Contoh: Julai 2026)</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="batch-name-input" class="form-control" placeholder="Masukkan nama tempoh komisen" required style="padding-left: 2.75rem;">
+                                <span class="input-icon">
+                                    <i data-lucide="calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Double File Upload Dropzones -->
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            
+                            <!-- 1. Commission Report Zone -->
+                            <div class="file-uploader-container">
+                                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    1. Fail Laporan Komisen (Commission Report) *
+                                </label>
+                                <div class="upload-zone compact" id="comm-upload-zone" onclick="document.getElementById('comm-file-input').click()" style="padding: 1.5rem; border-style: dashed;">
+                                    <input type="file" id="comm-file-input" style="display: none;" accept=".xlsx, .xls" onchange="Upload.handleBatchFileSelect(event, 'commission')">
+                                    <div class="upload-icon" style="font-size: 1.75rem;"><i data-lucide="file-text"></i></div>
+                                    <h4 style="font-size: 0.95rem;">Klik atau Tarik Laporan Komisen</h4>
+                                    <p style="font-size: 0.75rem;">(.xlsx, .xls - Data komisen asas)</p>
+                                </div>
+                                <div id="comm-file-details" class="file-details-card" style="display: none; padding: 0.5rem 1rem; margin-top: 0.5rem;">
+                                    <div class="file-info">
+                                        <div class="file-info-icon"><i data-lucide="check-circle" style="color: var(--success);"></i></div>
+                                        <div>
+                                            <div class="file-name" id="comm-file-name" style="font-size: 0.85rem;">-</div>
+                                            <div class="file-size" id="comm-file-size" style="font-size: 0.75rem;">-</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary btn-sm" onclick="Upload.clearFile('commission')" style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">
+                                        <i data-lucide="x"></i> Batal
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Deduction Details Zone -->
+                            <div class="file-uploader-container">
+                                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    2. Fail Butiran Potongan (Deduction Details Report) *
+                                </label>
+                                <div class="upload-zone compact" id="ded-upload-zone" onclick="document.getElementById('ded-file-input').click()" style="padding: 1.5rem; border-style: dashed;">
+                                    <input type="file" id="ded-file-input" style="display: none;" accept=".xlsx, .xls" onchange="Upload.handleBatchFileSelect(event, 'deduction')">
+                                    <div class="upload-icon" style="font-size: 1.75rem;"><i data-lucide="file-minus"></i></div>
+                                    <h4 style="font-size: 0.95rem;">Klik atau Tarik Butiran Potongan</h4>
+                                    <p style="font-size: 0.75rem;">(.xlsx, .xls - Data denda/potongan)</p>
+                                </div>
+                                <div id="ded-file-details" class="file-details-card" style="display: none; padding: 0.5rem 1rem; margin-top: 0.5rem;">
+                                    <div class="file-info">
+                                        <div class="file-info-icon"><i data-lucide="check-circle" style="color: var(--success);"></i></div>
+                                        <div>
+                                            <div class="file-name" id="ded-file-name" style="font-size: 0.85rem;">-</div>
+                                            <div class="file-size" id="ded-file-size" style="font-size: 0.75rem;">-</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary btn-sm" onclick="Upload.clearFile('deduction')" style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">
+                                        <i data-lucide="x"></i> Batal
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Validation Card (Hidden until validation errors exist) -->
+                        <div id="validation-container" class="validation-card" style="display: none; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2);">
+                            <div class="validation-header" style="color: var(--danger);">
+                                <i data-lucide="alert-triangle"></i>
+                                <span>Amaran Pengesahan Fail</span>
+                            </div>
+                            <ul class="validation-list" id="validation-list-items">
+                                <!-- Validation warnings listed here -->
+                            </ul>
+                        </div>
+
+                        <!-- Progress Bar during Import -->
+                        <div id="import-progress-container" class="progress-container" style="margin-top: 1rem; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+                                <span>Mengimport Rekod Batch...</span>
+                                <span id="import-progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar" id="import-progress-bar"></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                            <button class="btn btn-secondary" onclick="Upload.resetBatchForm()">Kosongkan</button>
+                            <button class="btn btn-secondary" id="btn-save-draft" onclick="Upload.saveBatch('draft')">
+                                Simpan Draf <i data-lucide="save"></i>
+                            </button>
+                            <button class="btn btn-primary" id="btn-publish-batch" onclick="Upload.saveBatch('published')" disabled>
+                                Terbit & Aktifkan <i data-lucide="check"></i>
+                            </button>
+                        </div>
+
+                        <!-- Template helpers -->
+                        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
+                            <span style="font-weight: 600;">Muat Turun Laporan Contoh untuk Rujukan:</span>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button class="btn btn-secondary btn-sm" onclick="Upload.downloadSplitTemplate('commission')" style="padding: 0.3rem 0.5rem; font-size: 0.7rem;">
+                                    <i data-lucide="download" style="width: 12px; height: 12px;"></i> Templat Laporan Komisen
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="Upload.downloadSplitTemplate('deduction')" style="padding: 0.3rem 0.5rem; font-size: 0.7rem;">
+                                    <i data-lucide="download" style="width: 12px; height: 12px;"></i> Templat Butiran Potongan
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="Upload.runSimulationBatch()" style="padding: 0.3rem 0.5rem; font-size: 0.7rem;">
+                                    <i data-lucide="beaker" style="width: 12px; height: 12px;"></i> Simulasi Batch Julai 2026
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Upload History -->
+                <div>
+                    <!-- Sidebar Brand Card -->
+                    <div class="card" style="text-align: center; margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+                        <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 55px; width: auto; object-fit: contain; background: white; padding: 4px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 0.75rem; display: inline-block;">
+                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">Mawar Teraju</h4>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.75rem; color: var(--text-secondary);">Commission Management System</p>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3>Sejarah Muat Naik</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="App.loadDashboardStats()" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                <i data-lucide="refresh-cw"></i> Segarkan
+                            </button>
+                        </div>
+
+                        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tarikh</th>
+                                        <th>Nama Fail</th>
+                                        <th>Bil. Rekod</th>
+                                        <th>Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- History rows loaded dynamically -->
+                                    <tr class="empty-row-state">
+                                        <td colspan="4">
+                                            <div class="empty-table-state">
+                                                <i data-lucide="folder-open"></i>
+                                                <span>Tiada sejarah muat naik fail.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; font-weight: 600;">Sistem & Penyelenggaraan</div>
+                            
+                            <button class="btn btn-secondary" onclick="App.openAuditModal()" style="width: 100%; justify-content: flex-start;">
+                                <i data-lucide="scroll-text" style="color: var(--info);"></i> Lihat Log Audit Sistem
+                            </button>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <button class="btn btn-secondary" onclick="App.downloadBackup()" style="font-size: 0.85rem; padding: 0.6rem 0.5rem;">
+                                    <i data-lucide="download"></i> Backup Data
+                                </button>
+                                <button class="btn btn-secondary" onclick="document.getElementById('backup-file-input').click()" style="font-size: 0.85rem; padding: 0.6rem 0.5rem;">
+                                    <i data-lucide="upload"></i> Restore Data
+                                </button>
+                                <input type="file" id="backup-file-input" style="display: none;" accept=".json" onchange="App.handleRestoreBackup(event)">
+                            </div>
+
+                            <button class="btn btn-danger" onclick="App.confirmClearDatabase()" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                                <i data-lucide="trash-2"></i> Kosongkan Pangkalan Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Dispatch Search Screen -->
+        <div id="dispatch-search-view" class="view fade-in">
+            <div class="view-header">
+                <div class="view-title">
+                    <h2>Semakan Komisen Dispatch</h2>
+                    <p>Sila masukkan nombor Kad Pengenalan anda untuk carian komisen pantas.</p>
+                </div>
+            </div>
+
+            <!-- Search Form Card -->
+            <div class="card" style="max-width: 600px; margin: 1rem auto 2rem auto; text-align: center;">
+                <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 80px; width: auto; object-fit: contain; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 1rem auto 0.75rem auto; display: block;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Mawar Teraju Commission Management System</p>
+                <form id="dispatch-search-form" onsubmit="App.handleSearch(event)" style="text-align: left;">
+                    <div class="form-group">
+                        <label for="dispatch-ic-input">Nombor Kad Pengenalan (IC Number)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="dispatch-ic-input" class="form-control" placeholder="900101-14-1234" maxlength="14" required style="font-size: 1.25rem; padding-left: 2.75rem;">
+                            <span class="input-icon" style="font-size: 1.25rem;">
+                                <i data-lucide="credit-card"></i>
+                            </span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem;">Format standard: XXXXXX-XX-XXXX (cth: 900101141234 atau 900101-14-1234)</p>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 0.9rem;">
+                        Semak Komisen <i data-lucide="search"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Search Results Area -->
+            <div id="search-results-area" style="display: none;">
+                <!-- Result Summary Info -->
+                <div class="card" style="border-left: 4px solid var(--primary); margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+                        <div>
+                            <span class="badge badge-success" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; margin-bottom: 0.5rem;">Carian Dijumpai</span>
+                            <h3 id="result-rider-name" style="font-size: 1.75rem;">Ahmad Bin Ali</h3>
+                            <p style="color: var(--text-secondary); margin-top: 0.15rem; font-size: 0.95rem;">
+                                No. KP: <span id="result-rider-ic" style="font-weight: 600; color: var(--text-primary);">900101-14-1234</span>
+                            </p>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+                                Batch: <span id="result-batch-name" style="font-weight: 600; color: var(--info);">-</span>
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; text-align: right; flex-wrap: wrap;">
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Jumlah Kasar</span>
+                                <h3 id="result-gross-commission" style="font-size: 1.25rem; color: var(--text-primary); margin-top: 0.25rem;">RM 0.00</h3>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Jumlah Potongan</span>
+                                <h3 id="result-total-deductions" style="font-size: 1.25rem; color: var(--danger); margin-top: 0.25rem;">RM 0.00</h3>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Jumlah Bersih</span>
+                                <h2 id="result-total-commission" style="font-size: 2.25rem; color: var(--primary); font-weight: 800; font-family: var(--font-heading); margin-top: 0.25rem;">RM 0.00</h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PDF Action Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="App.downloadCommissionReportPDF()" style="flex: 1; min-width: 200px;">
+                            <i data-lucide="download-cloud"></i> Download Commission Report (PDF)
+                        </button>
+                        <button class="btn btn-secondary" onclick="App.downloadDeductionDetailsPDF()" style="flex: 1; min-width: 200px;">
+                            <i data-lucide="file-minus"></i> Download Deduction Details (PDF)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detailed Records Table / Grid -->
+                <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="clipboard-list" style="color: var(--info);"></i> Perincian Rekod Komisen
+                </h3>
+
+                <div id="search-details-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Dynamic details cards injected here -->
+                </div>
+            </div>
+
+            <!-- No Results State -->
+            <div id="search-empty-area" class="card empty-state-card" style="display: none;">
+                <div class="empty-state-icon-wrapper">
+                    <i data-lucide="user-x"></i>
+                </div>
+                <h3 class="empty-state-title">Data tidak dijumpai</h3>
+                <p class="empty-state-text-primary">
+                    Tiada rekod komisen bagi nombor Kad Pengenalan <strong id="searched-ic-number" style="color: var(--text-primary);">900101-14-1234</strong> dalam sistem kami.
+                </p>
+                <p class="empty-state-text-secondary">
+                    Sila pastikan nombor IC dimasukkan dengan betul atau hubungi bahagian Pentadbiran untuk pengesahan muat naik data.
+                </p>
+                <button class="btn btn-secondary empty-state-btn" onclick="App.resetSearch()">
+                    Cuba Carian Lain
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>&copy; 2026 Mawar Teraju. Hak Cipta Terpelihara. Sistem Carian Komisen Modular.</p>
+    </footer>
+
+    <!-- Password Change Modal Overlay -->
+    <div id="password-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tukar Kata Laluan Admin</h3>
+                <button class="modal-close" onclick="App.closePasswordModal()">&times;</button>
+            </div>
+            <form id="change-pwd-form" onsubmit="App.handleChangePassword(event)">
+                <div class="form-group">
+                    <label for="old-pwd">Kata Laluan Lama</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="old-pwd" class="form-control" required>
+                        <span class="input-icon"><i data-lucide="lock"></i></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new-pwd">Kata Laluan Baharu</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="new-pwd" class="form-control" required>
+                        <span class="input-icon"><i data-lucide="key-round"></i></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="App.closePasswordModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audit Log Modal Overlay -->
+    <div id="audit-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <div class="modal-header">
+                <h3>Log Audit Aktiviti Sistem</h3>
+                <button class="modal-close" onclick="App.closeAuditModal()">&times;</button>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Menunjukkan sejarah aktiviti keselamatan, pemprosesan fail, dan carian komisen.</p>
+                <button class="btn btn-danger btn-sm" onclick="App.clearSystemAuditLogs()" style="font-size: 0.8rem; padding: 0.35rem 0.65rem;">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Padam Semua Log
+                </button>
+            </div>
+
+            <div class="table-container" style="max-height: 380px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 150px;">Tarikh & Masa</th>
+                            <th style="width: 100px;">Pengguna</th>
+                            <th style="width: 150px;">Aktiviti</th>
+                            <th>Perincian Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-table-body">
+                        <!-- Dynamic audit logs will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="App.closeAuditModal()">Tutup Halaman</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Script References -->
+    <script src="auth.js"></script>
+    <script src="db.js"></script>
+    <script src="excel.js"></script>
+    <script src="ui.js"></script>
+    <script src="router.js"></script>
+    <script src="dispatch.js"></script>
+    <script src="admin.js"></script>
+    <script src="upload.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

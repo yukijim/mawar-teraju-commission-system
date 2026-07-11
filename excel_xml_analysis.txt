@@ -1,0 +1,293 @@
+﻿=== EXCEL XML STRUCTURE ANALYSIS (STREAMING) ===
+Time: 11/7/2026 2:14:24 PM
+
+--------------------------------------------------
+SHEET: RAW (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: AWB Data
+XmlPath: C:\Users\User\.gemini\antigravity-ide\brain\60b93b0a-470b-4023-8eb2-3e02aae0ec75\scratch\unzipped\xl\worksheets/sheet2.xml
+--------------------------------------------------
+Headers: A: 'AWB No.' | B: 'Billing Weight' | C: 'DP | Signing' | D: 'Dispatcher ID' | E: 'Dispatcher Name' | F: 'Delivery Signature' | G: 'Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)' | I: '*Sila Ikut Title yang sama bila copy dari JMS data. Make sure tajuk tally
+1. AWB
+2. Chargeable Weight
+3. Signing DP
+4. Dispatcher ID
+5. Dispatcher Name
+6. Delivery Signature Date'
+
+First few rows:
+Row 2:
+  Values: A ('AWB No.'): '680097105212814' | B ('Billing Weight'): '0.25' | C ('DP | Signing'): 'NSN305' | D ('Dispatcher ID'): 'NSN3056695' | E ('Dispatcher Name'): 'MUHAMMAD AMIRUL HAKIM BIN SALEHUDIN' | F ('Delivery Signature'): '2026-05-21 14:51:34' | G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): '0'
+  Formulas:
+  G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): = IF(B2="",0,IF(VALUE(B2)<=5,0,CEILING(VALUE(B2)-5,1)*0.1)) [Calculated Val: '0']
+Row 3:
+  Values: A ('AWB No.'): '680099790751814' | B ('Billing Weight'): '1.16' | C ('DP | Signing'): 'NSN305' | D ('Dispatcher ID'): 'NSN3056672' | E ('Dispatcher Name'): 'SAFIRAH BINTI SAFRI' | F ('Delivery Signature'): '2026-05-21 14:50:42' | G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): '0'
+  Formulas:
+  G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): = IF(B3="",0,IF(VALUE(B3)<=5,0,CEILING(VALUE(B3)-5,1)*0.1)) [Calculated Val: '0']
+Row 4:
+  Values: A ('AWB No.'): '680097990541715' | B ('Billing Weight'): '2.00' | C ('DP | Signing'): 'NSN305' | D ('Dispatcher ID'): 'NSN3056655' | E ('Dispatcher Name'): 'MOHD ZAHARI BIN ZAINAL' | F ('Delivery Signature'): '2026-05-21 14:53:52' | G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): '0'
+  Formulas:
+  G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): = 0 [Calculated Val: '0']
+Row 5:
+  Values: A ('AWB No.'): '680087104802011' | B ('Billing Weight'): '0.50' | C ('DP | Signing'): 'NSN305' | D ('Dispatcher ID'): 'NSN3055235' | E ('Dispatcher Name'): 'LATIFAH YAZID' | F ('Delivery Signature'): '2026-05-21 14:50:41' | G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): '0'
+  Formulas:
+  A ('AWB No.'): = 59 [Calculated Val: '680087104802011']
+  B ('Billing Weight'): = 203197 [Calculated Val: '0.50']
+  C ('DP | Signing'): = 205150 [Calculated Val: 'NSN305']
+  D ('Dispatcher ID'): = 205154 [Calculated Val: 'NSN3055235']
+  E ('Dispatcher Name'): = 205243 [Calculated Val: 'LATIFAH YAZID']
+  F ('Delivery Signature'): = 205333 [Calculated Val: '2026-05-21 14:50:41']
+  G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): = 0 [Calculated Val: '0']
+Row 6:
+  Values: A ('AWB No.'): '680095101122114' | B ('Billing Weight'): '5.00' | C ('DP | Signing'): 'NSN305' | D ('Dispatcher ID'): 'NSN3052035' | E ('Dispatcher Name'): 'MOHD SAHARUDIN BIN MD JANI' | F ('Delivery Signature'): '2026-05-21 14:51:39' | G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): '0'
+  Formulas:
+  A ('AWB No.'): = 60 [Calculated Val: '680095101122114']
+  B ('Billing Weight'): = 203198 [Calculated Val: '5.00']
+  C ('DP | Signing'): = 205150 [Calculated Val: 'NSN305']
+  D ('Dispatcher ID'): = 205155 [Calculated Val: 'NSN3052035']
+  E ('Dispatcher Name'): = 205244 [Calculated Val: 'MOHD SAHARUDIN BIN MD JANI']
+  F ('Delivery Signature'): = 205334 [Calculated Val: '2026-05-21 14:51:39']
+  G ('Extra Weight Commission (New)
+(>=5.01kg, Add RM0.10/kg)'): = 0 [Calculated Val: '0']
+
+--------------------------------------------------
+SHEET: Agent D Data
+XmlPath: C:\Users\User\.gemini\antigravity-ide\brain\60b93b0a-470b-4023-8eb2-3e02aae0ec75\scratch\unzipped\xl\worksheets/sheet3.xml
+--------------------------------------------------
+Headers: A: 'Agent D Data Calculation' | K: 'Drop Point :' | L: 'NSN305'
+
+First few rows:
+Row 2:
+  Values: A ('Agent D Data Calculation'): 'Delivery Dispatcher ID' | B ('B'): 'Delivery Dispatcher Name' | C ('C'): 'Parcel Quantity' | D ('D'): 'D' | E ('E'): 'D+1' | F ('F'): 'D+2' | G ('G'): 'Total D' | H ('H'): 'Check Parcel Quantity' | K ('Drop Point :'): 'Agent :'
+Row 3:
+  Values: B ('B'): '-' | C ('C'): '0' | D ('D'): '#REF!' | E ('E'): '#REF!' | F ('F'): '#REF!' | G ('G'): '#REF!' | H ('H'): '#REF!' | K ('Drop Point :'): 'Month :'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A3,'AWB Data'!D:D,0)),"-") [Calculated Val: '-']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A3) [Calculated Val: '0']
+  D ('D'): = COUNTIFS('AWB Data'!D:D,A3,'AWB Data'!#REF!,"D") [Calculated Val: '#REF!']
+  E ('E'): = COUNTIFS('AWB Data'!D:D,A3,'AWB Data'!#REF!,"D+1") [Calculated Val: '#REF!']
+  F ('F'): = COUNTIFS('AWB Data'!D:D,A3,'AWB Data'!#REF!,"D+2") [Calculated Val: '#REF!']
+  G ('G'): = SUM(D3:F3) [Calculated Val: '#REF!']
+  H ('H'): = C3=G3 [Calculated Val: '#REF!']
+Row 4:
+  Values: B ('B'): '-' | C ('C'): '0' | D ('D'): '#REF!' | E ('E'): '#REF!' | F ('F'): '#REF!' | G ('G'): '#REF!' | H ('H'): '#REF!' | K ('Drop Point :'): 'Comm Period :'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A4,'AWB Data'!D:D,0)),"-") [Calculated Val: '-']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A4) [Calculated Val: '0']
+  D ('D'): = COUNTIFS('AWB Data'!D:D,A4,'AWB Data'!#REF!,"D") [Calculated Val: '#REF!']
+  E ('E'): = COUNTIFS('AWB Data'!D:D,A4,'AWB Data'!#REF!,"D+1") [Calculated Val: '#REF!']
+  F ('F'): = COUNTIFS('AWB Data'!D:D,A4,'AWB Data'!#REF!,"D+2") [Calculated Val: '#REF!']
+  G ('G'): = #REF! [Calculated Val: '#REF!']
+  H ('H'): = #REF! [Calculated Val: '#REF!']
+  K ('Drop Point :'): = 17 [Calculated Val: 'Comm Period :']
+Row 5:
+  Values: B ('B'): '-' | C ('C'): '0' | D ('D'): '#REF!' | E ('E'): '#REF!' | F ('F'): '#REF!' | G ('G'): '#REF!' | H ('H'): '#REF!'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A5,'AWB Data'!D:D,0)),"-") [Calculated Val: '-']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A5) [Calculated Val: '0']
+  D ('D'): = COUNTIFS('AWB Data'!D:D,A5,'AWB Data'!#REF!,"D") [Calculated Val: '#REF!']
+  E ('E'): = COUNTIFS('AWB Data'!D:D,A5,'AWB Data'!#REF!,"D+1") [Calculated Val: '#REF!']
+  F ('F'): = COUNTIFS('AWB Data'!D:D,A5,'AWB Data'!#REF!,"D+2") [Calculated Val: '#REF!']
+  G ('G'): = #REF! [Calculated Val: '#REF!']
+  H ('H'): = #REF! [Calculated Val: '#REF!']
+Row 6:
+  Values: B ('B'): '-' | C ('C'): '0' | D ('D'): '#REF!' | E ('E'): '#REF!' | F ('F'): '#REF!' | G ('G'): '#REF!' | H ('H'): '#REF!'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A6,'AWB Data'!D:D,0)),"-") [Calculated Val: '-']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A6) [Calculated Val: '0']
+  D ('D'): = COUNTIFS('AWB Data'!D:D,A6,'AWB Data'!#REF!,"D") [Calculated Val: '#REF!']
+  E ('E'): = COUNTIFS('AWB Data'!D:D,A6,'AWB Data'!#REF!,"D+1") [Calculated Val: '#REF!']
+  F ('F'): = COUNTIFS('AWB Data'!D:D,A6,'AWB Data'!#REF!,"D+2") [Calculated Val: '#REF!']
+  G ('G'): = #REF! [Calculated Val: '#REF!']
+  H ('H'): = #REF! [Calculated Val: '#REF!']
+
+--------------------------------------------------
+SHEET: D Price
+XmlPath: C:\Users\User\.gemini\antigravity-ide\brain\60b93b0a-470b-4023-8eb2-3e02aae0ec75\scratch\unzipped\xl\worksheets/sheet4.xml
+--------------------------------------------------
+Headers: A: 'For Delivery effectiveness' | B: 'Commission'
+
+First few rows:
+Row 2:
+  Values: A ('For Delivery effectiveness'): 'D' | B ('Commission'): '0.3'
+Row 3:
+  Values: A ('For Delivery effectiveness'): 'D+1' | B ('Commission'): '0.2'
+Row 4:
+  Values: A ('For Delivery effectiveness'): 'D+2' | B ('Commission'): '0.1'
+
+--------------------------------------------------
+SHEET: AWB YOYI (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: Sheet4 (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: Dispatcher Comm
+XmlPath: C:\Users\User\.gemini\antigravity-ide\brain\60b93b0a-470b-4023-8eb2-3e02aae0ec75\scratch\unzipped\xl\worksheets/sheet7.xml
+--------------------------------------------------
+Headers: A: 'Dispatcher Commission(RM1.11 + New Weight Comm)' | L: 'Drop Point :' | M: 'NSN305'
+
+First few rows:
+Row 2:
+  Values: A ('Dispatcher Commission(RM1.11 + New Weight Comm)'): 'Delivery Dispatcher ID' | B ('B'): 'Delivery Dispatcher Name' | C ('C'): 'Parcel Quantity' | D ('D'): 'Net Parcel' | E ('E'): 'Exclude Extra Weight YOYI' | F ('F'): 'RM1.11/Parcel
+Commission' | G ('G'): 'DIFF RATE NEW JOINER ' | H ('H'): 'Count of Pick Up Dispatcher Name' | I ('I'): 'Extra Weight
+Commission
+(=>5.01kg, Add RM0.10/kg)' | J ('J'): 'Total Commission' | L ('Drop Point :'): ' DEDUCTION:
+ADVANCE ' | M ('NSN305'): ' DEDUCTION:
+PENDING COD ' | N ('N'): ' DEDUCTION: HQ PENALTY ' | O ('O'): ' DEDUCTION:
+DUITNOW PENALTY  ' | P ('P'): ' DEDUCTION: LATE COD PENALTY ' | Q ('Q'): ' DEDUCTION: LOST INDIVIDUAL ' | R ('R'): ' DEDUCTION: LOST PARCEL HUB' | S ('S'): 'ADD: PICKUP COMMISSION' | T ('T'): 'ADD: FUEL ALLOWANCE' | U ('U'): 'ADD: SORTER' | V ('V'): 'NETT COMMISSION' | W ('W'): 'FINAL AMOUNT TO PAY' | X ('X'): 'SYSTEM 
+REG' | Y ('Y'): 'COUNT DIGIT' | Z ('Z'): 'PARCEL QTY JMS' | AA ('AA'): 'STATUS' | AB ('AB'): 'DATE 
+PAYMENT' | AC ('AC'): 'REMARK FARISHA'
+Row 3:
+  Values: A ('Dispatcher Commission(RM1.11 + New Weight Comm)'): 'NSN3052004' | B ('B'): 'MOHAMAD AZLAN BIN  JAAPAR' | C ('C'): '2335' | D ('D'): '2' | E ('E'): '2333' | F ('F'): '2591.8500000000004' | H ('H'): '0' | I ('I'): '50' | J ('J'): '2641.8500000000004' | N ('N'): '0' | Q ('Q'): '0' | R ('R'): '10.885599999999998' | S ('S'): '15.3' | V ('V'): '2646.2644000000005' | W ('W'): '2646.26' | X ('X'): 'SN001' | Y ('Y'): '920605055111' | Z ('Z'): '12'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A3,'AWB Data'!D:D,0)),"-") [Calculated Val: 'MOHAMAD AZLAN BIN  JAAPAR']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A3) [Calculated Val: '2335']
+  E ('E'): = Table1[[#This Row],[Parcel Quantity]]-D3 [Calculated Val: '2333']
+  F ('F'): = C3*1.11 [Calculated Val: '2591.8500000000004']
+  I ('I'): = ROUND(SUMIFS('AWB Data'!G:G,'AWB Data'!D:D,A3),2)-Table1[[#This Row],[Exclude Extra Weight YOYI]] [Calculated Val: '50']
+  J ('J'): = Table1[[#This Row],[RM1.11/Parcel
+Commission]]-Table1[[#This Row],[DIFF RATE NEW JOINER ]]+Table1[[#This Row],[Extra Weight
+Commission
+(=>5.01kg, Add RM0.10/kg)]] [Calculated Val: '2641.8500000000004']
+  N ('N'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,13,FALSE) [Calculated Val: '0']
+  Q ('Q'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,8,FALSE) [Calculated Val: '0']
+  R ('R'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,5,FALSE) [Calculated Val: '10.885599999999998']
+  S ('S'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher Name]],Sheet5!$J$9:$L$79,3,FALSE) [Calculated Val: '15.3']
+  V ('V'): = Table1[[#This Row],[Total Commission]]-L3-M3-N3-O3-P3-Q3-R3+S3+T3+U3 [Calculated Val: '2646.2644000000005']
+  W ('W'): = ROUND(V3,2) [Calculated Val: '2646.26']
+  X ('X'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'[1]Added Bene240425'!$L:$M,2,FALSE) [Calculated Val: 'SN001']
+  Y ('Y'): = VLOOKUP(X3,'[1]Added Bene240425'!$M:$P,4,FALSE) [Calculated Val: '920605055111']
+  Z ('Z'): = LEN(Y3) [Calculated Val: '12']
+Row 4:
+  Values: A ('Dispatcher Commission(RM1.11 + New Weight Comm)'): 'NSN3052006' | B ('B'): 'NOORSAYPUL BIN ABDUL RAZAK' | C ('C'): '4735' | E ('E'): '4735' | F ('F'): '5255.85' | I ('I'): '94.7' | J ('J'): '5350.55' | N ('N'): '499.5' | Q ('Q'): '0' | R ('R'): '10.885599999999998' | S ('S'): '11' | V ('V'): '4851.1644000000006' | W ('W'): '4851.16' | X ('X'): 'SN002' | Y ('Y'): '920818055043' | Z ('Z'): '12'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A4,'AWB Data'!D:D,0)),"-") [Calculated Val: 'NOORSAYPUL BIN ABDUL RAZAK']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A4) [Calculated Val: '4735']
+  E ('E'): = Table1[[#This Row],[Parcel Quantity]]-D4 [Calculated Val: '4735']
+  F ('F'): = 5255.85 [Calculated Val: '5255.85']
+  I ('I'): = ROUND(SUMIFS('AWB Data'!G:G,'AWB Data'!D:D,A4),2)-Table1[[#This Row],[Exclude Extra Weight YOYI]] [Calculated Val: '94.7']
+  J ('J'): = Table1[[#This Row],[RM1.11/Parcel
+Commission]]-Table1[[#This Row],[DIFF RATE NEW JOINER ]]+Table1[[#This Row],[Extra Weight
+Commission
+(=>5.01kg, Add RM0.10/kg)]] [Calculated Val: '5350.55']
+  N ('N'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,13,FALSE) [Calculated Val: '499.5']
+  Q ('Q'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,8,FALSE) [Calculated Val: '0']
+  R ('R'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,5,FALSE) [Calculated Val: '10.885599999999998']
+  V ('V'): = Table1[[#This Row],[Total Commission]]-L4-M4-N4-O4-P4-Q4-R4+S4+T4+U4 [Calculated Val: '4851.1644000000006']
+  W ('W'): = ROUND(V4,2) [Calculated Val: '4851.16']
+  X ('X'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'[1]Added Bene240425'!$L:$M,2,FALSE) [Calculated Val: 'SN002']
+  Y ('Y'): = VLOOKUP(X4,'[1]Added Bene240425'!$M:$P,4,FALSE) [Calculated Val: '920818055043']
+  Z ('Z'): = LEN(Y4) [Calculated Val: '12']
+Row 5:
+  Values: A ('Dispatcher Commission(RM1.11 + New Weight Comm)'): 'NSN3052016' | B ('B'): 'MUHAMAD HAFIZI BIN OTHMAN' | C ('C'): '4522' | E ('E'): '4522' | F ('F'): '5019.42' | I ('I'): '63.2' | J ('J'): '5082.62' | N ('N'): '125' | O ('O'): '3.0853155923764115' | Q ('Q'): '0' | R ('R'): '10.885599999999998' | S ('S'): '10.5' | V ('V'): '4954.1490844076243' | W ('W'): '4954.1499999999996' | X ('X'): 'SN003' | Y ('Y'): '960304015219' | Z ('Z'): '12'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A5,'AWB Data'!D:D,0)),"-") [Calculated Val: 'MUHAMAD HAFIZI BIN OTHMAN']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A5) [Calculated Val: '4522']
+  E ('E'): = Table1[[#This Row],[Parcel Quantity]]-D5 [Calculated Val: '4522']
+  F ('F'): = 5019.42 [Calculated Val: '5019.42']
+  I ('I'): = ROUND(SUMIFS('AWB Data'!G:G,'AWB Data'!D:D,A5),2)-Table1[[#This Row],[Exclude Extra Weight YOYI]] [Calculated Val: '63.2']
+  J ('J'): = Table1[[#This Row],[RM1.11/Parcel
+Commission]]-Table1[[#This Row],[DIFF RATE NEW JOINER ]]+Table1[[#This Row],[Extra Weight
+Commission
+(=>5.01kg, Add RM0.10/kg)]] [Calculated Val: '5082.62']
+  N ('N'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,13,FALSE) [Calculated Val: '125']
+  Q ('Q'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,8,FALSE) [Calculated Val: '0']
+  R ('R'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,5,FALSE) [Calculated Val: '10.885599999999998']
+  V ('V'): = Table1[[#This Row],[Total Commission]]-L5-M5-N5-O5-P5-Q5-R5+S5+T5+U5 [Calculated Val: '4954.1490844076243']
+  W ('W'): = 4954.1499999999996 [Calculated Val: '4954.1499999999996']
+  X ('X'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'[1]Added Bene240425'!$L:$M,2,FALSE) [Calculated Val: 'SN003']
+  Y ('Y'): = VLOOKUP(X5,'[1]Added Bene240425'!$M:$P,4,FALSE) [Calculated Val: '960304015219']
+  Z ('Z'): = 12 [Calculated Val: '12']
+Row 6:
+  Values: A ('Dispatcher Commission(RM1.11 + New Weight Comm)'): 'NSN3052029' | B ('B'): 'HAMDIN ZARIS BIN HAMIDI' | C ('C'): '10' | D ('D'): '10' | E ('E'): '0' | F ('F'): '11.100000000000001' | H ('H'): '0' | I ('I'): '0' | J ('J'): '11.100000000000001' | N ('N'): '0' | Q ('Q'): '0' | R ('R'): '0'
+  Formulas:
+  A ('Dispatcher Commission(RM1.11 + New Weight Comm)'): = 205234 [Calculated Val: 'NSN3052029']
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A6,'AWB Data'!D:D,0)),"-") [Calculated Val: 'HAMDIN ZARIS BIN HAMIDI']
+  C ('C'): = COUNTIFS('AWB Data'!D:D,A6) [Calculated Val: '10']
+  E ('E'): = Table1[[#This Row],[Parcel Quantity]]-D6 [Calculated Val: '0']
+  F ('F'): = 11.100000000000001 [Calculated Val: '11.100000000000001']
+  H ('H'): = 0 [Calculated Val: '0']
+  I ('I'): = ROUND(SUMIFS('AWB Data'!G:G,'AWB Data'!D:D,A6),2)-Table1[[#This Row],[Exclude Extra Weight YOYI]] [Calculated Val: '0']
+  J ('J'): = Table1[[#This Row],[RM1.11/Parcel
+Commission]]-Table1[[#This Row],[DIFF RATE NEW JOINER ]]+Table1[[#This Row],[Extra Weight
+Commission
+(=>5.01kg, Add RM0.10/kg)]] [Calculated Val: '11.100000000000001']
+  N ('N'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,13,FALSE) [Calculated Val: '0']
+  Q ('Q'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,8,FALSE) [Calculated Val: '0']
+  R ('R'): = VLOOKUP(Table1[[#This Row],[Delivery Dispatcher ID]],'Details Penalty'!$A$3:$M$91,5,FALSE) [Calculated Val: '0']
+
+--------------------------------------------------
+SHEET: Details Penalty
+XmlPath: C:\Users\User\.gemini\antigravity-ide\brain\60b93b0a-470b-4023-8eb2-3e02aae0ec75\scratch\unzipped\xl\worksheets/sheet8.xml
+--------------------------------------------------
+Headers: 
+
+First few rows:
+Row 2:
+  Values: A ('A'): 'Delivery Dispatcher ID' | B ('B'): 'Delivery Dispatcher Name' | C ('C'): 'LOST PIC SIGNED ' | D ('D'): 'LOST RATE' | E ('E'): 'TOTAL ALL LOST SHARED' | H ('H'): 'LOST PARCEL PIC SIGNED' | J ('J'): 'ARBI INDIVIDUAL' | K ('K'): 'RCGEN 03.07.26' | L ('L'): 'QC' | M ('M'): 'TOTAL HQ PENALTY'
+Row 3:
+  Values: A ('A'): 'NSN3052004' | B ('B'): 'MOHAMAD AZLAN BIN  JAAPAR' | C ('C'): '10.885599999999998' | E ('E'): '10.885599999999998' | M ('M'): '0'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A3,'AWB Data'!D:D,0)),"-") [Calculated Val: 'MOHAMAD AZLAN BIN  JAAPAR']
+  C ('C'): = 'Dispatcher Comm'!$R$101/'Dispatcher Comm'!$R$107 [Calculated Val: '10.885599999999998']
+  E ('E'): = C3+D3 [Calculated Val: '10.885599999999998']
+  M ('M'): = J3+K3+L3 [Calculated Val: '0']
+Row 4:
+  Values: A ('A'): 'NSN3052006' | B ('B'): 'NOORSAYPUL BIN ABDUL RAZAK' | C ('C'): '10.885599999999998' | E ('E'): '10.885599999999998' | J ('J'): '499.5' | M ('M'): '499.5'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A4,'AWB Data'!D:D,0)),"-") [Calculated Val: 'NOORSAYPUL BIN ABDUL RAZAK']
+  C ('C'): = 'Dispatcher Comm'!$R$101/'Dispatcher Comm'!$R$107 [Calculated Val: '10.885599999999998']
+  E ('E'): = C4+D4 [Calculated Val: '10.885599999999998']
+  J ('J'): = 999/2 [Calculated Val: '499.5']
+  M ('M'): = J4+K4+L4 [Calculated Val: '499.5']
+Row 5:
+  Values: A ('A'): 'NSN3052016' | B ('B'): 'MUHAMAD HAFIZI BIN OTHMAN' | C ('C'): '10.885599999999998' | E ('E'): '10.885599999999998' | L ('L'): '125' | M ('M'): '125'
+  Formulas:
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A5,'AWB Data'!D:D,0)),"-") [Calculated Val: 'MUHAMAD HAFIZI BIN OTHMAN']
+  C ('C'): = 'Dispatcher Comm'!$R$101/'Dispatcher Comm'!$R$107 [Calculated Val: '10.885599999999998']
+  E ('E'): = 10.885599999999998 [Calculated Val: '10.885599999999998']
+  L ('L'): = 100+25 [Calculated Val: '125']
+  M ('M'): = 125 [Calculated Val: '125']
+Row 6:
+  Values: A ('A'): 'NSN3052029' | B ('B'): 'HAMDIN ZARIS BIN HAMIDI' | E ('E'): '0' | M ('M'): '0'
+  Formulas:
+  A ('A'): = 205234 [Calculated Val: 'NSN3052029']
+  B ('B'): = _xlfn.IFNA(INDEX('AWB Data'!E:E,MATCH(A6,'AWB Data'!D:D,0)),"-") [Calculated Val: 'HAMDIN ZARIS BIN HAMIDI']
+  E ('E'): = 0 [Calculated Val: '0']
+  M ('M'): = 0 [Calculated Val: '0']
+
+--------------------------------------------------
+SHEET: Pickup (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: Sheet5 (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: Yoyi (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: Palong (Skipped Details)
+--------------------------------------------------
+
+--------------------------------------------------
+SHEET: Sorter (Skipped Details)
+--------------------------------------------------
+
