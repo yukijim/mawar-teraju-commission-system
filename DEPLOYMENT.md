@@ -94,22 +94,22 @@ DEFAULT_ADMIN_PASSWORD=Admin@123456789
 ```
 
 ### D. Konfigurasi Nginx
-1. Salin fail konfigurasi [nginx.conf](file:///c:/_MT%20Sistem%20Com/backend/nginx.conf) ke `/etc/nginx/sites-available/commission.mawar-teraju.com`.
+1. Salin fail konfigurasi [nginx.conf](file:///c:/_MT%20Sistem%20Com/backend/nginx.conf) ke `/etc/nginx/sites-available/semak.reekod.com`.
 2. Aktifkan konfigurasi dan muat semula Nginx:
    ```bash
-   sudo ln -s /etc/nginx/sites-available/commission.mawar-teraju.com /etc/nginx/sites-enabled/
+   sudo ln -s /etc/nginx/sites-available/semak.reekod.com /etc/nginx/sites-enabled/
    sudo nginx -t
    sudo systemctl reload nginx
    ```
 
 ### E. Cloudflare DNS & SSL Setup
-1. Tambah rekod **A** di Cloudflare DNS yang memadankan subdomain `commission.mawar-teraju.com` ke IP VPS anda.
+1. Tambah rekod **A** di Cloudflare DNS yang memadankan subdomain `semak.reekod.com` ke IP VPS anda.
 2. Aktifkan butang **Proxy status (Orange Cloud)** Cloudflare untuk perlindungan DDoS dan CDN caching.
 3. Di tab SSL/TLS Cloudflare, set mod enkripsi kepada **Full (strict)**.
 4. Pasang Let's Encrypt SSL di VPS menggunakan Certbot untuk enkripsi hujung-ke-hujung yang sah:
    ```bash
    sudo apt-get install -y certbot python3-certbot-nginx
-   sudo certbot --nginx -d commission.mawar-teraju.com
+   sudo certbot --nginx -d semak.reekod.com
    ```
 
 ---
@@ -155,6 +155,6 @@ Sistem pemantauan diagnostik boleh diakses oleh pentadbir melalui `GET /api/v1/a
 Selepas setiap deployment baru selesai:
 1. Jalankan skrip smoke test untuk mengesahkan kestabilan endpoint aplikasi:
    ```bash
-   SMOKE_HOST="commission.mawar-teraju.com" SMOKE_PORT="443" node backend/scripts/smoke.js
+    SMOKE_HOST="semak.reekod.com" SMOKE_PORT="443" node backend/scripts/smoke.js
    ```
 2. Skrip akan memaparkan kod status dan metadata ping. Jika jawapan mengandungi `status: "ok"`, deployment dianggap lulus dan sedia untuk kegunaan pengeluaran.
