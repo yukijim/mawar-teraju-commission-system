@@ -1,89 +1,84 @@
 # IMPORT FLOW SPECIFICATION (Sistem Komisen Mawar Teraju)
 
-Dokumen ini memperincikan saluran paip import (import pipeline) teknikal dari fail fizikal Excel sehingga menjadi rekod statik dalam pangkalan data.
+This document details the backend processing pipeline for Excel files from client upload to structured records in the PostgreSQL database.
 
 ---
 
-## 1. Saluran Paip Pemprosesan Fail (File Processing Pipeline)
+## 1. Backend Processing Pipeline
 
-Proses import bertaraf **business-first** memastikan pengesahan skema lajur dan hubungan relational dikira sepenuhnya sebelum penulisan ke pangkalan data dijalankan.
+The Mawar Teraju Excel Upload Engine parses raw spreadsheet files, normalizes columns dynamically, validates schemas, verifies NRIC profiles, and executes transactional bulk inserts.
 
-```
-[ Upload Excel ]
-       │
-       ▼
-[ Parse Sheets (SheetJS) ] ──► (Imbas 'Dispatcher Comm' & 'Details Penalty')
-       │
-       ▼
-[ Schema Validation ] ─────► (Sahkan Kewujudan Kolum Wajib)
-       │
-       ▼
-[ Build Master Mapping ] ──► (Petakan Dispatcher ID ──► COUNT DIGIT/No. IC)
-       │
-       ▼
-[ Compute Calculations ] ──► (Hitung RM1.11 Comm, Extra Weight Comm, Nett, Rounding)
-       │
-       ▼
-[ Resolve Deductions ] ────► (VLOOKUP details menggunakan Master Mapping)
-       │
-       ▼
-[ Save to IndexedDB ] ─────► (Tulis ke Store 'commission_records' & 'deduction_records')
+```text
+       [ POST /api/v1/upload/commission or /deduction ]
+                              │
+                              ▼
+                      [ Read File Buffer ]
+                              │
+                              ▼
+                [ Calculate SHA-256 Checksum ]
+                              │
+                              ▼
+            [ Check duplicates in batches table ]
+            ├── Found -> Overwrite flag & ADMIN check ?
+            │            ├── Yes -> Stage transaction for Overwrite
+            │            └── No  -> Abort (409 Conflict: UPLOAD_DUPLICATE_FILE)
+            └── Not Found -> Proceed to parsing
+                              │
+                              ▼
+                 [ Parse Workbook (SheetJS) ]
+                     (Option raw: false)
+                              │
+                              ▼
+             [ Header Dynamic Mapping & Validation ]
+           (Requires: ID, IC, Name, Numeric cols)
+                              │
+                              ▼
+                [ Extract & Resolve Mappings ]
+          (Build Master Mapping: ID -> NRIC / IC)
+                              │
+                              ▼
+                  [ PostgreSQL Transaction ]
+           ├── BEGIN
+           ├── If Overwrite: Delete existing Batch & Records
+           ├── Create New Batch (UUID)
+           ├── Bulk Insert Mappings / Commissions / Deductions
+           ├── COMMIT (Audit Success: UPLOAD_SUCCESS)
+           └── ROLLBACK (On failure -> Audit: UPLOAD_FAILED)
 ```
 
 ---
 
-## 2. Peringkat Pemprosesan (Processing Stages)
+## 2. Processing Stages
 
-### Peringkat A: Pembacaan Sheet & Pengesahan Skema
-1.  Admin memuat naik fail Excel.
-2.  Sistem menyemak senarai sheet dalam fail:
-    *   Mencari sheet `"Dispatcher Comm"` untuk data komisen.
-    *   Mencari sheet `"Details Penalty"` untuk data denda.
-3.  Sistem mengesahkan lajur wajib. Lajur berikut **mesti ada** untuk pemprosesan:
-    *   **Dispatcher Comm**: `Delivery Dispatcher ID`, `Delivery Dispatcher Name`, `Parcel Quantity`, `Net Parcel`, `COUNT DIGIT` (Col Y), `FINAL AMOUNT TO PAY`.
-    *   **Details Penalty**: `Delivery Dispatcher ID`, `Delivery Dispatcher Name`, `TOTAL ALL LOST SHARED`, `TOTAL HQ PENALTY`.
-4.  Jika mana-mana lajur wajib tiada, import dibatalkan dan sistem memaparkan senarai lajur yang hilang.
+### Stage A: Checksum Deduplication & Overwrite
+1. The file is uploaded into memory as a buffer.
+2. The server computes the **SHA-256 cryptographic checksum** of the buffer.
+3. It checks if the checksum already exists in the `batches` table:
+   - If a duplicate is found, and `overwrite` parameter is not `true`, the upload is rejected.
+   - If `overwrite` is `true`, but the user role is not `ADMIN`, it is rejected.
+   - If `overwrite` is `true` and the user is an `ADMIN`, the engine registers an `UPLOAD_OVERWRITE` event and schedules the deletion of the existing batch inside the transaction block.
 
-### Peringkat B: Pengekstrakan Master Mapping (Dispatcher ID $\rightarrow$ IC)
-1.  Sistem mengimbas sheet `"Dispatcher Comm"` bermula baris ke-3 (data baris pertama selepas tajuk lajur).
-2.  Untuk setiap baris, sistem membaca:
-    *   `Delivery Dispatcher ID` (Col A)
-    *   `COUNT DIGIT` (Col Y) $\rightarrow$ Ini mengandungi No. IC
-3.  Sistem menapis No. IC dengan membuang ruang kosong dan sengkang (cth: `920605-05-5111` $\rightarrow$ `920605055111`).
-4.  Hubungan pemetaan ini disimpan ke dalam stor ingatan sementara (in-memory map) `MasterMapping`.
-5.  Setiap entri pemetaan ditulis ke dalam store `dispatcher_mappings` untuk rekod rujukan kekal sistem.
+### Stage B: Passive Cell Value Extraction
+1. The workbook is read using SheetJS with the configuration `{ raw: false }`.
+2. This forces the parser to read only the `.w` formatted text values (the computed cell values calculated internally by Excel) rather than raw variables.
+3. Formulas are never calculated in JavaScript, ensuring Excel remains the absolute **Single Source of Truth**.
 
-### Peringkat C: Pengiraan Komisen & Pelarasan
-1.  Sistem memproses baris-baris pada `"Dispatcher Comm"`.
-2.  Bagi setiap baris, nilai-nilai berikut dihitung secara programmatik:
-    *   `parcel_qty` = Nilai angka pada Col C.
-    *   `net_parcel` = Nilai angka pada Col D.
-    *   `exclude_extra_weight_yoyi` = `parcel_qty` - `net_parcel` (Col C - Col D).
-    *   `commission_rate` = `parcel_qty` * `1.11` (Kadar komisen tetap RM1.11).
-    *   `diff_rate_new_joiner` = Nilai angka pada Col G.
-    *   `count_pickup` = Nilai angka pada Col H.
-    *   `extra_weight_commission` = (Nilai komisen berat dari `AWB Data` jika dibekalkan) - `exclude_extra_weight_yoyi`. (Jika tiada data `AWB Data`, sistem menggunakan nilai statik dari Col I).
-    *   `total_commission` = `commission_rate` - `diff_rate_new_joiner` + `extra_weight_commission` (Col F - Col G + Col I).
-3.  Semua nilai disimpan sebagai jenis data angka (`Number`). Tiada formula Excel disimpan.
+### Stage C: Dynamic Header Mapping & Column Validation
+1. The parser normalizes headers (stripping carriage returns, converting to lowercase, and collapsing multiple spaces to a single space).
+2. It matches columns against mapping rules (e.g. `Delivery Dispatcher ID`, `COUNT DIGIT`, `RM1.11/Parcel Commission`, `Total Commission`).
+3. If required columns are missing, the import fails with a `400 Bad Request` (`UPLOAD_INVALID_TEMPLATE`).
 
-### Peringkat D: Penyelarasan Potongan & Denda (VLOOKUP Resolving)
-1.  Sistem membaca sheet `"Details Penalty"` bermula baris ke-3.
-2.  Bagi setiap baris, sistem memadankan `Delivery Dispatcher ID` (Col A) dalam `Details Penalty` dengan `MasterMapping` yang telah dibina.
-3.  No. IC yang sepadan diambil daripada map. Jika tiada, denda dianggap tidak dipetakan ke IC dan sistem memaparkan amaran, tetapi import diteruskan dengan rujukan Dispatcher ID.
-4.  Butiran denda berikut dibaca:
-    *   `lost_pic_signed` = Col C.
-    *   `lost_rate` = Col D.
-    *   `total_all_lost_shared` = Col E (Denda Lost Parcel Hub).
-    *   `lost_parcel_pic_signed` = Col H (Denda Lost Parcel Individu).
-    *   `arbi_individual` = Col J.
-    *   `rcgen_penalty` = Col K.
-    *   `qc_penalty` = Col L.
-    *   `total_hq_penalty_detail` = Col M.
-5.  Sistem menyilang (join) data potongan di atas dengan data potongan ringkasan pada `"Dispatcher Comm"` bagi dispatcher yang sama (advance, pending COD, duitnow, dll) dan menyimpannya ke store `deduction_records` berindeks `batchId` dan `ic_number`.
+### Stage D: Relational Mapping (Master Mapping)
+1. During a **Commission Excel** upload, the system reads columns `Delivery Dispatcher ID` and `COUNT DIGIT` (IC/NRIC).
+2. It strips hyphens and spaces from the IC column, creating a normalized 12-digit string.
+3. It writes or updates these dispatcher-to-IC relationships in the `dispatcher_mappings` table.
+4. During a **Deduction Excel** upload, raw records do not contain the IC number directly. The service queries the `dispatcher_mappings` table to resolve the IC number for each dispatcher ID. If a dispatcher's mapping does not exist, the record is skipped.
 
-### Peringkat E: Transaksi DB & Kemas Kini Status Batch
-1.  Sistem melancarkan satu transaksi penulisan asinkronus ke IndexedDB.
-2.  Data komisen dan potongan lama bagi batch ini dibersihkan terlebih dahulu (jika ia kemaskini batch draf).
-3.  Semua rekod komisen dan potongan baharu ditulis.
-4.  Metadata batch dikemas kini dengan jumlah baris yang berjaya diimport dan nama fail asal.
-5.  Proses import selesai. Status batch ditetapkan kepada `"draft"` (kecuali admin terus menekan terbit).
+### Stage E: PostgreSQL Transaction & Cascade Cleanups
+1. A transaction client is retrieved from the connection pool.
+2. The transaction is initiated: `BEGIN`.
+3. If overwriting, the existing duplicate batch is deleted: cascading rules automatically delete all commission or deduction records associated with that batch.
+4. A new batch metadata record is inserted with a UUID primary key.
+5. Records are bulk inserted in batches (multi-row INSERT query) to optimize speed and query counts.
+6. If all records insert successfully, the transaction is committed: `COMMIT`, and the audit trail logs `UPLOAD_SUCCESS`.
+7. If any database constraint is violated (e.g. duplicate IC, null values, key mismatch), the transaction rollbacks completely: `ROLLBACK`, restoring database state to its original form, and the audit log records `UPLOAD_FAILED`.

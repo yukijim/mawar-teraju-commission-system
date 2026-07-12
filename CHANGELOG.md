@@ -4,6 +4,23 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.4.0] - 2026-07-12
+
+### Selesai (Added)
+* **Excel Upload Engine & Transactional Bulk Import (v1.4.0)**:
+  * **Enjin Import Pasif Backend**: Menggunakan SheetJS dengan konfigurasi `{ raw: false }` untuk membaca hanya nilai terhitung yang dipaparkan dalam sel Excel (no JS formula recalculations), mengekalkan Excel sebagai sumber kebenaran tunggal.
+  * **Pengesanan Fail Duplikat (SHA-256 Checksum)**: Menjana checksum SHA-256 bagi setiap fail muat naik untuk mengesan pertindihan. Membenarkan overwrite rekod lama hanya jika parameter overwrite dibekalkan dan pemanggil memegang peranan `ADMIN`.
+  * **Transaksi PostgreSQL & Cascading Rollback**: Menggunakan transaksi pool database (`BEGIN` / `COMMIT` / `ROLLBACK`) untuk memastikan integriti data import secara atomik. Kegagalan mana-mana rekod akan melancarkan rollback penuh.
+  * **Log Audit Keselamatan**: Merekodkan perlakuan log upload secara automatik: `UPLOAD_STARTED`, `UPLOAD_SUCCESS`, `UPLOAD_FAILED`, dan `UPLOAD_OVERWRITE`.
+  * **Had Kadar Muat Naik**: Mengintegrasikan rate limiter khusus `uploadLimiter` (maksimum 20 requests/minute) bagi melindungi pelayan.
+  * **API REST Upload**: Menyediakan endpoint API:
+    * `POST /api/v1/upload/commission`
+    * `POST /api/v1/upload/deduction`
+    * `GET /api/v1/upload/history`
+    * `GET /api/v1/upload/:batchId`
+
+---
+
 ## [1.3.0] - 2026-07-12
 
 ### Selesai (Added)

@@ -1,44 +1,59 @@
 # Database Schema Specification - PostgreSQL
 
-Dokumen ini memperincikan reka bentuk skema pangkalan data hubungan PostgreSQL bagi Commission Lookup System. Skema ini dioptimumkan untuk kelajuan pencarian dispatcher, integriti hubungan (*foreign key constraints*), dan cascading rollback untuk penghapusan batch secara menyeluruh.
+This document details the PostgreSQL relational database schema for the Mawar Teraju Commission System. All tables use cryptographically random UUID primary keys, support session token rotation, and enforce cascading constraint deletion for batch rollbacks.
 
 ---
 
-## 1. Gambar Rajah Hubungan Entiti (ERD)
+## 1. Entity Relationship Diagram (ERD)
 
 ```mermaid
 erDiagram
     users {
-        int id PK
+        uuid id PK
         varchar username UK
         varchar password_hash
         varchar role
+        varchar status
+        timestamp created_at
+    }
+    user_refresh_tokens {
+        uuid id PK
+        uuid user_id FK
+        text token_hash UK
+        timestamp expires_at
+        timestamp revoked_at
         timestamp created_at
     }
     batches {
         uuid id PK
-        varchar batch_name UK
+        varchar name
         int month
         int year
         varchar status
-        int active
-        varchar commission_file_name
-        varchar deduction_file_name
-        timestamp created_at
+        boolean active
+        varchar filename
+        varchar type
+        varchar checksum UK
+        int record_count
+        uuid uploaded_by FK
+        timestamp uploaded_at
     }
     dispatcher_mappings {
-        varchar dispatcher_id PK
+        uuid id PK
+        varchar dispatcher_id UK
         varchar ic_number UK
         varchar name
-        timestamp created_at
+        timestamp last_updated
     }
     commission_records {
-        int id PK
+        uuid id PK
         uuid batch_id FK
-        varchar dispatcher_id FK
+        varchar dispatcher_id
+        varchar ic_number
+        varchar name
         int parcel_qty
         int net_parcel
-        numeric total_commission
+        numeric commission_rate
         numeric nett_commission
         numeric final_amount_to_pay
         varchar status_payment
@@ -46,182 +61,206 @@ erDiagram
         timestamp created_at
     }
     deduction_records {
-        int id PK
+        uuid id PK
         uuid batch_id FK
-        varchar dispatcher_id FK
-        numeric lost_pic_signed
+        varchar dispatcher_id
+        varchar ic_number
+        varchar name
         numeric hq_penalty
-        numeric late_cod_penalty
-        numeric lost_parcel_hub_scan
-        text remark
+        numeric lost_pic_signed
+        numeric total_all_lost_shared
         timestamp created_at
     }
     audit_logs {
-        int id PK
-        timestamp timestamp
-        varchar username
+        uuid id PK
+        uuid user_id FK
         varchar action
-        text details
+        varchar ip_address
+        varchar user_agent
+        varchar status
+        jsonb details
+        timestamp created_at
     }
 
+    users ||--o{ user_refresh_tokens : "has"
+    users ||--o{ batches : "uploads"
     batches ||--o{ commission_records : "has cascade"
     batches ||--o{ deduction_records : "has cascade"
-    dispatcher_mappings ||--o{ commission_records : "references"
-    dispatcher_mappings ||--o{ deduction_records : "references"
+    users ||--o{ audit_logs : "triggers"
 ```
 
 ---
 
-## 2. Struktur Jadual SQL (DDL Schema)
+## 2. Table Schemas & DDL Definition
 
-### A. Jadual Pengguna & Log Sistem
+### A. Authentication & Audit Logs
 
-#### 1. Jadual Pengguna (`users`)
-Storan data kredensial pentadbir (Admin) untuk kawalan RBAC.
+#### 1. Table: `users`
 ```sql
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name VARCHAR(255) NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'admin' CHECK (role IN ('admin', 'dispatch')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    role VARCHAR(50) NOT NULL CHECK (role IN ('ADMIN', 'DISPATCH')),
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX idx_users_username ON users(username);
 ```
 
-#### 2. Jadual Log Audit (`audit_logs`)
-Jejak audit automatik bagi merekod setiap perlakuan kritikal pentadbir dan carian dispatcher.
+#### 2. Table: `user_refresh_tokens`
+```sql
+CREATE TABLE user_refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_refresh_tokens_hash ON user_refresh_tokens(token_hash);
+```
+
+#### 3. Table: `audit_logs`
 ```sql
 CREATE TABLE audit_logs (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    username VARCHAR(50) NOT NULL,
-    action VARCHAR(50) NOT NULL,
-    details TEXT
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    user_agent VARCHAR(500) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    details JSONB NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 ```
 
 ---
 
-### B. Jadual Pengurusan Batch
+### B. Batch Management
 
-#### 3. Jadual Batches (`batches`)
-Menyimpan data induk untuk setiap batch bulanan komisen yang diimport.
+#### 4. Table: `batches`
 ```sql
 CREATE TABLE batches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    batch_name VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
     month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
     year INTEGER NOT NULL CHECK (year >= 2020),
-    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
-    active INTEGER DEFAULT 1 CHECK (active IN (0, 1)),
-    commission_file_name VARCHAR(255) NOT NULL,
-    deduction_file_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
+    active BOOLEAN NOT NULL DEFAULT FALSE,
+    filename VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('COMMISSION', 'DEDUCTION')),
+    checksum VARCHAR(64) UNIQUE NOT NULL,
+    record_count INTEGER NOT NULL DEFAULT 0,
+    uploaded_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX idx_batches_name ON batches(name);
+CREATE INDEX idx_batches_active ON batches(active);
+CREATE INDEX idx_batches_checksum ON batches(checksum);
 ```
 
 ---
 
-### C. Jadual Pemetaan & Transaksi Komisen
+### C. Dispatcher Mappings & Records
 
-#### 4. Jadual Pemetaan Dispatcher (`dispatcher_mappings`)
-Storan berasingan untuk memetakan Dispatcher ID Kewangan ke Nombor IC yang sah. Data diisi secara automatik semasa pengesahan fail import komisen.
+#### 5. Table: `dispatcher_mappings`
 ```sql
 CREATE TABLE dispatcher_mappings (
-    dispatcher_id VARCHAR(50) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    dispatcher_id VARCHAR(100) UNIQUE NOT NULL,
     ic_number VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(255) NOT NULL,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_mappings_ic ON dispatcher_mappings(ic_number);
+CREATE INDEX idx_dispatcher_mappings_ic ON dispatcher_mappings(ic_number);
 ```
 
-#### 5. Jadual Rekod Komisen (`commission_records`)
-Menyimpan data pre-calculated komisen dispatcher yang diimport secara pasif daripada Excel.
+#### 6. Table: `commission_records`
 ```sql
 CREATE TABLE commission_records (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     batch_id UUID NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
-    dispatcher_id VARCHAR(50) NOT NULL REFERENCES dispatcher_mappings(dispatcher_id),
+    dispatcher_id VARCHAR(100) NOT NULL,
+    ic_number VARCHAR(20) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     
-    -- Komisen & Volume
-    parcel_qty INTEGER DEFAULT 0,
-    net_parcel INTEGER DEFAULT 0,
-    exclude_extra_weight_yoyi INTEGER DEFAULT 0,
-    commission_rate NUMERIC(10, 2) DEFAULT 0.00,
-    diff_rate_new_joiner NUMERIC(10, 2) DEFAULT 0.00,
-    count_pickup INTEGER DEFAULT 0,
-    extra_weight_commission NUMERIC(10, 2) DEFAULT 0.00,
-    total_commission NUMERIC(10, 2) DEFAULT 0.00,
+    parcel_qty INTEGER NOT NULL DEFAULT 0,
+    net_parcel INTEGER NOT NULL DEFAULT 0,
+    exclude_extra_weight_yoyi INTEGER NOT NULL DEFAULT 0,
+    commission_rate NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    diff_rate_new_joiner NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    count_pickup INTEGER NOT NULL DEFAULT 0,
+    extra_weight_commission NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    total_commission NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    -- Penambahan
-    addition_pickup_commission NUMERIC(10, 2) DEFAULT 0.00,
-    addition_fuel_allowance NUMERIC(10, 2) DEFAULT 0.00,
-    addition_sorter NUMERIC(10, 2) DEFAULT 0.00,
+    addition_pickup_commission NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    addition_fuel_allowance NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    addition_sorter NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    -- Potongan
-    deduction_advance NUMERIC(10, 2) DEFAULT 0.00,
-    deduction_pending_cod NUMERIC(10, 2) DEFAULT 0.00,
-    deduction_hq_penalty NUMERIC(10, 2) DEFAULT 0.00,
-    deduction_duitnow_penalty NUMERIC(10, 2) DEFAULT 0.00,
-    deduction_late_cod_penalty NUMERIC(10, 2) DEFAULT 0.00,
-    deduction_lost_individual NUMERIC(10, 2) DEFAULT 0.00,
-    deduction_lost_parcel_hub NUMERIC(10, 2) DEFAULT 0.00,
+    deduction_advance NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_pending_cod NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_hq_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_duitnow_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_late_cod_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_lost_individual NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_lost_parcel_hub NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    -- Ringkasan
-    nett_commission NUMERIC(10, 2) DEFAULT 0.00,
-    final_amount_to_pay NUMERIC(10, 2) DEFAULT 0.00,
+    nett_commission NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    final_amount_to_pay NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    -- Metadata Excel
-    system_reg VARCHAR(50),
-    parcel_qty_jms INTEGER DEFAULT 0,
-    status_payment VARCHAR(50),
-    date_payment VARCHAR(50),
-    remark TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    system_reg VARCHAR(100) NULL,
+    parcel_qty_jms INTEGER NOT NULL DEFAULT 0,
+    status_payment VARCHAR(50) NOT NULL DEFAULT 'SUCCESS',
+    date_payment VARCHAR(50) NULL,
+    remark TEXT NULL,
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT uq_commission_batch_ic UNIQUE (batch_id, ic_number)
 );
-
--- Indeks komposit untuk pencarian carian pantas
-CREATE INDEX idx_comm_batch_disp ON commission_records(batch_id, dispatcher_id);
+CREATE INDEX idx_commission_records_batch ON commission_records(batch_id);
+CREATE INDEX idx_commission_records_ic ON commission_records(ic_number);
 ```
 
-#### 6. Jadual Perincian Potongan (`deduction_records`)
-Menyimpan maklumat butiran penalti harian yang diperincikan daripada tab raw Excel.
+#### 7. Table: `deduction_records`
 ```sql
 CREATE TABLE deduction_records (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     batch_id UUID NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
-    dispatcher_id VARCHAR(50) NOT NULL REFERENCES dispatcher_mappings(dispatcher_id),
+    dispatcher_id VARCHAR(100) NOT NULL,
+    ic_number VARCHAR(20) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     
-    date_str VARCHAR(20),
-    driver_id VARCHAR(50),
-    driver_name VARCHAR(100),
+    deduction_advance NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_pending_cod NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_hq_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_duitnow_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_late_cod_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_lost_individual NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_lost_parcel_hub NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    -- Kategori Penalti
-    lost_pic_signed NUMERIC(10, 2) DEFAULT 0.00,
-    pending_cod_returned NUMERIC(10, 2) DEFAULT 0.00,
-    hq_penalty NUMERIC(10, 2) DEFAULT 0.00,
-    late_cod_penalty NUMERIC(10, 2) DEFAULT 0.00,
-    lost_parcel_hub_scan NUMERIC(10, 2) DEFAULT 0.00,
-    lost_individual_scan NUMERIC(10, 2) DEFAULT 0.00,
-    duitnow_penalty NUMERIC(10, 2) DEFAULT 0.00,
+    lost_pic_signed NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    lost_rate NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    total_all_lost_shared NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    lost_parcel_pic_signed NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    arbi_individual NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    rcgen_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    qc_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    total_hq_penalty_detail NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    remark TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT uq_deduction_batch_ic UNIQUE (batch_id, ic_number)
 );
-
-CREATE INDEX idx_ded_batch_disp ON deduction_records(batch_id, dispatcher_id);
+CREATE INDEX idx_deduction_records_batch ON deduction_records(batch_id);
+CREATE INDEX idx_deduction_records_ic ON deduction_records(ic_number);
 ```
-
----
-
-## 3. Kekunci & Kekangan Integriti (Constraints & Cascade)
-
-1.  **Cascading Deletes**: `ON DELETE CASCADE` ditetapkan pada kekunci asing `batch_id` bagi `commission_records` dan `deduction_records`. Apabila rekod induk di dalam jadual `batches` dipadamkan (Rollback Batch), kesemua rekod data transaksi dan butiran penalti berkaitan akan terpadam secara automatik untuk mengelakkan *orphaned records*.
-2.  **Unique Constraints**:
-    *   `batches.batch_name` mestilah unik bagi mengelakkan pertindihan nama import fail bagi bulan yang sama.
-    *   `dispatcher_mappings.ic_number` mestilah unik untuk memastikan satu dispatcher hanya terikat kepada satu nombor IC yang sah dalam master mapping.
-3.  **Check Constraints**:
-    *   Bulan mestilah di antara 1 hingga 12.
-    *   Tahun mestilah 2020 ke atas.
-    *   Status batch hanya boleh diisi dengan `'draft'`, `'published'`, atau `'archived'`.
