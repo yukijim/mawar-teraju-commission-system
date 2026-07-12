@@ -4,6 +4,21 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.3.0] - 2026-07-12
+
+### Selesai (Added)
+* **Security Hardening & Refactoring (v1.3.0)**:
+  * **Hapus Hardcoded Kredensial**: Kredensial pentadbir asal dialihkan sepenuhnya ke pemboleh ubah persekitaran (`.env`).
+  * **UUID Secara Global**: Menukarkan semua kunci utama jadual Postgres (`users`, `user_refresh_tokens`, `audit_logs`) daripada `SERIAL`/`BIGSERIAL` kepada `UUID` menggunakan standard `gen_random_uuid()`.
+  * **Hashing Refresh Token**: Melindungi refresh token di dalam pangkalan data dengan kaedah pencincangan SHA-256 (hanya hash disimpan bagi mengelakkan kebocoran sesi).
+  * **Sistem Jejak Audit (Audit Logging)**: Penambahan jadual `audit_logs` dan `auditLogService` yang merakam secara automatik setiap aktiviti log masuk (berjaya/gagal), log keluar, token tidak sah, dan penggunaan refresh token.
+  * **Polisi Keselamatan Kata Laluan**: Menguatkuasakan had minimum 12 aksara, penggunaan huruf besar, huruf kecil, angka, dan simbol khas pada kata laluan menggunakan validator `express-validator`.
+  * **Rate Limiting Terperinci (Route-Specific Limiters)**: Menghapuskan pembatas kadar global dan menggantikannya dengan pembatas khusus per-laluan (`loginLimiter` 5 req/min, `searchLimiter` 100 req/min, `uploadLimiter` 20 req/min, `adminLimiter` 60 req/min).
+  * **Piawaian Ralat Standard (API Error Standard)**: Menyeragamkan respons ralat API backend kepada struktur `{ success: false, code: "...", message: "...", errors: [] }`.
+  * **Helmet Content Security Policy (CSP)**: Mengaktifkan parameter kawalan dasar kandungan Helmet bagi menghalang serangan XSS dan JWT replay.
+
+---
+
 ## [1.2.0-beta] - 2026-07-11
 
 ### Selesai (Added)

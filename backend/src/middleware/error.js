@@ -2,13 +2,16 @@ const variables = require('../config/variables');
 
 /**
  * Custom application error class for handling operational errors.
+ * Now captures programmatic error code and errors array.
  */
 class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode, code = 'INTERNAL_SERVER_ERROR', errors = []) {
     super(message);
     this.statusCode = statusCode;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
     this.isOperational = true;
+    this.code = code;
+    this.errors = errors;
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -16,35 +19,35 @@ class AppError extends Error {
 
 /**
  * Global Express error handling middleware
+ * Enforces standardized response structure: { success: false, code, message, errors }
  */
 const errorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
+  err.code = err.code || 'INTERNAL_SERVER_ERROR';
+  err.errors = err.errors || [];
+
+  const responsePayload = {
+    success: false,
+    code: err.code,
+    message: err.message,
+    errors: err.errors,
+  };
 
   if (variables.NODE_ENV === 'development') {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-      error: {
-        name: err.name,
-        statusCode: err.statusCode,
-        isOperational: err.isOperational
-      },
-      stack: err.stack,
-    });
+    responsePayload.stack = err.stack;
+    return res.status(err.statusCode).json(responsePayload);
   } else {
-    // Production: Hide sensitive stack traces
+    // Production Mode: Limit exposure of sensitive debug information
     if (err.isOperational) {
-      res.status(err.statusCode).json({
-        status: err.status,
-        message: err.message,
-      });
+      return res.status(err.statusCode).json(responsePayload);
     } else {
-      // Programming or third-party library errors
+      // Unhandled programming error or third-party package error
       console.error('[Unhandled Server Error] ', err);
-      res.status(500).json({
-        status: 'error',
+      return res.status(500).json({
+        success: false,
+        code: 'INTERNAL_SERVER_ERROR',
         message: 'Internal server error occurred.',
+        errors: [],
       });
     }
   }

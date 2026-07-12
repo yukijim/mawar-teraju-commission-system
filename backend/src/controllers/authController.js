@@ -13,7 +13,7 @@ class AuthController {
     try {
       const { username, password } = req.body;
       
-      const { user, accessToken, refreshToken } = await authService.login(username, password);
+      const { user, accessToken, refreshToken } = await authService.login(username, password, req);
 
       const isProduction = process.env.NODE_ENV === 'production';
 
@@ -39,7 +39,7 @@ class AuthController {
         refreshToken,
       });
     } catch (err) {
-      return sendResponse(res, 401, false, err.message || 'Login failed.');
+      return sendResponse(res, 401, false, err.message || 'Login failed.', null, [], 'AUTH_INVALID_CREDENTIALS');
     }
   };
 
@@ -57,7 +57,7 @@ class AuthController {
       }
 
       if (userId) {
-        await authService.logout(userId, refreshToken);
+        await authService.logout(userId, refreshToken, req);
       }
 
       // Clear both cookies
@@ -101,10 +101,10 @@ class AuthController {
       }
 
       if (!refreshToken) {
-        return sendResponse(res, 400, false, 'Refresh token is missing.');
+        return sendResponse(res, 400, false, 'Refresh token is missing.', null, [], 'AUTH_MISSING_REFRESH_TOKEN');
       }
 
-      const { accessToken } = await authService.refresh(refreshToken);
+      const { accessToken } = await authService.refresh(refreshToken, req);
       const isProduction = process.env.NODE_ENV === 'production';
 
       // Update the access token cookie
@@ -119,7 +119,7 @@ class AuthController {
         accessToken,
       });
     } catch (err) {
-      return sendResponse(res, 401, false, err.message || 'Token refresh failed.');
+      return sendResponse(res, 401, false, err.message || 'Token refresh failed.', null, [], 'AUTH_INVALID_REFRESH_TOKEN');
     }
   };
 }

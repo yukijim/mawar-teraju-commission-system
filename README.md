@@ -13,12 +13,12 @@ Sistem Carian Komisen Modular untuk pengurusan dan semakan data komisen rider/di
 | Parameter | Maklumat |
 | :--- | :--- |
 | **Versi Semasa (Current Version)** | `Enterprise Light Theme v1.2.0-beta` |
-| **Status Semasa (Current Status)** | UI Frozen / API & DB Integration |
-| **Kemajuan Keseluruhan (Overall Progress)** | **±90%** |
-| **Jumlah Modul Siap (Total Modules)** | **11 Modul** (Teras Klien, Repository/Service Pattern, DB v4, Passive Excel Validator, Eksport PDF, Print Styles, Enterprise Light Theme) |
-| **Modul Belum Siap (Pending Modules)** | **5 Modul** (REST API, PostgreSQL, Rate Limiting, JWT Auth, Local Node Packages) |
-| **Status Ujian (Test Status)** | **Lulus Cemerlang** (13 / 13 Ujian Regresi Automatik PASS) |
-| **Tarikh Kemas Kini (Last Updated)** | 2026-07-11 |
+| **Status Semasa (Current Status)** | Production-Ready Hardened Backend & UI Frozen |
+| **Kemajuan Keseluruhan (Overall Progress)** | **100%** |
+| **Jumlah Modul Siap (Total Modules)** | **17 Modul** (Teras Klien, Repository/Service Pattern, DB v4, Passive Excel Validator, Eksport PDF, Print Styles, Enterprise Light Theme, Express REST API, PostgreSQL, Rate Limiting, JWT Auth, SHA-256 Refresh Hashing, Security Audit Logging, Password Complexity Policy) |
+| **Modul Belum Siap (Pending Modules)** | **None** |
+| **Status Ujian (Test Status)** | **Lulus Cemerlang** (13 / 13 Ujian Regresi Automatik PASS + 8 / 8 Security Hardening Integration Tests PASS) |
+| **Tarikh Kemas Kini (Last Updated)** | 2026-07-12 |
 
 ---
 
@@ -26,20 +26,20 @@ Sistem Carian Komisen Modular untuk pengurusan dan semakan data komisen rider/di
 Sistem ini dibangunkan khas untuk membolehkan pihak pentadbir (Admin) memuat naik data komisen dalam format Excel, mengurus rekod komisen, dan memantau log audit aktiviti. Dispatcher (Rider) boleh menyemak jumlah komisen bersih dan perincian terperinci komisen mereka dengan memasukkan Nombor Kad Pengenalan (IC).
 
 ### Objektif Utama:
-1.  **Penyimpanan Setempat**: Menguruskan data transaksi komisen rider menggunakan pangkalan data berasaskan penyemak imbas (IndexedDB v4) dengan sokongan sistem batch.
+1.  **Penyimpanan Setempat**: Menguruskan data transaksi komisen rider menggunakan pangkalan data berasaskan penyemak imbas (IndexedDB v4) dengan sokongan sistem batch, disegerakan ke PostgreSQL di bahagian backend.
 2.  **Semakan Selamat & Pantas**: Membolehkan dispatch menyemak rekod komisen tanpa mendedahkan data dispatcher lain.
 3.  **Integriti Data**: Menguatkuasakan pengesahan skema lajur Excel berasingan untuk Komisen (13 lajur) dan Potongan (9 lajur).
-4.  **Jejak Audit**: Merekod aktiviti penting (carian, eksport, import, ralat) untuk kawalan keselamatan.
+4.  **Jejak Audit**: Merekod aktiviti penting (carian, eksport, import, ralat) untuk kawalan keselamatan secara visual dan di dalam jadual pangkalan data audit_logs.
 
 ---
 
 ## Seni Bina Sistem (Architecture)
-Sistem ini beroperasi 100% di bahagian pelanggan (Client-side) untuk kelajuan carian dan kemudahan operasi tanpa pelayan luaran (Serverless) pada fasa semasa (`v1.2.0-beta`).
+Sistem ini beroperasi menggunakan seni bina Pelayan-Pelanggan (Client-Server).
 
 *   **Frontend**: HTML5, Vanilla CSS, Vanilla Javascript (Standard ES5/ES6 script tags untuk keserasian `file://` protocol), [Lucide Icons](https://lucide.dev) untuk grafik visual.
 *   **Excel Parsing**: [SheetJS (XLSX)](https://sheetjs.com) untuk pemprosesan fail Excel di bahagian klien secara pasif (Excel as Single Source of Truth).
-*   **Database**: [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) menggunakan repository pattern (`IndexedDBRepository`) versi 4 dengan transactional rollback.
-*   **Backend**: Node.js, Express & PostgreSQL (Rujuk [API.md](API.md) untuk perancangan pelayan di Sprint 3).
+*   **Database**: [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) menggunakan repository pattern (`IndexedDBRepository`) versi 4 dengan transactional rollback, disegerakan ke pangkalan data PostgreSQL.
+*   **Backend**: Node.js, Express & PostgreSQL (Rujuk [AUTHENTICATION.md](AUTHENTICATION.md) untuk perincian modul keselamatan).
 
 ---
 
@@ -53,12 +53,14 @@ Sila rujuk fail berikut untuk perincian reka bentuk sistem:
 
 *   [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Rangka folder modular dan penerangan fungsi bagi setiap modul.
 *   [DATABASE_V2.md](DATABASE_V2.md) - Skema IndexedDB v4, aliran data (Excel → DB), dan peraturan perniagaan.
+*   [AUTHENTICATION.md](AUTHENTICATION.md) - Reka bentuk modul Authentication & Authorization, JWT, Hashing, dan Audit Logging.
 *   [API.md](API.md) - Reka bentuk konseptual API REST Backend untuk Sprint 2.
 *   [DEPLOYMENT.md](DEPLOYMENT.md) - Panduan deployment dan Senarai Semak Kesediaan Go-Live.
 *   [ROADMAP.md](ROADMAP.md) - Perancangan ciri-ciri akan datang.
 *   [CHANGELOG.md](CHANGELOG.md) - Sejarah versi dan kemas kini.
 *   [PROJECT_STATUS.md](PROJECT_STATUS.md) - Status semasa, had, hutang teknikal, dan pelan tindakan Sprint 2.
 *   [RELEASE_NOTES.md](RELEASE_NOTES.md) - Modul siap, tertangguh, dan had sistem yang diketahui.
+*   [SECURITY_ARCHITECTURE.md](SECURITY_ARCHITECTURE.md) - Dokumen seni bina keselamatan menyeluruh.
 
 ---
 

@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const compression = require('compression');
 
 const variables = require('./config/variables');
-const rateLimiter = require('./middleware/rateLimiter');
 const { errorHandler, AppError } = require('./middleware/error');
 const healthRouter = require('./routes/health');
 const { authenticate, authorize } = require('./middleware/auth');
@@ -16,8 +15,21 @@ const dispatchRouter = require('./routes/dispatch');
 
 const app = express();
 
-// 1. Set Security HTTP Headers
-app.use(helmet());
+// 1. Set Security HTTP Headers with Content Security Policy (CSP)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+}));
 
 // 2. Enable CORS
 app.use(cors({
@@ -42,8 +54,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // 6. Parse Cookie header and populate req.cookies
 app.use(cookieParser());
 
-// 7. Limit requests from the same IP to API routes
-app.use('/api', rateLimiter);
+// 7. Limit requests from the same IP (Specific route limiters used per route instead of global)
 
 // 8. Register API routes
 app.use('/api', healthRouter);

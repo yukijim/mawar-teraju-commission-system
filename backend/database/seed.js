@@ -3,22 +3,30 @@ const { pool } = require('../src/config/database');
 const variables = require('../src/config/variables');
 
 /**
- * Seeds the default Admin user if they do not already exist in the database.
+ * Seeds the default Admin user using credentials specified in the environment variables.
+ * Aborts the operation if the credentials are not provided.
  */
 const seedAdmin = async () => {
-  const username = 'admin';
-  const rawPassword = 'Admin@123456';
+  const username = variables.DEFAULT_ADMIN_USERNAME;
+  const rawPassword = variables.DEFAULT_ADMIN_PASSWORD;
+
+  // Enforce credentials check from variables.js
+  if (!username || !rawPassword) {
+    console.error('[Seed Failure] Aborting database seeding. Environment variables "DEFAULT_ADMIN_USERNAME" and "DEFAULT_ADMIN_PASSWORD" must be defined in the .env file.');
+    process.exit(1);
+  }
+
   const fullName = 'System Administrator';
   const role = 'ADMIN';
 
-  console.log(`[Seed Info] Connecting to ${variables.DATABASE_HOST}:${variables.DATABASE_PORT}...`);
+  console.log(`[Seed Info] Connecting to database on ${variables.DATABASE_HOST}:${variables.DATABASE_PORT}...`);
 
   try {
     // 1. Check if user already exists
     const userCheck = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
     
     if (userCheck.rows.length > 0) {
-      console.log(`[Seed Info] User "${username}" already exists. Seeding skipped.`);
+      console.log(`[Seed Info] Admin user "${username}" already exists in the database. Seeding skipped.`);
       return;
     }
 

@@ -12,7 +12,10 @@ const variables = {
   DATABASE_NAME: process.env.DATABASE_NAME || 'mawar_teraju_db',
   DATABASE_USER: process.env.DATABASE_USER || 'postgres',
   DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || '',
-  JWT_SECRET: process.env.JWT_SECRET || 'secret'
+  JWT_SECRET: process.env.JWT_SECRET || 'secret',
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'refresh_secret',
+  DEFAULT_ADMIN_USERNAME: process.env.DEFAULT_ADMIN_USERNAME || '',
+  DEFAULT_ADMIN_PASSWORD: process.env.DEFAULT_ADMIN_PASSWORD || ''
 };
 
 // Simple validation
@@ -22,7 +25,8 @@ const requiredEnv = [
   'DATABASE_NAME',
   'DATABASE_USER',
   'DATABASE_PASSWORD',
-  'JWT_SECRET'
+  'JWT_SECRET',
+  'JWT_REFRESH_SECRET'
 ];
 
 requiredEnv.forEach((key) => {

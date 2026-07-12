@@ -1,10 +1,11 @@
 const express = require('express');
+const { searchLimiter } = require('../middleware/rateLimiter');
 const { sendResponse } = require('../utils/response');
 
 const router = express.Router();
 
 // Matches GET /api/dispatch/commissions
-router.get('/commissions', (req, res) => {
+router.get('/commissions', searchLimiter, (req, res) => {
   return sendResponse(res, 200, true, 'Dispatcher commission details retrieved successfully.', {
     dispatcher: {
       id: req.user.id,

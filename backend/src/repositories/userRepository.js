@@ -2,6 +2,7 @@ const db = require('../config/database');
 
 /**
  * Data Access Layer for User and Session authentication structures.
+ * Now hardened with UUIDs and token hash support.
  */
 class UserRepository {
   /**
@@ -27,53 +28,64 @@ class UserRepository {
   }
 
   /**
-   * Saves a newly generated refresh token
+   * Saves a newly generated refresh token hash
    * @param {string} userId - UUID string
-   * @param {string} token - Signed JWT refresh token
+   * @param {string} tokenHash - SHA-256 hash of refresh token
    * @param {Date} expiresAt - Date timestamp when token expires
    * @returns {Promise<object>}
    */
-  async saveRefreshToken(userId, token, expiresAt) {
+  async saveRefreshToken(userId, tokenHash, expiresAt) {
     const text = `
-      INSERT INTO user_refresh_tokens (user_id, token, expires_at)
+      INSERT INTO user_refresh_tokens (user_id, token_hash, expires_at)
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-    const result = await db.query(text, [userId, token, expiresAt]);
+    const result = await db.query(text, [userId, tokenHash, expiresAt]);
     return result.rows[0];
   }
 
   /**
-   * Finds a refresh token record
+   * Finds a refresh token record by hash
    * @param {string} userId - UUID string
-   * @param {string} token - Signed JWT refresh token
+   * @param {string} tokenHash - SHA-256 hash of refresh token
    * @returns {Promise<object|null>}
    */
-  async findRefreshToken(userId, token) {
-    const text = 'SELECT * FROM user_refresh_tokens WHERE user_id = $1 AND token = $2';
-    const result = await db.query(text, [userId, token]);
+  async findRefreshToken(userId, tokenHash) {
+    const text = `
+      SELECT * FROM user_refresh_tokens 
+      WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL
+    `;
+    const result = await db.query(text, [userId, tokenHash]);
     return result.rows[0] || null;
   }
 
   /**
-   * Deletes a refresh token from the database (revocation / logout)
+   * Revokes a refresh token in the database (sets revoked_at timestamp)
    * @param {string} userId - UUID string
-   * @param {string} token - Signed JWT refresh token
+   * @param {string} tokenHash - SHA-256 hash of refresh token
    * @returns {Promise<boolean>}
    */
-  async revokeRefreshToken(userId, token) {
-    const text = 'DELETE FROM user_refresh_tokens WHERE user_id = $1 AND token = $2';
-    const result = await db.query(text, [userId, token]);
+  async revokeRefreshToken(userId, tokenHash) {
+    const text = `
+      UPDATE user_refresh_tokens 
+      SET revoked_at = CURRENT_TIMESTAMP 
+      WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL
+    `;
+    const result = await db.query(text, [userId, tokenHash]);
     return result.rowCount > 0;
   }
 
   /**
-   * Deletes all refresh tokens for a user (forces full logout across all devices)
+   * Revokes all refresh tokens for a user (forces full logout across all devices)
    * @param {string} userId - UUID string
    * @returns {Promise<void>}
    */
   async revokeAllRefreshTokens(userId) {
-    const text = 'DELETE FROM user_refresh_tokens WHERE user_id = $1';
+    const text = `
+      UPDATE user_refresh_tokens 
+      SET revoked_at = CURRENT_TIMESTAMP 
+      WHERE user_id = $1 AND revoked_at IS NULL
+    `;
     await db.query(text, [userId]);
   }
 }
