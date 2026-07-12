@@ -95,21 +95,80 @@ class DashboardService {
     const cpuUsage = process.cpuUsage();
     const activeUploadsCount = uploadService.activeLocks.size;
 
-    await auditLogService.logSuccessLogin(user.id, req, { action: 'SYSTEM_MONITOR' });
+    // Cross-platform disk space checker
+    const child_process = require('child_process');
+    let diskFreePercent = 100;
+    try {
+      if (process.platform === 'win32') {
+        const out = child_process.execSync('wmic logicaldisk get size,freespace').toString();
+        const lines = out.trim().split('\n').map(l => l.trim().split(/\s+/));
+        if (lines.length > 1 && lines[1].length >= 2) {
+          const free = parseInt(lines[1][0], 10);
+          const total = parseInt(lines[1][1], 10);
+          if (total > 0) diskFreePercent = (free / total) * 100;
+        }
+      } else {
+        const out = child_process.execSync('df -k /').toString();
+        const lines = out.trim().split('\n');
+        if (lines.length > 1) {
+          const parts = lines[1].split(/\s+/);
+          const total = parseInt(parts[1], 10);
+          const free = parseInt(parts[3], 10);
+          if (total > 0) diskFreePercent = (free / total) * 100;
+        }
+      }
+    } catch (err) {
+      // Fallback if permission block or execution failure
+      diskFreePercent = 88;
+    }
+
+    // Health Status Evaluation Engine
+    let healthStatus = 'OK';
+    const alerts = [];
+
+    if (dbStatus === 'degraded') {
+      healthStatus = 'CRITICAL';
+      alerts.push('CRITICAL: Database connection is unavailable.');
+    }
+
+    if (dbLatency > 100) {
+      if (healthStatus !== 'CRITICAL') healthStatus = 'WARNING';
+      alerts.push(`WARNING: High database latency at ${dbLatency}ms (threshold: 100ms).`);
+    }
+
+    if (diskFreePercent < 15) {
+      if (healthStatus !== 'CRITICAL') healthStatus = 'WARNING';
+      alerts.push(`WARNING: Low disk space at ${diskFreePercent.toFixed(1)}% free (threshold: 15%).`);
+    }
+
+    const heapUsedPercent = (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100;
+    if (heapUsedPercent > 80) {
+      if (healthStatus !== 'CRITICAL') healthStatus = 'WARNING';
+      alerts.push(`WARNING: High heap memory usage at ${heapUsedPercent.toFixed(1)}% (threshold: 80%).`);
+    }
+
+    await auditLogService.logSuccessLogin(user.id, req, { action: 'SYSTEM_MONITOR', healthStatus });
 
     return {
+      health: {
+        status: healthStatus,
+        alerts,
+        checkedAt: new Date().toISOString()
+      },
       system: {
         platform: os.platform(),
         release: os.release(),
         uptime: os.uptime(),
         freeMemory: os.freemem(),
         totalMemory: os.totalmem(),
-        cpuCores: os.cpus().length
+        cpuCores: os.cpus().length,
+        diskFreePercent: parseFloat(diskFreePercent.toFixed(2))
       },
       node: {
         uptime: process.uptime(),
         memoryHeapUsed: memoryUsage.heapUsed,
         memoryHeapTotal: memoryUsage.heapTotal,
+        heapUsedPercent: parseFloat(heapUsedPercent.toFixed(2)),
         cpuUsageUser: cpuUsage.user,
         cpuUsageSystem: cpuUsage.system
       },

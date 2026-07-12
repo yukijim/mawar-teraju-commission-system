@@ -4,6 +4,19 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.9.0] - 2026-07-12
+
+### Selesai (Added)
+* **Production Readiness & VPS Deployment (v1.9.0)**:
+  * **Persediaan PM2 & Nginx**: Menambah fail konfigurasi PM2 `ecosystem.config.js` untuk mod cluster server dan template konfigurasi reverse proxy Nginx secure SSL.
+  * **Skrip Sandaran Automatik (pg_dump & Retention)**: Membina skrip `backup.sh` yang menjalankan `pg_dump` harian pada jam 2:00 pagi, menguatkuasakan had retention 30 hari lokal, dan bersedia untuk replikasi sandaran off-site.
+  * **Sokongan Pelan Pemulihan (Restore Testing)**: Mendokumentasikan tatacara dan perintah psql pemulihan bagi ujian integriti sandaran bulanan.
+  * **Sistem Amaran Pemantauan Diagnostik**: Mempertingkat enjin monitor `GET /api/v1/admin/monitor` dengan amaran disk space (bawah 15%), db latency (melebihi 100ms), dan pengkelasan kesihatan `OK`/`WARNING`/`CRITICAL` secara automatik.
+  * **Skrip Smoke Testing Post-Deployment**: Menambah fail skrip `smoke.js` yang menghantar request ping diagnostik automatik bagi menyemak kestabilan pelan web server sejurus selepas dikemas kini.
+  * **Audit Log & Peraturan RBAC**: Mengukuhkan kawalan audit log dan pengesahan peranan Admin sahaja bagi semua endpoint dashboard, monitor kesihatan, dan download backup.
+
+---
+
 ## [1.8.0] - 2026-07-12
 
 ### Selesai (Added)
