@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const db = require('../config/database');
 const SimplePdfGenerator = require('../utils/pdfGenerator');
 const auditLogService = require('./auditLogService');
@@ -52,11 +53,18 @@ class ReportService {
     // 4. Generate PDF buffer
     const pdfBuffer = SimplePdfGenerator.generateCommissionPdf(record, user.username, ipAddress);
 
-    // 5. Log audit trail
+    // Calculate unique reference number
+    const refNum = `REF-${record.batch_id.substring(0, 8).toUpperCase()}-${crypto.createHash('sha256').update(record.ic_number).digest('hex').substring(0, 8).toUpperCase()}`;
+
+    // 5. Log audit trail with precise parameters
     await auditLogService.logSuccessLogin(user.id, req, {
-      action: 'GENERATE_PDF_COMMISSION',
+      action: 'COMMISSION_PDF_DOWNLOADED',
       recordId,
-      dispatcherId: record.dispatcher_id
+      dispatcherId: record.dispatcher_id,
+      referenceNumber: refNum,
+      ipAddress,
+      time: new Date().toISOString(),
+      user: { id: user.id, username: user.username, role: user.role }
     });
 
     return {
@@ -103,11 +111,18 @@ class ReportService {
     // 4. Generate PDF buffer
     const pdfBuffer = SimplePdfGenerator.generateDeductionPdf(record, user.username, ipAddress);
 
-    // 5. Log audit trail
+    // Calculate unique reference number
+    const refNum = `REF-${record.batch_id.substring(0, 8).toUpperCase()}-${crypto.createHash('sha256').update(record.ic_number).digest('hex').substring(0, 8).toUpperCase()}`;
+
+    // 5. Log audit trail with precise parameters
     await auditLogService.logSuccessLogin(user.id, req, {
-      action: 'GENERATE_PDF_DEDUCTION',
+      action: 'DEDUCTION_PDF_DOWNLOADED',
       recordId,
-      dispatcherId: record.dispatcher_id
+      dispatcherId: record.dispatcher_id,
+      referenceNumber: refNum,
+      ipAddress,
+      time: new Date().toISOString(),
+      user: { id: user.id, username: user.username, role: user.role }
     });
 
     return {

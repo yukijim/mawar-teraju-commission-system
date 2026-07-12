@@ -4,6 +4,22 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.8.0] - 2026-07-12
+
+### Selesai (Added)
+* **Dashboard Analytics, Backup & Monitoring (v1.8.0)**:
+  * **Carian Metrik Dashboard**: Menyediakan fungsi pengiraan data agregat kewangan bagi keseluruhan batch published (jumlah pembayaran, purata komisen bulanan, jumlah dispatcher, penalti kasar).
+  * **Tren Perbandingan Bulanan**: Menyusun sejarah trend pembayaran bulanan sehingga 12 period sebelumnya untuk paparan dashboard.
+  * **Sistem Data Backup Tersendiri (Programmatic Exporter)**: Membina utiliti penyusunan data backup relasi secara langsung dari data jadual Postgres ke barisan arahan Insert SQL (.sql file) secara mandiri (tidak bergantung kepada OS command).
+  * **Monitor Kesihatan Sistem**: Gumpalan data latency DB ping, status uptime pelayan Node, proses heap memory, OS free memory, CPU core, serta jumlah active locks secara real-time.
+  * **API REST Dashboard & Monitor**: Menyediakan endpoint:
+    * `GET /api/v1/dashboard/summary`
+    * `POST /api/v1/admin/backup`
+    * `GET /api/v1/admin/monitor`
+  * **Audit Log Baharu**: Merekodkan perlakuan audit secara spesifik: `VIEW_DASHBOARD`, `DATABASE_BACKUP`, `SYSTEM_MONITOR`, `COMMISSION_PDF_DOWNLOADED`, dan `DEDUCTION_PDF_DOWNLOADED`.
+
+---
+
 ## [1.7.0] - 2026-07-12
 
 ### Selesai (Added)
