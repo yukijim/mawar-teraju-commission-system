@@ -1,6 +1,6 @@
-# Commission Lookup System (Mawar Teraju)
+# REEKOD Semak - Commission Lookup System
 
-Sistem Carian Komisen Modular untuk pengurusan dan semakan data komisen rider/dispatch Mawar Teraju secara production-ready.
+Sistem Carian Komisen Modular White-Label untuk pengurusan dan semakan data komisen rider/dispatch secara production-ready.
 
 > [!IMPORTANT]
 > **UI Frozen - Versi UI Enterprise Light Theme v1.2.0-beta**
@@ -60,6 +60,7 @@ Sila rujuk fail berikut untuk perincian reka bentuk sistem:
 *   [AUTHENTICATION.md](AUTHENTICATION.md) - Reka bentuk modul Authentication & Authorization, JWT, Hashing, dan Audit Logging.
 *   [API.md](API.md) - Reka bentuk konseptual API REST Backend untuk Sprint 2.
 *   [DEPLOYMENT.md](DEPLOYMENT.md) - Panduan deployment dan Senarai Semak Kesediaan Go-Live.
+*   [BRANDING.md](BRANDING.md) - Konfigurasi penjenamaan white-label dan multi-tenant REEKOD.
 *   [ROADMAP.md](ROADMAP.md) - Perancangan ciri-ciri akan datang.
 *   [CHANGELOG.md](CHANGELOG.md) - Sejarah versi dan kemas kini.
 *   [PROJECT_STATUS.md](PROJECT_STATUS.md) - Status semasa, had, hutang teknikal, dan pelan tindakan Sprint 2.
@@ -70,7 +71,7 @@ Sila rujuk fail berikut untuk perincian reka bentuk sistem:
 
 ## Panduan Identiti Visual & Branding (Branding Guidelines)
 
-Sistem ini mematuhi identiti visual rasmi Mawar Teraju menggunakan tema warna Maroon & Gold berasaskan aset penjenamaan rasmi.
+Sistem ini mematuhi identiti visual rasmi REEKOD menggunakan tema warna Maroon & Gold berasaskan aset penjenamaan rasmi.
 
 ### Warna Penjenamaan (Corporate Colors):
 *   **Maroon (Primary)**: `#8E1B32` (Digunakan untuk warna butang utama, header, dan elemen navigasi).

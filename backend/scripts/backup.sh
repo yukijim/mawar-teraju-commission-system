@@ -1,16 +1,16 @@
 #!/bin/bash
-# Mawar Teraju PostgreSQL Backup Automation Script
-# Location: /opt/mawar-teraju/scripts/backup.sh
+# REEKOD Semak PostgreSQL Backup Automation Script
+# Location: /opt/reekod/scripts/backup.sh
 # Scheduled via Cron: 0 2 * * * (Every day at 2:00 AM)
 
 # Exit immediately if a command exits with a non-zero status
 set -e
 
 # Load PostgreSQL variables
-DB_NAME=${DATABASE_NAME:-"mawar_teraju_commission"}
+DB_NAME=${DATABASE_NAME:-"reekod_commission"}
 DB_USER=${DATABASE_USER:-"postgres"}
 DB_PASSWORD=${DATABASE_PASSWORD}
-BACKUP_DIR="/var/backups/mawar-teraju"
+BACKUP_DIR="/var/backups/reekod-semak"
 DATE=$(date +\%Y-\%m-\%d_\%H-\%M-\%S)
 FILENAME="${BACKUP_DIR}/db_backup_${DATE}.sql.gz"
 
@@ -26,7 +26,7 @@ echo "[Backup Success] Local backup archive saved to ${FILENAME}"
 
 # 2. Off-site replication copy (Replicates archive to offsite storage)
 # Example S3 copy command (Requires AWS CLI configured on the VPS)
-# aws s3 cp "${FILENAME}" "s3://mawar-teraju-backups/database/db_backup_${DATE}.sql.gz"
+# aws s3 cp "${FILENAME}" "s3://reekod-backups/database/db_backup_${DATE}.sql.gz"
 echo "[Backup Replicating] (Placeholder) Replicating archive to off-site cloud storage bucket..."
 
 # 3. Enforce Retention Policy (Keep daily backups for 30 days, purge older files)

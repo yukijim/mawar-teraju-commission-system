@@ -245,10 +245,8 @@ const Dispatch = {
             doc.setFillColor(142, 27, 50); // Maroon background bar
             doc.rect(0, 0, 210, 8, 'F');
 
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(22);
-            doc.setTextColor(31, 41, 55);
-            doc.text("MAWAR TERAJU ENTERPRISE", 14, 25);
+            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName.toUpperCase() + ' ENTERPRISE' : 'MAWAR TERAJU ENTERPRISE';
+            doc.text(compName, 14, 25);
 
             doc.setFontSize(10);
             doc.setFont("Helvetica", "normal");
@@ -350,10 +348,8 @@ const Dispatch = {
             doc.setFillColor(184, 147, 36); // Dark Gold background bar
             doc.rect(0, 0, 210, 8, 'F');
 
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(22);
-            doc.setTextColor(31, 41, 55);
-            doc.text("MAWAR TERAJU ENTERPRISE", 14, 25);
+            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName.toUpperCase() + ' ENTERPRISE' : 'MAWAR TERAJU ENTERPRISE';
+            doc.text(compName, 14, 25);
 
             doc.setFontSize(10);
             doc.setFont("Helvetica", "normal");

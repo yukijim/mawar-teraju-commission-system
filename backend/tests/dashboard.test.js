@@ -1,7 +1,7 @@
 const assert = require('assert');
 const dashboardService = require('../services/dashboardService');
 
-describe('Mawar Dashboard Analytics, Backup & Health Monitoring Tests', () => {
+describe('REEKOD Dashboard Analytics, Backup & Health Monitoring Tests', () => {
 
   before(() => {
     console.log('[Setup] Preparing analytics, backing stores, and locks mock metrics...');

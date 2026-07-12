@@ -2,7 +2,7 @@ const assert = require('assert');
 const searchService = require('../src/services/searchService');
 const searchRepository = require('../src/repositories/searchRepository');
 
-describe('Mawar Enterprise Commission Search Engine Tests', () => {
+describe('REEKOD Enterprise Commission Search Engine Tests', () => {
 
   before(() => {
     console.log('[Setup] Seeding test database batches and mappings for search queries...');

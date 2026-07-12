@@ -3,7 +3,7 @@ const uploadService = require('../src/services/uploadService');
 const uploadRepository = require('../src/repositories/uploadRepository');
 
 // Integration test suite verifying Excel Upload Engine with Enterprise Batch features
-describe('Mawar Commission Excel Upload Engine & Batch Management Tests', () => {
+describe('REEKOD Commission Excel Upload Engine & Batch Management Tests', () => {
 
   before(() => {
     console.log('[Setup] Preparing enterprise mock databases and files...');

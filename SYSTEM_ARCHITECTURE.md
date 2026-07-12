@@ -1,4 +1,4 @@
-# SYSTEM ARCHITECTURE SPECIFICATION (Sistem Komisen Mawar Teraju)
+# SYSTEM ARCHITECTURE SPECIFICATION (REEKOD Semak - Commission System)
 
 Dokumen ini memperincikan reka bentuk seni bina modular bagi Commission Lookup System, memisahkan bahagian persembahan (UI), logik perniagaan, dan storan data.
 

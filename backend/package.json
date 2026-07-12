@@ -1,7 +1,7 @@
 {
-  "name": "mawar-teraju-commission-backend",
+  "name": "reekod-commission-backend",
   "version": "1.0.0",
-  "description": "Backend foundation for Mawar Teraju Commission System",
+  "description": "Backend foundation for REEKOD Semak - Commission System",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {

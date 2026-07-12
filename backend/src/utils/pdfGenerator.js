@@ -10,9 +10,10 @@ class SimplePdfGenerator {
    * Generates a Maroon-themed PDF Commission Report
    */
   static generateCommissionPdf(record, searcherUsername, ipAddress) {
+    const companyConfig = require('../config/company');
     return this.buildPdf({
-      title: 'MAWAR TERAJU COMMISSION REPORT',
-      themeColor: '0.5 0 0', // Maroon in RGB decimal (128, 0, 0)
+      title: `${companyConfig.companyName.toUpperCase()} COMMISSION REPORT`,
+      themeColor: companyConfig.companyColor || '0.5 0 0',
       record,
       searcherUsername,
       ipAddress,
@@ -24,8 +25,9 @@ class SimplePdfGenerator {
    * Generates a Gold-themed PDF Deduction Details Report
    */
   static generateDeductionPdf(record, searcherUsername, ipAddress) {
+    const companyConfig = require('../config/company');
     return this.buildPdf({
-      title: 'MAWAR TERAJU DEDUCTION DETAILS',
+      title: `${companyConfig.companyName.toUpperCase()} DEDUCTION DETAILS`,
       themeColor: '0.77 0.63 0.35', // Gold in RGB decimal (197, 160, 89)
       record,
       searcherUsername,
@@ -52,7 +54,7 @@ class SimplePdfGenerator {
     const writeHeader = (pageNumber) => {
       let header = '';
       
-      // Mawar Teraju logo element (represented as a filled colored rectangle path)
+      // REEKOD logo element (represented as a filled colored rectangle path)
       header += `q\n`;
       header += `${themeColor} rg\n`;
       header += `10 0 0 10 50 780 cm\n`; // logo bounds
@@ -154,9 +156,10 @@ class SimplePdfGenerator {
     }
 
     // Write footer on the final page
+    const companyConfig = require('../config/company');
     currentStream += `0.5 w\n50 ${y + 5} m\n545 ${y + 5} l\nS\n`;
     currentStream += `BT\n/F1 8 Tf\n50 ${y - 12} Td\n(Penjana: ${searcherUsername} | IP Address: ${ipAddress} | Tarikh Cetak: ${genTime}) Tj\nET\n`;
-    currentStream += `BT\n/F1 8 Tf\n420 ${y - 12} Td\n(Mawar Teraju System v1.7.0 - Halaman ${currentPage} / ${currentPage}) Tj\nET\n`;
+    currentStream += `BT\n/F1 8 Tf\n420 ${y - 12} Td\n(${companyConfig.portalName} - Halaman ${currentPage} / ${currentPage}) Tj\nET\n`;
     pageStreams.push(currentStream);
 
     const N = pageStreams.length;

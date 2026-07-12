@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'mawar-commission-backend',
+      name: 'reekod-commission-backend',
       script: 'src/server.js',
       instances: 'max', // Cluster mode uses all available CPU cores on the VPS
       exec_mode: 'cluster',

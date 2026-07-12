@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sistem Carian Komisen untuk Mawar Teraju - Pilihan Admin dan Dispatch">
-    <title>Mawar Teraju - Commission Lookup System</title>
+    <meta name="description" content="Sistem Carian Komisen untuk REEKOD Semak - Pilihan Admin dan Dispatch">
+    <title>REEKOD Semak - Commission Lookup System</title>
     <!-- Favicon Assets -->
     <link rel="icon" type="image/x-icon" href="assets/images/branding/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/branding/favicon-32x32.png">
     <!-- Custom styling -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Company Configurations -->
+    <script src="config/company.js"></script>
     <!-- SheetJS Excel Library -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <!-- Lucide Icons CDN for beautiful typography and icons -->
@@ -23,7 +25,7 @@
     <!-- Header Section -->
     <header>
         <div class="logo-container" id="logo-btn" style="cursor: pointer; display: flex; align-items: center;">
-            <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 38px; width: auto; object-fit: contain; background: white; padding: 2px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 38px; width: auto; object-fit: contain; background: white; padding: 2px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
             <div class="logo-text" style="margin-left: 0.75rem;">Mawar <span>Teraju</span></div>
         </div>
         <div class="header-actions" id="header-actions-area">
@@ -36,9 +38,9 @@
         <!-- Print View Header (Visible during page printing only) -->
         <div class="print-only-header" style="display: none; align-items: center; justify-content: space-between; border-bottom: 2px solid #8E1B32; padding-bottom: 1rem; margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 60px; width: auto; object-fit: contain; background: white; padding: 3px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-                <div>
-                    <h2 style="margin: 0; color: #8E1B32; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.05em;">MAWAR TERAJU</h2>
+                <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 60px; width: auto; object-fit: contain; background: white; padding: 3px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                <div class="logo-text">
+                    <h2 style="margin: 0; color: #8E1B32; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: 0.05em;">REEKOD</h2>
                     <p style="margin: 0.15rem 0 0 0; color: #4b5563; font-size: 0.8rem; font-family: 'Plus Jakarta Sans', sans-serif;">Commission Management System</p>
                 </div>
             </div>
@@ -51,8 +53,8 @@
         <!-- SECTION 1: Role Selection Screen -->
         <div id="role-selection-view" class="view active fade-in">
             <div class="role-selection-container" style="text-align: center;">
-                <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 100px; width: auto; object-fit: contain; background: white; padding: 6px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-bottom: 2rem; display: inline-block;">
-                <h1 class="welcome-title">Mawar Teraju Commission Management System</h1>
+                <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 100px; width: auto; object-fit: contain; background: white; padding: 6px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-bottom: 2rem; display: inline-block;">
+                <h1 class="welcome-title">REEKOD Commission Management System</h1>
                 <p class="welcome-subtitle">Sila pilih peranan anda untuk memulakan sesi carian atau pengurusan data.</p>
                 
                 <div class="role-grid">
@@ -87,8 +89,8 @@
         <div id="login-view" class="view fade-in">
             <div class="card login-container" style="text-align: center;">
                 <div class="login-header">
-                    <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 70px; width: auto; object-fit: contain; background: white; padding: 4px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 1rem; display: inline-block;">
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Mawar Teraju Commission Management System</p>
+                    <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 70px; width: auto; object-fit: contain; background: white; padding: 4px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 1rem; display: inline-block;">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">REEKOD Commission Management System</p>
                     <h2>Log Masuk Admin</h2>
                     <p>Sila masukkan kata laluan pentadbir</p>
                 </div>
@@ -308,8 +310,8 @@
                 <div>
                     <!-- Sidebar Brand Card -->
                     <div class="card" style="text-align: center; margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
-                        <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 55px; width: auto; object-fit: contain; background: white; padding: 4px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 0.75rem; display: inline-block;">
-                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">Mawar Teraju</h4>
+                        <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 55px; width: auto; object-fit: contain; background: white; padding: 4px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 0.75rem; display: inline-block;">
+                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">REEKOD</h4>
                         <p style="margin: 0.15rem 0 0 0; font-size: 0.75rem; color: var(--text-secondary);">Commission Management System</p>
                     </div>
 
@@ -382,8 +384,8 @@
 
             <!-- Search Form Card -->
             <div class="card" style="max-width: 600px; margin: 1rem auto 2rem auto; text-align: center;">
-                <img src="assets/images/branding/logo.png" alt="Mawar Teraju Logo" style="height: 80px; width: auto; object-fit: contain; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 1rem auto 0.75rem auto; display: block;">
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Mawar Teraju Commission Management System</p>
+                <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 80px; width: auto; object-fit: contain; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 1rem auto 0.75rem auto; display: block;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">REEKOD Commission Management System</p>
                 <form id="dispatch-search-form" onsubmit="App.handleSearch(event)" style="text-align: left;">
                     <div class="form-group">
                         <label for="dispatch-ic-input">Nombor Kad Pengenalan (IC Number)</label>
@@ -476,7 +478,7 @@
 
     <!-- Footer Section -->
     <footer>
-        <p>&copy; 2026 Mawar Teraju. Hak Cipta Terpelihara. Sistem Carian Komisen Modular.</p>
+        <p>&copy; 2026 REEKOD. Hak Cipta Terpelihara. REEKOD Semak Modular.</p>
     </footer>
 
     <!-- Password Change Modal Overlay -->

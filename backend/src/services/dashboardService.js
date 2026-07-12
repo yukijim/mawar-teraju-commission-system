@@ -33,7 +33,8 @@ class DashboardService {
       throw new AppError('Only administrators can trigger database backups.', 403, 'BACKUP_FORBIDDEN');
     }
 
-    let sqlDump = `-- Mawar Teraju Central central Database Backup\n`;
+    const companyConfig = require('../config/company');
+    let sqlDump = `-- ${companyConfig.companyName} Central Database Backup\n`;
     sqlDump += `-- Penjana: ${user.username} | Tarikh: ${new Date().toISOString()}\n\n`;
 
     const tables = ['users', 'batches', 'dispatcher_mappings', 'commission_records', 'deduction_records', 'search_history', 'audit_logs'];
@@ -68,7 +69,7 @@ class DashboardService {
     await auditLogService.logSuccessLogin(user.id, req, { action: 'DATABASE_BACKUP' });
 
     return {
-      filename: `mawar_backup_${Date.now()}.sql`,
+      filename: `reekod_backup_${Date.now()}.sql`,
       sqlDump
     };
   }

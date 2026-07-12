@@ -6,7 +6,8 @@ const PORT = variables.PORT || 5000;
 
 // Start Server listening
 const server = app.listen(PORT, () => {
-  console.log(`[Server] Mawar Teraju Commission Backend running on port ${PORT} in [${variables.NODE_ENV}] mode`);
+  const companyConfig = require('./config/company');
+  console.log(`[Server] ${companyConfig.portalName} Backend running on port ${PORT} in [${variables.NODE_ENV}] mode`);
 });
 
 // Handle unhandled promise rejections

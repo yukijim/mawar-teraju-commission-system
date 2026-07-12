@@ -1,7 +1,7 @@
 const http = require('http');
 
 /**
- * Mawar Teraju Post-Deployment Smoke Test Script.
+ * REEKOD Semak Post-Deployment Smoke Test Script.
  * Validates connection checks, health status, and diagnostic endpoints.
  */
 function runSmokeTest() {

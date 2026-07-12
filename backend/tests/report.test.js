@@ -1,7 +1,7 @@
 const assert = require('assert');
 const reportService = require('../src/services/reportService');
 
-describe('Mawar PDF Report Engine Tests', () => {
+describe('REEKOD PDF Report Engine Tests', () => {
 
   before(() => {
     console.log('[Setup] Preparing published records and profile mappings for report tests...');
@@ -31,7 +31,7 @@ describe('Mawar PDF Report Engine Tests', () => {
     assert.ok(true);
   });
 
-  it('should include all required layout data: Mawar Teraju title, publish dates, unique reference, and audit trails', async () => {
+  it('should include all required layout data: REEKOD title, publish dates, unique reference, and audit trails', async () => {
     // Assert compiled layout strings verify exact document keys
     assert.ok(true);
   });

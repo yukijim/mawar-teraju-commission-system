@@ -57,6 +57,37 @@ const App = {
     async init() {
         console.log('Memulakan Aplikasi Commission Lookup System...');
         
+        // Apply isomorphic white-label configuration values
+        if (window.companyConfig) {
+            const config = window.companyConfig;
+            document.title = `${config.portalName} - Commission Lookup System`;
+            
+            document.querySelectorAll('img[alt*="Mawar Teraju"]').forEach(img => {
+                img.alt = `${config.companyName} Logo`;
+            });
+            
+            const headerTitle = document.querySelector('h2[style*="font-family: \'Outfit\'"]');
+            if (headerTitle) headerTitle.textContent = config.companyName.toUpperCase();
+            
+            const welcomeTitle = document.querySelector('.welcome-title');
+            if (welcomeTitle) welcomeTitle.textContent = `${config.companyName} Commission Management System`;
+            
+            const subtitleTexts = document.querySelectorAll('p[style*="text-transform: uppercase"]');
+            subtitleTexts.forEach(p => {
+                if (p.textContent.includes('Mawar Teraju')) {
+                    p.textContent = `${config.companyName} Commission Management System`;
+                }
+            });
+            
+            const sidebarTitle = document.querySelector('h4[style*="text-transform: uppercase"]');
+            if (sidebarTitle) sidebarTitle.textContent = config.companyName;
+            
+            const footerCopy = document.querySelector('footer p');
+            if (footerCopy) {
+                footerCopy.innerHTML = `&copy; 2026 ${config.companyName}. Hak Cipta Terpelihara. ${config.portalName} Modular.`;
+            }
+        }
+        
         // Initialize Auth system parameters (checks local hashes etc)
         if (window.Auth) {
             try {
@@ -70,7 +101,8 @@ const App = {
         if (window.DB) {
             try {
                 await window.DB.open();
-                console.log('Database Mawar Teraju sedia.');
+                const dbMsgName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName : 'Mawar Teraju';
+                console.log(`Database ${dbMsgName} sedia.`);
             } catch (err) {
                 window.ErrorHandler.handle(err, 'Penyediaan Database');
             }

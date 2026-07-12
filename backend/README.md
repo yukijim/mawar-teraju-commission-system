@@ -1,6 +1,6 @@
-# Mawar Teraju Commission System Backend
+# REEKOD Semak - Commission System Backend
 
-Backend production API service for the Mawar Teraju Commission System built using Node.js, Express, and PostgreSQL.
+Backend production API service for the REEKOD Semak - Commission System built using Node.js, Express, and PostgreSQL.
 
 ## Features & Technologies
 - **Framework**: Express.js

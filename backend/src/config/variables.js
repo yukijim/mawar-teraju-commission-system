@@ -9,7 +9,7 @@ const variables = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   DATABASE_HOST: process.env.DATABASE_HOST || 'localhost',
   DATABASE_PORT: parseInt(process.env.DATABASE_PORT || '5432', 10),
-  DATABASE_NAME: process.env.DATABASE_NAME || 'mawar_teraju_db',
+  DATABASE_NAME: process.env.DATABASE_NAME || 'reekod_commission_db',
   DATABASE_USER: process.env.DATABASE_USER || 'postgres',
   DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || '',
   JWT_SECRET: process.env.JWT_SECRET || 'secret',

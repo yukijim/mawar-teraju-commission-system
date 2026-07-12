@@ -4,7 +4,7 @@ const auditLogRepository = require('../src/repositories/auditLogRepository');
 const userRepository = require('../src/repositories/userRepository');
 
 // Integration test suite verifying security enhancements
-describe('Mawar Commission Security Hardening & Authentication Tests', () => {
+describe('REEKOD Commission Security Hardening & Authentication Tests', () => {
 
   before(() => {
     console.log('[Setup] Preparing database mock profiles for security checks...');

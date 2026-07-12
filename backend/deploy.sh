@@ -4,11 +4,11 @@
 set -e
 
 # Configuration
-APP_DIR="/var/www/mawar-teraju-commission-system/backend"
-PM2_APP_NAME="mawar-commission-backend"
+APP_DIR="/var/www/reekod-commission-system/backend"
+PM2_APP_NAME="reekod-commission-backend"
 
 echo "============================================="
-echo " Starting Mawar Commission Backend Deployment"
+echo " Starting REEKOD Semak Backend Deployment"
 echo "============================================="
 
 # Ensure we are in the correct application directory
