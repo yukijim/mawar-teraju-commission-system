@@ -14,6 +14,7 @@ const adminRouter = require('./routes/admin');
 const dispatchRouter = require('./routes/dispatch');
 const uploadRouter = require('./routes/upload');
 const searchRouter = require('./routes/search');
+const reportRouter = require('./routes/report');
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/admin', authenticate(), authorize('ADMIN'), adminRouter);
 app.use('/api/dispatch', authenticate(), authorize('DISPATCH'), dispatchRouter);
 app.use('/api/v1/upload', uploadRouter);
 app.use('/api/v1/search', searchRouter);
+app.use('/api/v1/reports', reportRouter);
 
 // 9. Fallback for unhandled routes
 app.all('*', (req, res, next) => {

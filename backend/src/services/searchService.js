@@ -53,7 +53,7 @@ class SearchService {
       // Dispatcher can only query their own records!
       const resolvedIc = await this.resolveDispatcherIc(user.username);
       if (!resolvedIc) {
-        throw new AppError('Your profile NRIC is not mapped in the system.', 403, 'SEARCH_FORBIDDEN');
+        throw new AppError('Dispatcher profile mapping is incomplete.', 403, 'SEARCH_MAPPING_INCOMPLETE');
       }
       icNumber = resolvedIc;
       dispatcherId = null; // Ignore external dispatcher query parameter
@@ -63,6 +63,14 @@ class SearchService {
       status = queryParams.status || null;
       if (queryParams.is_active !== undefined) {
         is_active = queryParams.is_active === 'true';
+      }
+    }
+
+    // 2.1 Verify batch exists if batchId is provided
+    if (batchId) {
+      const batchRes = await db.query('SELECT id FROM batches WHERE id = $1 AND deleted_at IS NULL', [batchId]);
+      if (batchRes.rows.length === 0) {
+        throw new AppError('Requested batch period does not exist.', 404, 'UPLOAD_BATCH_NOT_FOUND');
       }
     }
 
@@ -81,6 +89,10 @@ class SearchService {
       limit,
       offset
     });
+
+    if (records.length === 0) {
+      throw new AppError('No commission records found matching search filters.', 404, 'SEARCH_RECORD_NOT_FOUND');
+    }
 
     const totalPages = Math.ceil(totalRecords / limit);
     const duration = Date.now() - startTime;

@@ -4,6 +4,24 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.7.0] - 2026-07-12
+
+### Selesai (Added)
+* **PDF Report Engine & Search Hardening (v1.7.0)**:
+  * **Sekuriti & Hardening Indeks Komposit**: Menambahkan indeks komposit di PostgreSQL untuk optimal carian: `uq_commission_batch_ic (batch_id, ic_number)`, `idx_commission_batch_dispatcher (batch_id, dispatcher_id)`, dan `idx_search_history_created_user (created_at, user_id)`.
+  * **Validasi Had & Normalisasi IC**: Mengunci had parameter limit pencarian maksimum pada 100 secara mutlak, serta menormalisasikan No. IC input dengan membuang aksara sempang `-` dan ruang kosong.
+  * **Aliran Ralat Spesifik**: Menambah sistem maklum balas bagi error kes khas: `UPLOAD_BATCH_NOT_FOUND` (404 apabila batch tiada), `SEARCH_RECORD_NOT_FOUND` (404 jika rekod tiada), dan `SEARCH_MAPPING_INCOMPLETE` (403 jika mapping rider tidak lengkap).
+  * **Enjin Kompilasi PDF Berprestasi**: Membina enjin penghasilan PDF dalam kod JavaScript tulen tanpa kebergantungan library NPM pihak ketiga (no kit/pdfmake dependency), bagi A4 document streaming yang pantas.
+  * **Dua Format Laporan Berasingan**:
+    * **Commission Report**: Laporan komisen bulanan bertema merah Maroon dengan pecahan penghantaran, allowance, dan potongan.
+    * **Deduction Details**: Laporan terperinci potongan denda bertema emas Gold memaparkan lost pic, penalty, dan arbi.
+  * **Sekatan Keselamatan Muat Turun**: Memastikan data hanya diambil dari batch berstatus `PUBLISHED`. Mengunci endpoint reports untuk peranan `DISPATCH` agar hanya boleh memuat turun dokumen milik profil mereka sendiri berdasarkan pemetaan NRIC yang sah.
+  * **API REST Laporan**: Menyediakan endpoint:
+    * `GET /api/v1/reports/commission/:recordId`
+    * `GET /api/v1/reports/deduction/:recordId`
+
+---
+
 ## [1.6.0] - 2026-07-12
 
 ### Selesai (Added)
