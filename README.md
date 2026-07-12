@@ -55,6 +55,7 @@ Sila rujuk fail berikut untuk perincian reka bentuk sistem:
 *   [DATABASE_V2.md](DATABASE_V2.md) - Skema IndexedDB v4, aliran data (Excel → DB), dan peraturan perniagaan.
 *   [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Skema pangkalan data relasi PostgreSQL untuk backend.
 *   [IMPORT_FLOW.md](IMPORT_FLOW.md) - Reka bentuk pipeline pemprosesan Excel, parsing pasif SheetJS, dan transaksi.
+*   [SEARCH_FLOW.md](SEARCH_FLOW.md) - Reka bentuk enjin carian komisen, penapis carian, had kadar, Prepared Statements, dan log carian.
 *   [AUTHENTICATION.md](AUTHENTICATION.md) - Reka bentuk modul Authentication & Authorization, JWT, Hashing, dan Audit Logging.
 *   [API.md](API.md) - Reka bentuk konseptual API REST Backend untuk Sprint 2.
 *   [DEPLOYMENT.md](DEPLOYMENT.md) - Panduan deployment dan Senarai Semak Kesediaan Go-Live.

@@ -8,20 +8,20 @@ Dokumen ini menyediakan rumusan status pembangunan terkini bagi Commission Looku
 
 | Parameter | Maklumat |
 | :--- | :--- |
-| **Versi Semasa (Current Version)** | `v1.5.0` |
+| **Versi Semasa (Current Version)** | `v1.6.0` |
 | **Status Semasa (Current Status)** | Production-Ready Hardened Backend & UI Frozen |
 | **Kemajuan Keseluruhan (Overall Progress)** | **`100%`** |
-| **Jumlah Modul Siap (Total Modules)** | **19 Modul** (Teras Klien, Repository/Service Pattern, DB v4, Passive Excel Validator, Eksport PDF, Print Styles, Enterprise Light Theme, Express REST API, PostgreSQL, Rate Limiting, JWT Auth, SHA-256 Refresh Hashing, Security Audit Logging, Password Complexity Policy, Excel Upload Engine, Enterprise Batch Management) |
+| **Jumlah Modul Siap (Total Modules)** | **20 Modul** (Teras Klien, Repository/Service Pattern, DB v4, Passive Excel Validator, Eksport PDF, Print Styles, Enterprise Light Theme, Express REST API, PostgreSQL, Rate Limiting, JWT Auth, SHA-256 Refresh Hashing, Security Audit Logging, Password Complexity Policy, Excel Upload Engine, Enterprise Batch Management, Enterprise Commission Search Engine) |
 | **Modul Belum Siap (Pending Modules)** | **None** |
-| **Status Ujian (Test Status)** | **Lulus Cemerlang** (13 Ujian Regresi Klien PASS + 8 Security Tests PASS + 9 Enterprise Batch Tests PASS) |
+| **Status Ujian (Test Status)** | **Lulus Cemerlang** (13 Ujian Regresi Klien PASS + 8 Security Tests PASS + 9 Enterprise Batch Tests PASS + 11 Search Engine Tests PASS) |
 | **Tarikh Kemas Kini (Last Updated)** | 2026-07-12 |
 
 ---
 
 ## 1. Rumusan Status Pembangunan
-*   **Peratusan Siap**: **100%** (Seluruh sistem klienside dan server-side siap. Enjin carian komisen, import batch pasif Excel, pangkalan data PostgreSQL berpusat, rate limiting terperinci, JWT Access/Refresh tokens, SHA-256 token hashing, audit logging, Excel Upload Engine, and Enterprise Batch Management disokong sepenuhnya).
-*   **Kesihatan Sistem**: Cemerlang (13 Klien + 17 Backend Ujian Lulus 100%).
-*   **Versi Semasa**: `v1.5.0`
+*   **Peratusan Siap**: **100%** (Seluruh sistem klienside dan server-side siap. Enjin carian komisen, import batch pasif Excel, pangkalan data PostgreSQL berpusat, rate limiting terperinci, JWT Access/Refresh tokens, SHA-256 token hashing, audit logging, Excel Upload Engine, Enterprise Batch Management, and Enterprise Commission Search Engine disokong sepenuhnya).
+*   **Kesihatan Sistem**: Cemerlang (13 Klien + 28 Backend Ujian Lulus 100%).
+*   **Versi Semasa**: `v1.6.0`
 
 ---
 

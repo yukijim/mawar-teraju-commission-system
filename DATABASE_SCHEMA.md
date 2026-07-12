@@ -88,12 +88,22 @@ erDiagram
         jsonb details
         timestamp created_at
     }
+    search_history {
+        uuid id PK
+        uuid user_id FK
+        varchar ic_number
+        varchar dispatcher_id
+        int duration
+        varchar ip_address
+        timestamp created_at
+    }
 
     users ||--o{ user_refresh_tokens : "has"
     users ||--o{ batches : "uploads"
     batches ||--o{ commission_records : "has cascade"
     batches ||--o{ deduction_records : "has cascade"
     users ||--o{ audit_logs : "triggers"
+    users ||--o{ search_history : "performs"
 ```
 
 ---
@@ -146,11 +156,26 @@ CREATE INDEX idx_audit_logs_action ON audit_logs(action);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 ```
 
+#### 4. Table: `search_history`
+```sql
+CREATE TABLE search_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    ic_number VARCHAR(20) NULL,
+    dispatcher_id VARCHAR(100) NULL,
+    duration INTEGER NOT NULL, -- in milliseconds
+    ip_address VARCHAR(45) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_search_history_user ON search_history(user_id);
+CREATE INDEX idx_search_history_created_at ON search_history(created_at);
+```
+
 ---
 
 ### B. Batch Management
 
-#### 4. Table: `batches`
+#### 5. Table: `batches`
 ```sql
 CREATE TABLE batches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -188,7 +213,7 @@ CREATE INDEX idx_batches_previous_batch_id ON batches(previous_batch_id);
 
 ### C. Dispatcher Mappings & Records
 
-#### 5. Table: `dispatcher_mappings`
+#### 6. Table: `dispatcher_mappings`
 ```sql
 CREATE TABLE dispatcher_mappings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -200,7 +225,7 @@ CREATE TABLE dispatcher_mappings (
 CREATE INDEX idx_dispatcher_mappings_ic ON dispatcher_mappings(ic_number);
 ```
 
-#### 6. Table: `commission_records`
+#### 7. Table: `commission_records`
 ```sql
 CREATE TABLE commission_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -248,7 +273,7 @@ CREATE INDEX idx_commission_records_batch ON commission_records(batch_id);
 CREATE INDEX idx_commission_records_ic ON commission_records(ic_number);
 ```
 
-#### 7. Table: `deduction_records`
+#### 8. Table: `deduction_records`
 ```sql
 CREATE TABLE deduction_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

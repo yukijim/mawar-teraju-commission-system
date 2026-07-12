@@ -1,112 +1,112 @@
 # SEARCH FLOW SPECIFICATION (Sistem Komisen Mawar Teraju)
 
-Dokumen ini memperincikan aliran teknikal proses carian Nombor Kad Pengenalan (IC) oleh Dispatcher pada portal carian dan proses penjanaan dokumen PDF rasmi.
+This document defines the backend processing flow, pagination strategy, security layers, logging schemas, and architecture for the Enterprise Commission Search Engine.
 
 ---
 
-## 1. Saluran Paip Carian & Penyatuan Data (Search & Join Pipeline)
+## 1. Search Query Pipeline
 
+The search engine processes incoming queries through security filters and constructs parameterized prepared queries to retrieve matching commissions and deductions.
+
+```text
+            [ GET /api/v1/search?ic_number=... ]
+                             │
+                             ▼
+                 [ Authentication Guard ]
+            (Checks JWT status, user role & claims)
+                             │
+                             ▼
+                 [ Security Role Filtering ]
+           ├── User is DISPATCH:
+           │    ├── Lock query NRIC to logged-in user's mapped NRIC
+           │    └── Force filter: status = 'PUBLISHED' AND is_active = TRUE
+           └── User is ADMIN:
+                └── Allow arbitrary NRIC, Dispatcher ID, Batch ID, and status queries
+                             │
+                             ▼
+                [ Query Parameter Extraction ]
+           (Month, Year, Version, Sort, Order, Page, Limit)
+                             │
+                             ▼
+              [ Safe Sorting Column Validation ]
+       (Ensures sort is within whitelisted database columns)
+                             │
+                             ▼
+             [ Prepared Statement Execution ]
+         (Using PostgreSQL parameterized bindings)
+                             │
+                             ▼
+              [ Log Audit & Latency Metrics ]
+           ├── Save trace inside search_history table
+           └── Log security query event in audit_logs
+                             │
+                             ▼
+           [ Payload Formatting & API Response ]
 ```
-[ Input No. IC ]
-       │
-       ▼
-[ Sanitasi Input ] ──────────► (Buang sengkang & ruang kosong)
-       │
-       ▼
-[ Ambil Batch Aktif ] ───────► (Cari batches: status='published' & active=1)
-       │
-       ▼
-[ Query commission_records ] ─► (Cari guna indeks komposit batchId + ic)
-       │
-       ▼
-[ Query deduction_records ] ──► (Cari guna indeks komposit batchId + ic)
-       │
-       ▼
-[ Gabung Rekod (Join) ] ─────► (Padankan dan bina model DispatcherSummary)
-       │
-       ▼
-[ Papar Hasil Carian UI ]
-       │
-       ├──────────────────────┐
-       ▼                      ▼
-[ Jana PDF Komisen ]   [ Jana PDF Butiran Potongan ]
+
+---
+
+## 2. Security & Access Rules
+
+### A. Role Constraints
+- **DISPATCH User**:
+  - A dispatcher can *only* search their own financial records.
+  - The service resolves the dispatcher's username to their registered `ic_number` in `dispatcher_mappings` and overrides any requested search parameter.
+  - Dispatchers can *only* access records belonging to **active published batches** (`status = 'PUBLISHED' AND is_active = TRUE`). Drafts, validating batches, and archived versions are completely hidden.
+- **ADMIN User**:
+  - Administrators can search records across all riders, batch periods, versions, and states.
+
+### B. Audit Compliance & Metrics
+For every search executed, a record is created in the `search_history` table:
+- **`user_id`**: The UUID of the authenticated searcher.
+- **`ic_number`**: The NRIC queried (masked or normalized).
+- **`dispatcher_id`**: The dispatcher ID queried.
+- **`ip_address`**: The client's IP.
+- **`duration`**: The exact database lookup latency in milliseconds.
+- **`created_at`**: Timestamp.
+
+Additionally, an action entry (`COMMISSION_SEARCH`) is appended to the central `audit_logs` table.
+
+---
+
+## 3. Query Performance & SQL Security
+
+### A. Prepared Statements
+All query filters (NRIC, dispatcher ID, batch UUID, month, year, version, offset, limit) are passed using parameterized bindings (e.g. `$1`, `$2`). This isolates inputs, preventing **SQL Injection** attacks, and allows PostgreSQL to cache query plans.
+
+### B. Safe Sorting
+To prevent SQL injection via `ORDER BY` query inputs, the repository checks the `sort` parameter against a hard whitelisted column map:
+```javascript
+ALLOWED_SORT_COLUMNS = {
+  name: 'c.name',
+  ic_number: 'c.ic_number',
+  dispatcher_id: 'c.dispatcher_id',
+  final_amount_to_pay: 'c.final_amount_to_pay',
+  nett_commission: 'c.nett_commission',
+  parcel_qty: 'c.parcel_qty',
+  month: 'b.month',
+  year: 'b.year',
+  version: 'b.version'
+};
 ```
+If a parameter is not in the whitelist, the engine falls back to `c.name`.
+
+### C. Indexes
+Queries are optimized to scan composite indexes and foreign key references:
+- Primary/Foreign keys use UUID binary formats.
+- An index exists on `commission_records(ic_number)` and `commission_records(batch_id)`.
+- Composite index `uq_commission_batch_ic (batch_id, ic_number)` accelerates joined lookups.
 
 ---
 
-## 2. Peringkat Penyatuan Data (Client-Side Join)
+## 4. Export Architecture Hooks
 
-Pangkalan data IndexedDB tidak menyokong arahan `JOIN` SQL secara asal. Penyatuan data dilakukan dalam JavaScript menggunakan logik berikut:
+To prepare the platform for PDF and Excel exports, the search service exposes two architectural hooks:
 
-1.  Apabila No. IC yang sah diserahkan (cth: `920605055111`), sistem memulakan transaksi `readonly` ke atas stores `commission_records` dan `deduction_records`.
-2.  Sistem mencari rekod pada store `commission_records` menggunakan kunci komposit `[activeBatchId, cleanIc]`.
-3.  Sistem mencari rekod pada store `deduction_records` menggunakan kunci komposit `[activeBatchId, cleanIc]`.
-4.  Keputusan disatukan ke dalam objek JavaScript tunggal `DispatcherSummary`:
-    ```javascript
-    const DispatcherSummary = {
-        ic_number: cleanIc,
-        dispatcher_id: commissionRecord ? commissionRecord.dispatcher_id : deductionRecord.dispatcher_id,
-        name: commissionRecord ? commissionRecord.name : deductionRecord.name,
-        
-        // Komisen & Tambahan
-        parcel_qty: commissionRecord ? commissionRecord.parcel_qty : 0,
-        exclude_extra_weight_yoyi: commissionRecord ? commissionRecord.exclude_extra_weight_yoyi : 0,
-        commission_rate: commissionRecord ? commissionRecord.commission_rate : 0,
-        extra_weight_commission: commissionRecord ? commissionRecord.extra_weight_commission : 0,
-        total_commission: commissionRecord ? commissionRecord.total_commission : 0,
-        addition_pickup_commission: commissionRecord ? commissionRecord.addition_pickup_commission : 0,
-        addition_fuel_allowance: commissionRecord ? commissionRecord.addition_fuel_allowance : 0,
-        addition_sorter: commissionRecord ? commissionRecord.addition_sorter : 0,
-        nett_commission: commissionRecord ? commissionRecord.nett_commission : 0,
-        final_amount_to_pay: commissionRecord ? commissionRecord.final_amount_to_pay : 0,
-        
-        // Potongan & Denda
-        deduction_advance: deductionRecord ? deductionRecord.deduction_advance : 0,
-        deduction_pending_cod: deductionRecord ? deductionRecord.deduction_pending_cod : 0,
-        deduction_hq_penalty: deductionRecord ? deductionRecord.deduction_hq_penalty : 0,
-        deduction_duitnow_penalty: deductionRecord ? deductionRecord.deduction_duitnow_penalty : 0,
-        deduction_late_cod_penalty: deductionRecord ? deductionRecord.deduction_late_cod_penalty : 0,
-        deduction_lost_individual: deductionRecord ? deductionRecord.deduction_lost_individual : 0,
-        deduction_lost_parcel_hub: deductionRecord ? deductionRecord.deduction_lost_parcel_hub : 0,
-        
-        // Perincian Denda Khusus
-        lost_pic_signed: deductionRecord ? deductionRecord.lost_pic_signed : 0,
-        lost_rate: deductionRecord ? deductionRecord.lost_rate : 0,
-        total_all_lost_shared: deductionRecord ? deductionRecord.total_all_lost_shared : 0,
-        lost_parcel_pic_signed: deductionRecord ? deductionRecord.lost_parcel_pic_signed : 0,
-        arbi_individual: deductionRecord ? deductionRecord.arbi_individual : 0,
-        rcgen_penalty: deductionRecord ? deductionRecord.rcgen_penalty : 0,
-        qc_penalty: deductionRecord ? deductionRecord.qc_penalty : 0,
-        total_hq_penalty_detail: deductionRecord ? deductionRecord.total_hq_penalty_detail : 0
-    };
-    ```
+### A. PDF Export Hook
+- Generates a structure containing the dispatcher record data, validation metrics, and theme formatting (e.g., `Gold` for deductions, `Maroon` for commissions).
+- Endpoint: `GET /api/v1/search/export/pdf?recordId=...`
 
----
-
-## 3. Aliran Penjanaan Fail PDF (PDF Export Flow)
-
-Dispatcher disediakan dengan dua pilihan muat turun PDF berasingan bagi menjaga kerahsiaan dan kejelasan struktur laporan.
-
-### Fail A: Commission Report (Laporan Ringkasan Komisen)
-*   **Format**: Tema korporat Mawar Teraju (Maroon `#8E1B32` dan Gold `#D4AF37`).
-*   **Kandungan**:
-    1.  Logo Rasmi Mawar Teraju.
-    2.  Nama Batch & Tempoh Carian.
-    3.  Maklumat Dispatcher (Nama, ID Dispatcher, No. IC).
-    4.  Jadual Komisen:
-        *   Jumlah Parcel & Net Parcel.
-        *   Kadar Komisen RM1.11 & Jumlah Komisen Asas.
-        *   Komisen Berat Tambahan.
-        *   Allowance Tambahan (Pickup, Fuel, Sorter).
-    5.  Jadual Ringkasan Potongan (Advance, COD, HQ Penalty, Lost).
-    6.  **Final Amount to Pay** (Jumlah Bersih Akhir) dipaparkan secara besar dalam kad aksen Gold.
-
-### Fail B: Details Deduction Report (Laporan Butiran Potongan & Denda)
-*   **Format**: Tema Grid Minimalis dengan aksen warna kelabu/maroon untuk menyerlahkan item denda.
-*   **Kandungan**:
-    1.  Tajuk Rasmi: *"Penyata Perincian Denda & Potongan Dispatcher"*.
-    2.  Maklumat Batch & Pengenalan Dispatcher.
-    3.  Jadual Perperincian Denda HQ (QC, RCGEN, ARBI).
-    4.  Jadual Perperincian Lost Parcel (Lost PIC Signed, Lost Rate, Lost Shared, Lost Individual).
-    5.  Jumlah Keseluruhan Potongan Denda (`total_hq_penalty_detail` + `total_all_lost_shared` + `lost_parcel_pic_signed`).
-    6.  Penafian Rasmi: *"Penyata ini dijana secara komputer bagi menerangkan denda yang dipindahkan dari sistem operasi ke penyata gaji."*
+### B. Excel Export Hook
+- Prepares cell matrix structures from query results to stream directly into sheet layout cells.
+- Endpoint: `GET /api/v1/search/export/excel?batchId=...`

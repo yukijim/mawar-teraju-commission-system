@@ -4,6 +4,23 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.6.0] - 2026-07-12
+
+### Selesai (Added)
+* **Enterprise Commission Search Engine (v1.6.0)**:
+  * **Carian Berbilang Parameter**: Membolehkan carian rekod komisen berdasarkan Nombor IC, Dispatcher ID, dan Batch ID.
+  * **Sekatan Pengesahan Sesi Dispatcher**: Mengunci parameter carian NRIC bagi pengguna bertaraf `DISPATCH` kepada nombor IC profil sendiri sahaja, menyekat akses ke data dispatcher lain. Mengehadkan carian dispatch kepada batch bertaraf `PUBLISHED` dan aktif sahaja.
+  * **Sejarah Jejak Carian (Search History Logging)**: Penambahan jadual database `search_history` yang merekodkan data carian (ID pengguna, IC dicari, duration masa milisaat, IP klien, dll) secara terperinci.
+  * **Sistem Pagination & Sorting Selamat**: Menyediakan had halaman (`page`, `limit`) serta penyusunan lajur (`sorting`) berasaskan whitelist bagi menghalang serangan SQL injection dinamik.
+  * **Saringan Metadata Terperinci (Filtering)**: Menyokong tapisan carian berdasarkan bulan, tahun, dan versi batch secara langsung.
+  * **Optimasi Prepared Statements**: Menggunakan pengikatan parameterized query PostgreSQL bagi mempercepatkan eksekusi pelan carian pangkalan data.
+  * **API REST Carian**: Menyediakan endpoint:
+    * `GET /api/v1/search`
+    * `GET /api/v1/search/history` (Had kuasa ADMIN sahaja)
+  * **Seni Bina Eksport**: Mempersiapkan reka bentuk controller dan service helper hooks bagi eksport laporan PDF (Maroon & Gold themes) serta grid hamparan Excel.
+
+---
+
 ## [1.5.0] - 2026-07-12
 
 ### Selesai (Added)
