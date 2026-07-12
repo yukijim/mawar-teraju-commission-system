@@ -9,6 +9,10 @@ const variables = require('./config/variables');
 const rateLimiter = require('./middleware/rateLimiter');
 const { errorHandler, AppError } = require('./middleware/error');
 const healthRouter = require('./routes/health');
+const { authenticate, authorize } = require('./middleware/auth');
+const authRouter = require('./routes/auth');
+const adminRouter = require('./routes/admin');
+const dispatchRouter = require('./routes/dispatch');
 
 const app = express();
 
@@ -43,6 +47,9 @@ app.use('/api', rateLimiter);
 
 // 8. Register API routes
 app.use('/api', healthRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/admin', authenticate(), authorize('ADMIN'), adminRouter);
+app.use('/api/dispatch', authenticate(), authorize('DISPATCH'), dispatchRouter);
 
 // 9. Fallback for unhandled routes
 app.all('*', (req, res, next) => {
