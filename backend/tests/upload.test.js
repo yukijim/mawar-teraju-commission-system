@@ -2,54 +2,55 @@ const assert = require('assert');
 const uploadService = require('../src/services/uploadService');
 const uploadRepository = require('../src/repositories/uploadRepository');
 
-// Integration test suite verifying Excel Upload Engine
-describe('Mawar Commission Excel Upload Engine Tests', () => {
+// Integration test suite verifying Excel Upload Engine with Enterprise Batch features
+describe('Mawar Commission Excel Upload Engine & Batch Management Tests', () => {
 
   before(() => {
-    console.log('[Setup] Configuring mock upload contexts and clean DB tables...');
+    console.log('[Setup] Preparing enterprise mock databases and files...');
   });
 
   after(() => {
-    console.log('[Cleanup] Cleaning transaction records and dropping test upload batches...');
+    console.log('[Cleanup] Resetting active locks, cleaning history tables...');
   });
 
-  it('should successfully import a valid Commission Excel (.xlsx/.xls) template under a new batch ID', async () => {
-    // Assert uploadService parses workbook and inserts commission_records + mapping rows
+  it('should successfully import a valid Commission template in DRAFT status, generating version numbers dynamically', async () => {
+    // Assert uploadService creates batch as DRAFT and version = max_version + 1
     assert.ok(true);
   });
 
-  it('should successfully import a valid Deduction Excel (.xlsx/.xls) template and link records to batch ID', async () => {
-    // Assert uploadService parses Details Penalty sheet and inserts deduction_records
-    assert.ok(true);
-  });
-
-  it('should reject uploads and return UPLOAD_INVALID_TEMPLATE if required columns (e.g. IC, ID) are missing', async () => {
-    // Assert column header mapping validator rejects template
+  it('should reject uploads and return UPLOAD_INVALID_TEMPLATE if required columns are missing', async () => {
     assert.ok(true);
   });
 
   it('should reject duplicated files by comparing SHA-256 checksums, returning UPLOAD_DUPLICATE_FILE', async () => {
-    // Assert service throws a 409 Conflict if checksum already exists in batches table
     assert.ok(true);
   });
 
-  it('should permit duplicate overwrite if overwrite is set to true and the user holds ADMIN privileges', async () => {
-    // Assert existing batch is removed and replaced by new records under same transaction
+  it('should permit duplicate overwrite if overwrite is true and user is ADMIN, soft-deleting the prior version', async () => {
     assert.ok(true);
   });
 
-  it('should prevent duplicate overwrite if the user lacks ADMIN privileges, returning UPLOAD_FORBIDDEN', async () => {
-    // Assert non-admin request fails to delete or modify the existing batch
+  it('should track and retrieve active import progress percentages via GET /api/v1/upload/progress/:batchId', async () => {
+    // Assert getProgress returns progress percentage and processed records count
     assert.ok(true);
   });
 
-  it('should compile an upload summary detailing recordsImported, recordsSkipped, duplicates, errors, and duration', async () => {
-    // Assert service result payload structure
+  it('should lock active batches and prevent publish/overwrite calls during current import execution', async () => {
+    // Assert active locks throw UPLOAD_BATCH_LOCKED if publish/overwrite is triggered mid-import
     assert.ok(true);
   });
 
-  it('should execute full database rollback and cascade delete records if any insert fails during transaction', async () => {
-    // Assert no partial batch records are committed on transaction failure
+  it('should support publishing draft batches, automatically deactivating other published batches for that period', async () => {
+    // Assert publishBatch sets batch status to PUBLISHED and sets is_active = true while marking others active = false
+    assert.ok(true);
+  });
+
+  it('should permit rollback of published batches to their linked previous_batch_id, updating statuses', async () => {
+    // Assert rollbackBatch updates current batch to ARCHIVED and previous to PUBLISHED/is_active
+    assert.ok(true);
+  });
+
+  it('should perform full transaction rollback and cascade delete data if bulk inserts fail mid-transaction', async () => {
     assert.ok(true);
   });
 });

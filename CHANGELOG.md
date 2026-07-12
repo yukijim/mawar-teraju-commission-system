@@ -4,6 +4,20 @@ Semua perubahan penting bagi projek Commission Lookup System akan direkodkan dal
 
 ---
 
+## [1.5.0] - 2026-07-12
+
+### Selesai (Added)
+* **Enterprise Batch Management Upgrades (v1.5.0)**:
+  * **Kitaran Hayat Batch**: Menguatkuasakan aliran status penuh (`DRAFT`, `VALIDATING`, `IMPORTING`, `IMPORTED`, `PUBLISHED`, `ARCHIVED`).
+  * **Sekatan Carian Dispatcher**: Mengehadkan portal carian dispatcher agar hanya membenarkan pertanyaan rekod daripada batch yang bertaraf `PUBLISHED` dan aktif (`is_active = TRUE`).
+  * **Pengurusan Versi & Hubungan Rollback**: Menambah lajur versi, status keaktifan, maklumat penerbitan (`published_at`, `published_by`), serta rujukan batch sebelumnya (`previous_batch_id`) ke pangkalan data PostgreSQL.
+  * **Endpoint API Progress Upload**: Menyediakan endpoint `GET /api/v1/upload/progress/:batchId` untuk memantau peratusan muat naik dan data rekod yang diproses secara real-time.
+  * **Pengesan Rekod Duplikat Unik**: Mengesan pertindihan rekod dalam satu batch dengan memadankan gabungan unik `Batch ID` + `Dispatcher ID` + `IC Number`.
+  * **Kunci Muat Naik (Upload Locking)**: Menyediakan sistem kunci berasaskan checksum in-memory bagi mengelakkan publishing atau overwriting semasa proses import sedang berjalan.
+  * **Aliran Rollback Versi**: Menyokong endpoint `POST /api/v1/upload/rollback/:batchId` untuk menarik balik batch bermasalah secara automatik dan mengaktifkan semula data batch versi terdahulu.
+
+---
+
 ## [1.4.0] - 2026-07-12
 
 ### Selesai (Added)

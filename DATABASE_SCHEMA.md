@@ -37,6 +37,13 @@ erDiagram
         int record_count
         uuid uploaded_by FK
         timestamp uploaded_at
+        int version
+        boolean is_active
+        timestamp published_at
+        uuid published_by FK
+        uuid previous_batch_id FK
+        timestamp deleted_at
+        uuid deleted_by FK
     }
     dispatcher_mappings {
         uuid id PK
@@ -150,7 +157,7 @@ CREATE TABLE batches (
     name VARCHAR(100) NOT NULL,
     month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
     year INTEGER NOT NULL CHECK (year >= 2020),
-    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
+    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'VALIDATING', 'IMPORTING', 'IMPORTED', 'PUBLISHED', 'ARCHIVED')),
     active BOOLEAN NOT NULL DEFAULT FALSE,
     filename VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL CHECK (type IN ('COMMISSION', 'DEDUCTION')),
@@ -159,11 +166,22 @@ CREATE TABLE batches (
     uploaded_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Enterprise Batch Management columns
+    version INTEGER NOT NULL DEFAULT 1,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+    published_at TIMESTAMP WITH TIME ZONE NULL,
+    published_by UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    previous_batch_id UUID NULL REFERENCES batches(id) ON DELETE SET NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    deleted_by UUID NULL REFERENCES users(id) ON DELETE SET NULL
 );
 CREATE INDEX idx_batches_name ON batches(name);
 CREATE INDEX idx_batches_active ON batches(active);
 CREATE INDEX idx_batches_checksum ON batches(checksum);
+CREATE INDEX idx_batches_is_active ON batches(is_active);
+CREATE INDEX idx_batches_previous_batch_id ON batches(previous_batch_id);
 ```
 
 ---

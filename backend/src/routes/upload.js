@@ -27,6 +27,15 @@ router.post('/deduction', uploadLimiter, upload.single('file'), uploadController
 // GET /api/v1/upload/history
 router.get('/history', uploadController.getUploadHistory);
 
+// GET /api/v1/upload/progress/:batchId
+router.get('/progress/:batchId', uploadController.getUploadProgress);
+
+// POST /api/v1/upload/publish/:batchId
+router.post('/publish/:batchId', uploadController.publishBatch);
+
+// POST /api/v1/upload/rollback/:batchId
+router.post('/rollback/:batchId', uploadController.rollbackBatch);
+
 // GET /api/v1/upload/:batchId
 router.get('/:batchId', uploadController.getBatchDetails);
 

@@ -1,67 +1,84 @@
 # BUSINESS FLOW SPECIFICATION (Sistem Komisen Mawar Teraju)
 
-Dokumen ini mendefinisikan aliran perniagaan (business flows) bagi kitaran hayat Batch Komisen dan interaksi Dispatcher di portal semakan.
+This document defines the business flows, batch lifecycles, and search workflows for the Mawar Teraju Commission System.
 
 ---
 
-## 1. Aliran Kerja Pengurusan Batch (Admin Workflow)
+## 1. Enterprise Batch Lifecycle (Admin Workflow)
 
-Kitaran hayat bagi data komisen diuruskan oleh pentadbir melalui langkah-langkah berikut:
+The lifecycle of commission batch files is managed by the administrator. Statuses transition sequentially through six states to guarantee transactional integrity:
 
+```text
+  [ Upload Excel ]
+         │
+         ▼
+    [ VALIDATING ] ──► (Validates workbook columns & schema)
+         │
+         ▼
+    [ IMPORTING ]  ──► (Locks batch, performs chunked bulk inserts in transaction)
+         │
+         ▼
+    [ IMPORTED ]   ──► (Unlocks batch, commits records as DRAFT)
+         │
+         ▼
+    [ PUBLISHED ]  ──► (Activates batch, sets other concurrent batches to ARCHIVED)
+         │
+         ▼
+    [ ARCHIVED ]   ──► (Deactivates search accessibility. Supported by rollback to previous versions)
 ```
-[ Cipta Batch ] ──► [ Draf ] ──► [ Validasi & Import ] ──► [ Terbitkan ] ──► [ Aktif & Boleh Dicari ] ──► [ Diarkib ]
-```
 
-### A. Mewujudkan Kumpulan Bayaran (Batch Creation)
-1.  Admin mengakses panel pengurusan batch.
-2.  Admin memasukkan **Nama Batch** (cth: `"Jun 2026"`), **Bulan** (`6`), dan **Tahun** (`2026`).
-3.  Batch baharu dicipta dalam keadaan **Draf** (`status = 'draft'`, `active = 0`).
+### A. Batch Creation & Import (`DRAFT` / `VALIDATING` / `IMPORTING` / `IMPORTED`)
+1. **DRAFT**: A batch metadata shell is initialized.
+2. **VALIDATING**: Excel columns are read and validated.
+3. **IMPORTING**: Checksum-based upload locking is applied. Overwrite and publish operations are blocked. Records are bulk inserted in transactional chunks.
+4. **IMPORTED**: On successful transaction commit, status updates to `IMPORTED`. The lock is released. Records remain in a draft state, hidden from the public dispatcher carian.
 
-### B. Validasi & Import Data
-1.  Sistem menyokong import fail Excel berasingan atau fail tunggal yang disatukan (consolidated workbook).
-2.  Laporan **Commission Report** (Sheet: `Dispatcher Comm`) dan laporan **Deduction Details** (Sheet: `Details Penalty`) dimuat naik.
-3.  Sistem mengesahkan struktur data lajur (Schema Validation). Sebarang kegagalan struktur akan menyekat proses import.
-4.  JavaScript memproses pengiraan lookup, penjumlahan, dan pembundaran mengikut logik perniagaan:
-    *   Membina pemetaan `Dispatcher ID` $\rightarrow$ `No. IC`.
-    *   Mengira komisen bersih (`nett_commission`) dan jumlah bayaran akhir (`final_amount_to_pay`).
-5.  Data yang telah bersih disimpan sebagai nilai statik dalam database IndexedDB.
+### B. Activation & Version Control (`PUBLISHED`)
+1. An admin reviews the imported summary and publishes the batch.
+2. The batch status updates to `PUBLISHED` and `is_active` becomes `TRUE`.
+3. If an active batch already exists for the same month/year period:
+   - The version of the new batch is incremented (`version = previous_version + 1`).
+   - The previous batch's ID is stored as `previous_batch_id`.
+   - The previous batch is set to `is_active = FALSE` and status `ARCHIVED`.
+   - **Only one published batch remains active** for search queries per period.
 
-### C. Penerbitan & Pengarkiban (Publish & Archive)
-1.  Sebuah batch draf tidak boleh dicari oleh dispatch.
-2.  Admin meneliti ringkasan batch (jumlah rekod, jumlah pembayaran) dan mengklik **Terbitkan (Publish)**.
-3.  Status batch dikemas kini kepada `"published"` dan `active` diset kepada `1`.
-4.  Semua batch published yang terdahulu diubah `active` kepada `0`. Ini memastikan **hanya satu batch published sahaja** yang aktif untuk carian dispatch pada satu masa.
-5.  Untuk mengunci data dari sebarang carian masa depan, admin boleh menukar status batch kepada `"archived"`.
+### C. Version Rollback (`ARCHIVED`)
+1. If an admin discovers errors in a published batch (e.g. invalid excel row calculations):
+   - The admin calls a rollback on the active batch ID.
+   - The current active batch is marked as `is_active = FALSE` and `status = 'ARCHIVED'` (soft-deleted).
+   - The batch pointed to by `previous_batch_id` is automatically reactivated (`is_active = TRUE`, `status = 'PUBLISHED'`).
+   - The search portal instantly reflects the restored previous dataset.
 
 ---
 
-## 2. Aliran Kerja Carian Portal Dispatch (Search Workflow)
+## 2. Dispatcher Search Portal (Search Workflow)
 
-Semakan data oleh rider/dispatcher mengikut langkah-langkah berikut:
+Riders query commission information on the search portal:
 
+```text
+  [ Enter NRIC / IC ]
+          │
+          ▼
+  [ Fetch Active Published Batches ]
+          │
+          ▼
+  [ Merge Commission & Deduction Records by NRIC ]
+          │
+          ▼
+  [ Render Financial Summaries & Dual PDF Reports ]
 ```
-[ Log Masuk Portal ] ──► [ Masukkan No. IC ] ──► [ Cari Batch Aktif (Published) ] ──► [ Papar Ringkasan ] ──► [ Muat Turun PDF ]
-```
 
-### A. Pengesahan Carian
-1.  Dispatcher memasukkan Nombor Kad Pengenalan (IC) 12-digit pada portal carian.
-2.  Sistem membersihkan input (membuang sengkang dan ruang kosong).
-3.  Portal menyemak pangkalan data untuk mencari **satu-satunya batch published yang aktif** (`status = 'published'`, `active = 1`).
+### A. Search Validation & Restrictions
+1. A dispatcher enters their 12-digit Kad Pengenalan (IC) number.
+2. The system formats and sanitizes the NRIC input.
+3. **Enforced Limit**: Carian queries strictly extract records linked to **PUBLISHED** batches only (`status = 'PUBLISHED'`). Drafts, validating batches, and soft-deleted version history records are ignored.
 
-### B. Pengambilan & Integrasi Data
-1.  Menggunakan indeks komposit `batch_ic` (menggabungkan `batchId` aktif dan `ic_number` yang dicari), sistem mencari rekod sepadan dalam store:
-    *   `commission_records`
-    *   `deduction_records`
-2.  Jika tiada rekod dijumpai, portal memaparkan mesej makluman "Rekod komisen tidak ditemui bagi No. IC ini untuk batch semasa".
-3.  Jika dijumpai, sistem menggabungkan rekod komisen dan butiran potongan berdasarkan `dispatcher_id` yang sepadan.
-
-### C. Paparan Ringkasan & Dokumentasi
-1.  Portal memaparkan ringkasan kewangan yang jelas kepada dispatcher:
-    *   **Final Amount to Pay** (Bayaran Bersih Akhir)
-    *   **Jumlah Komisen Kasar**
-    *   **Jumlah Potongan/Denda**
-    *   **Jumlah Tambahan/Allowance**
-2.  Portal menyediakan dua butang muat turun berasingan untuk dokumentasi rasmi:
-    *   **Muat Turun Commission Report (PDF)**: Laporan rasmi komisen dan allowance dispatcher.
-    *   **Muat Turun Details Deduction Report (PDF)**: Laporan butiran terperinci denda dan penalti (QC, RCGEN, Lost) dari `Details Penalty`.
-3.  Tiada maklumat dispatcher lain didedahkan semasa proses carian ini.
+### B. Relational Resolution
+1. Using the dispatcher's NRIC, the system fetches records from:
+   - `commission_records` where `batch_id` is published and active.
+   - `deduction_records` where `batch_id` is published and active.
+2. If records exist, the dispatcher portal displays the consolidated financial summary:
+   - **Final Amount to Pay** (Net payment).
+   - **Gross Commission** (Deliveries + Allowance additions).
+   - **Gross Deductions** (COD + advance + HQ penalties).
+3. The rider can download the Maroon-themed **Commission PDF** and Gold-themed **Deduction PDF** for their personal logs.

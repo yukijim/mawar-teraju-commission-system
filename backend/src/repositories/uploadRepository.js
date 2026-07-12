@@ -2,6 +2,7 @@ const db = require('../config/database');
 
 /**
  * Repository layer for Excel Upload & Batch processing operations.
+ * Upgraded to support Enterprise Batch Management features.
  */
 class UploadRepository {
   /**
@@ -10,7 +11,7 @@ class UploadRepository {
    * @returns {Promise<object|null>}
    */
   async findBatchByChecksum(checksum) {
-    const text = 'SELECT * FROM batches WHERE checksum = $1';
+    const text = 'SELECT * FROM batches WHERE checksum = $1 AND deleted_at IS NULL';
     const result = await db.query(text, [checksum]);
     return result.rows[0] || null;
   }
@@ -21,13 +22,13 @@ class UploadRepository {
    * @returns {Promise<object|null>}
    */
   async findBatchById(batchId) {
-    const text = 'SELECT * FROM batches WHERE id = $1';
+    const text = 'SELECT * FROM batches WHERE id = $1 AND deleted_at IS NULL';
     const result = await db.query(text, [batchId]);
     return result.rows[0] || null;
   }
 
   /**
-   * Retrieves all upload batches sorted by upload time desc
+   * Retrieves all upload batches sorted by upload time desc (excluding soft-deleted batches)
    * @returns {Promise<Array<object>>}
    */
   async getUploadHistory() {
@@ -35,6 +36,7 @@ class UploadRepository {
       SELECT b.*, u.username as uploader_name 
       FROM batches b
       JOIN users u ON b.uploaded_by = u.id
+      WHERE b.deleted_at IS NULL
       ORDER BY b.uploaded_at DESC
     `;
     const result = await db.query(text);
@@ -42,18 +44,19 @@ class UploadRepository {
   }
 
   /**
-   * Deletes a batch by ID (used during overwriting or rollback)
-   * @param {string} batchId - UUID string
-   * @returns {Promise<boolean>}
+   * Performs soft deletion of a batch record (updates deleted_at / deleted_by / status)
    */
-  async deleteBatch(batchId) {
-    const text = 'DELETE FROM batches WHERE id = $1';
-    const result = await db.query(text, [batchId]);
-    return result.rowCount > 0;
+  async softDeleteBatch(client, batchId, userId) {
+    const text = `
+      UPDATE batches
+      SET deleted_at = CURRENT_TIMESTAMP, deleted_by = $2, is_active = FALSE, status = 'ARCHIVED'
+      WHERE id = $1
+    `;
+    await client.query(text, [batchId, userId]);
   }
 
   /**
-   * Deletes a batch by ID using a transaction client
+   * Deletes a batch by ID using a transaction client (hard delete)
    * @param {object} client - pg pool client
    * @param {string} batchId - UUID string
    */
@@ -65,15 +68,85 @@ class UploadRepository {
   /**
    * Inserts a new batch record inside a transaction
    */
-  async createBatch(client, { name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy }) {
+  async createBatch(client, { id, name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy, version = 1, previousBatchId = null }) {
     const text = `
-      INSERT INTO batches (name, month, year, status, active, filename, type, checksum, record_count, uploaded_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO batches (id, name, month, year, status, active, filename, type, checksum, record_count, uploaded_by, version, previous_batch_id, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *
     `;
-    const params = [name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy];
+    const params = [id, name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy, version, previousBatchId, active];
     const result = await client.query(text, params);
     return result.rows[0];
+  }
+
+  /**
+   * Publishes a batch inside a transaction
+   */
+  async publishBatch(client, batchId, userId, previousBatchId = null) {
+    const text = `
+      UPDATE batches
+      SET status = 'PUBLISHED', is_active = TRUE, published_at = CURRENT_TIMESTAMP, published_by = $2, previous_batch_id = $3
+      WHERE id = $1
+      RETURNING *
+    `;
+    const result = await client.query(text, [batchId, userId, previousBatchId]);
+    return result.rows[0];
+  }
+
+  /**
+   * Deactivates all other published batches for the same month/year inside a transaction
+   */
+  async deactivateOtherBatches(client, batchId, month, year) {
+    const text = `
+      UPDATE batches
+      SET is_active = FALSE, status = 'ARCHIVED'
+      WHERE id != $1 AND month = $2 AND year = $3 AND status = 'PUBLISHED' AND deleted_at IS NULL
+    `;
+    await client.query(text, [batchId, month, year]);
+  }
+
+  /**
+   * Finds the latest active/published batch for a month/year to set as previous_batch_id
+   */
+  async findLatestActiveBatch(month, year) {
+    const text = `
+      SELECT id FROM batches 
+      WHERE month = $1 AND year = $2 AND status = 'PUBLISHED' AND is_active = TRUE AND deleted_at IS NULL
+      ORDER BY uploaded_at DESC 
+      LIMIT 1
+    `;
+    const result = await db.query(text, [month, year]);
+    return result.rows[0]?.id || null;
+  }
+
+  /**
+   * Retrieves the current max version number for a batch period name
+   */
+  async getMaxVersionForPeriod(month, year) {
+    const text = 'SELECT COALESCE(MAX(version), 0) as max_ver FROM batches WHERE month = $1 AND year = $2 AND deleted_at IS NULL';
+    const result = await db.query(text, [month, year]);
+    return parseInt(result.rows[0].max_ver, 10);
+  }
+
+  /**
+   * Rolls back from target batch to its previous_batch_id inside a transaction
+   */
+  async executeRollback(client, batchId, previousBatchId, userId) {
+    // 1. Deactivate current batch
+    const decText = `
+      UPDATE batches
+      SET is_active = FALSE, status = 'ARCHIVED', deleted_at = CURRENT_TIMESTAMP, deleted_by = $2
+      WHERE id = $1
+    `;
+    await client.query(decText, [batchId, userId]);
+
+    // 2. Reactivate previous batch
+    const actText = `
+      UPDATE batches
+      SET is_active = TRUE, status = 'PUBLISHED'
+      WHERE id = $1
+    `;
+    await client.query(actText, [previousBatchId]);
   }
 
   /**
@@ -82,7 +155,6 @@ class UploadRepository {
   async upsertDispatcherMappings(client, mappings) {
     if (!mappings || mappings.length === 0) return;
 
-    // Build batch insert query with conflict updates
     const valuePlaceholders = [];
     const values = [];
     let paramIndex = 1;
