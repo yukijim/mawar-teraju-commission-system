@@ -33,6 +33,13 @@ const errorHandler = (err, req, res, next) => {
     errors: err.errors,
   };
 
+  if (err.expected !== undefined) {
+    responsePayload.expected = err.expected;
+  }
+  if (err.availableSheets !== undefined) {
+    responsePayload.availableSheets = err.availableSheets;
+  }
+
   if (variables.NODE_ENV === 'development') {
     responsePayload.stack = err.stack;
     return res.status(err.statusCode).json(responsePayload);

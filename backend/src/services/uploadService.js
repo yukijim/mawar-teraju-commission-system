@@ -180,9 +180,21 @@ class UploadService {
       }
 
       const sheetNames = workbook.SheetNames;
-      const commSheetName = sheetNames.find(n => n.toLowerCase().includes('dispatcher comm') || n.toLowerCase().includes('comm'));
+      const commSheetName = sheetNames.find(n => {
+        if (!n) return false;
+        const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+        return normalized === 'dispatcher comm';
+      });
+
+      if (process.env.NODE_ENV === 'uat') {
+        console.log(`[UAT LOG] Excel Upload: filename=${filename}, size=${fileBuffer.length} bytes, SheetNames=${JSON.stringify(sheetNames)}, selectedSheet=${commSheetName || 'none'}`);
+      }
+
       if (!commSheetName) {
-        throw new AppError('Lembaran "Dispatcher Comm" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        const err = new AppError('Lembaran "Dispatcher Comm" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        err.expected = 'Dispatcher Comm';
+        err.availableSheets = sheetNames;
+        throw err;
       }
 
       const commSheet = workbook.Sheets[commSheetName];

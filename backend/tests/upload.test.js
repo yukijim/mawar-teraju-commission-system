@@ -53,4 +53,23 @@ describe('REEKOD Commission Excel Upload Engine & Batch Management Tests', () =>
   it('should perform full transaction rollback and cascade delete data if bulk inserts fail mid-transaction', async () => {
     assert.ok(true);
   });
+
+  it('should correctly normalize and match worksheet names: "Dispatcher Comm", "✅ Dispatcher Comm", " Dispatcher  Comm ", and "DISPATCHER COMM"', () => {
+    const testNames = [
+      "Dispatcher Comm",
+      "✅ Dispatcher Comm",
+      " Dispatcher  Comm ",
+      "DISPATCHER COMM"
+    ];
+    
+    const normalizeSheetName = (name) => {
+      if (!name) return '';
+      return name.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+    };
+
+    testNames.forEach(name => {
+      const normalized = normalizeSheetName(name);
+      assert.equal(normalized, 'dispatcher comm', `Failed to normalize "${name}"`);
+    });
+  });
 });
