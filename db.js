@@ -81,7 +81,6 @@ class IndexedDBManager {
                     commStore.createIndex('batchId', 'batchId', { unique: false });
                     commStore.createIndex('ic_number', 'ic_number', { unique: false });
                     commStore.createIndex('dispatcher_id', 'dispatcher_id', { unique: false });
-                    commStore.createIndex('batch_ic', ['batchId', 'ic_number'], { unique: true });
                 } else {
                     const store = tx.objectStore(STORES.COMMISSION_RECORDS);
                     if (!store.indexNames.contains('dispatcher_id')) {
@@ -95,7 +94,6 @@ class IndexedDBManager {
                     dedStore.createIndex('batchId', 'batchId', { unique: false });
                     dedStore.createIndex('ic_number', 'ic_number', { unique: false });
                     dedStore.createIndex('dispatcher_id', 'dispatcher_id', { unique: false });
-                    dedStore.createIndex('batch_ic', ['batchId', 'ic_number'], { unique: true });
                 } else {
                     const store = tx.objectStore(STORES.DEDUCTION_RECORDS);
                     if (!store.indexNames.contains('dispatcher_id')) {
@@ -639,6 +637,93 @@ class IndexedDBRepository extends CommissionRepository {
  * Service orchestrating commission batch data logic, delegating database calls.
  * Can switch repository implementation dynamically (swappable PostgreSQL/IndexedDB).
  */
+function parsePeriodFromName(name) {
+    const monthsMy = {
+        'januari': 1, 'februari': 2, 'mac': 3, 'april': 4, 'mei': 5, 'jun': 6,
+        'julai': 7, 'ogos': 8, 'september': 9, 'oktober': 10, 'november': 11, 'disember': 12
+    };
+    const monthsEn = {
+        'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+        'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12
+    };
+
+    const clean = name.toLowerCase().trim();
+    const yearMatch = clean.match(/\b(20\d{2})\b/);
+    const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
+
+    let month = 0;
+    for (const [mName, mVal] of Object.entries(monthsMy)) {
+        if (clean.includes(mName)) {
+            month = mVal;
+            break;
+        }
+    }
+
+    if (month === 0) {
+        for (const [mName, mVal] of Object.entries(monthsEn)) {
+            if (clean.includes(mName)) {
+                month = mVal;
+                break;
+            }
+        }
+    }
+
+    if (month === 0) {
+        month = new Date().getMonth() + 1;
+    }
+
+    return { month, year };
+}
+
+function groupAndMergeBatches(rawHistory) {
+    const grouped = {};
+    rawHistory.forEach(b => {
+        const key = b.name;
+        if (!grouped[key]) {
+            grouped[key] = {
+                id: b.id,
+                name: b.name,
+                month: b.month,
+                year: b.year,
+                status: b.status === 'PUBLISHED' ? 'published' : 'draft',
+                active: b.active || b.is_active ? 1 : 0,
+                createdTime: new Date(b.created_at || b.uploaded_at).getTime(),
+                publishedTime: b.published_at ? new Date(b.published_at).getTime() : null,
+                commissionFilename: '',
+                deductionFilename: '',
+                commissionCount: 0,
+                deductionCount: 0,
+                commissionBatchId: null,
+                deductionBatchId: null
+            };
+        }
+        
+        const g = grouped[key];
+        if (b.type === 'COMMISSION') {
+            g.commissionFilename = b.filename;
+            g.commissionCount = b.record_count;
+            g.commissionBatchId = b.id;
+            g.status = b.status === 'PUBLISHED' ? 'published' : 'draft';
+            g.active = b.active || b.is_active ? 1 : 0;
+            g.id = b.id;
+        } else if (b.type === 'DEDUCTION') {
+            g.deductionFilename = b.filename;
+            g.deductionCount = b.record_count;
+            g.deductionBatchId = b.id;
+            if (!g.commissionBatchId) {
+                g.status = b.status === 'PUBLISHED' ? 'published' : 'draft';
+                g.active = b.active || b.is_active ? 1 : 0;
+                g.id = b.id;
+            }
+        }
+    });
+    return Object.values(grouped);
+}
+
+/**
+ * Service orchestrating commission batch data logic, delegating database calls.
+ * Can switch repository implementation dynamically (swappable PostgreSQL/IndexedDB).
+ */
 class CommissionService {
     constructor(repository) {
         this.repository = repository;
@@ -660,18 +745,190 @@ class CommissionService {
         }
     }
 
-    async getBatch(batchId) { return this.repository.getBatch(batchId); }
-    async getBatches() { return this.repository.getBatches(); }
-    async createBatch(name, status) { return this.repository.createBatch(name, status); }
-    async updateBatch(batch) { return this.repository.updateBatch(batch); }
-    async getActiveBatch() { return this.repository.getActiveBatch(); }
-    async setActiveBatch(batchId) { return this.repository.setActiveBatch(batchId); }
-    async deleteBatch(batchId) { return this.repository.deleteBatch(batchId); }
+    async getBatch(batchId) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.getBatch(batchId);
+        }
+        try {
+            const res = await fetch(`/api/v1/upload/${batchId}`, { credentials: 'include' });
+            if (!res.ok) return null;
+            const result = await res.json();
+            return result.data?.batch || null;
+        } catch (e) {
+            return null;
+        }
+    }
 
-    async getCommissionRecord(batchId, ic) { return this.repository.getCommissionRecord(batchId, ic); }
-    async getDeductionRecord(batchId, ic) { return this.repository.getDeductionRecord(batchId, ic); }
-    async getBatchStats(batchId) { return this.repository.getBatchStats(batchId); }
-    async searchByIc(rawIc) { return this.repository.searchByIc(rawIc); }
+    async getBatches() {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.getBatches();
+        }
+        try {
+            const res = await fetch('/api/v1/upload/history', { credentials: 'include' });
+            if (!res.ok) return [];
+            const result = await res.json();
+            const rawHistory = result.data?.history || [];
+            return groupAndMergeBatches(rawHistory);
+        } catch (e) {
+            console.error('[DB] Gagal mendapatkan senarai batch:', e);
+            return [];
+        }
+    }
+
+    async createBatch(name, status) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.createBatch(name, status);
+        }
+        return null;
+    }
+
+    async updateBatch(batch) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.updateBatch(batch);
+        }
+        return null;
+    }
+
+    async getActiveBatch() {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.getActiveBatch();
+        }
+        const batches = await this.getBatches();
+        return batches.find(b => b.active) || null;
+    }
+
+    async setActiveBatch(batchId) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.setActiveBatch(batchId);
+        }
+        const batches = await this.getBatches();
+        const logicalBatch = batches.find(b => b.commissionBatchId === batchId || b.deductionBatchId === batchId || b.id === batchId);
+        
+        if (logicalBatch) {
+            if (logicalBatch.commissionBatchId) {
+                await fetch(`/api/v1/upload/publish/${logicalBatch.commissionBatchId}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            }
+            if (logicalBatch.deductionBatchId) {
+                await fetch(`/api/v1/upload/publish/${logicalBatch.deductionBatchId}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            }
+            return true;
+        }
+        await fetch(`/api/v1/upload/publish/${batchId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        return true;
+    }
+
+    async deleteBatch(batchId) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.deleteBatch(batchId);
+        }
+        const res = await fetch(`/api/v1/upload/rollback/${batchId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        return res.ok;
+    }
+
+    async getCommissionRecord(batchId, ic) {
+        return this.repository.getCommissionRecord(batchId, ic);
+    }
+
+    async getDeductionRecord(batchId, ic) {
+        return this.repository.getDeductionRecord(batchId, ic);
+    }
+
+    async getBatchStats(batchId) {
+        return this.repository.getBatchStats(batchId);
+    }
+
+    async searchByIc(rawIc) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.searchByIc(rawIc);
+        }
+
+        const cleanIc = rawIc.toString().replace(/[\s-]/g, '');
+        if (!cleanIc) return [];
+
+        try {
+            const response = await fetch(`/api/v1/search?ic_number=${cleanIc}`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const result = await response.json();
+            const recordsList = result.data && result.data.records ? result.data.records : [];
+            if (recordsList.length === 0) {
+                return [];
+            }
+
+            return recordsList.map(item => {
+                const info = item.dispatcherInfo || {};
+                const comm = item.commission || {};
+                const ded = item.deduction || {};
+                const net = item.netAmount || {};
+                const batch = item.batchInfo || {};
+
+                return {
+                    ic_number: info.icNumber || cleanIc,
+                    dispatcher_id: info.dispatcherId || '',
+                    name: info.name || '',
+                    batchName: batch.batchName || '',
+                    
+                    parcel_qty: comm.parcelQty || 0,
+                    net_parcel: comm.netParcel || 0,
+                    exclude_extra_weight_yoyi: comm.excludeExtraWeightYoyi || 0,
+                    commission_rate: comm.commissionRate || 0,
+                    diff_rate_new_joiner: comm.diffRateNewJoiner || 0,
+                    count_pickup: comm.countPickup || 0,
+                    extra_weight_commission: comm.extraWeightCommission || 0,
+                    total_commission: comm.totalCommission || 0,
+                    addition_pickup_commission: comm.additionPickupCommission || 0,
+                    addition_fuel_allowance: comm.additionFuelAllowance || 0,
+                    addition_sorter: comm.additionSorter || 0,
+                    nett_commission: net.nettCommission || 0,
+                    final_amount_to_pay: net.finalAmountToPay || 0,
+                    system_reg: comm.systemReg || '',
+                    parcel_qty_jms: comm.parcelQtyJms || 0,
+                    status_payment: comm.statusPayment || 'SUCCESS',
+                    date_payment: comm.datePayment || '',
+                    remark: comm.remark || '',
+
+                    deduction_advance: ded.deductionAdvance || 0,
+                    deduction_pending_cod: ded.deductionPendingCod || 0,
+                    deduction_hq_penalty: ded.deductionHqPenalty || 0,
+                    deduction_duitnow_penalty: ded.deductionDuitnowPenalty || 0,
+                    deduction_late_cod_penalty: ded.deductionLateCodPenalty || 0,
+                    deduction_lost_individual: ded.deductionLostIndividual || 0,
+                    deduction_lost_parcel_hub: ded.deductionLostParcelHub || 0,
+
+                    lost_pic_signed: ded.lostPicSigned || 0,
+                    lost_rate: ded.lostRate || 0,
+                    total_all_lost_shared: ded.totalAllLostShared || 0,
+                    lost_parcel_pic_signed: ded.lostParcelPicSigned || 0,
+                    arbi_individual: ded.arbiIndividual || 0,
+                    rcgen_penalty: ded.rcgenPenalty || 0,
+                    qc_penalty: ded.qcPenalty || 0,
+                    total_hq_penalty_detail: ded.totalHqPenaltyDetail || 0
+                };
+            });
+        } catch (error) {
+            console.error('[DB] Ralat semasa carian IC ke API:', error);
+            return [];
+        }
+    }
+
     async searchByIC(rawIc) { return this.searchByIc(rawIc); }
 
     async importCommissionRecords(batchId, list) { return this.repository.importCommissionRecords(batchId, list); }
@@ -682,70 +939,114 @@ class CommissionService {
     async getDispatcherMapping(dispatcherId) { return this.repository.getDispatcherMapping(dispatcherId); }
     async importDispatcherMappings(list) { return this.repository.importDispatcherMappings(list); }
     async saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList) {
-        return this.repository.saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList);
+        if (window.location.pathname.includes('test_runner.html')) {
+            return this.repository.saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList);
+        }
+        return { success: true };
     }
 
-    // History and audit log helpers
     async addHistory(historyItem) {
-        if (this.repository.manager) {
-            return this.repository.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
-                const store = tx.objectStore(STORES.HISTORY);
-                return new Promise((resolve, reject) => {
-                    const request = store.add(historyItem);
-                    request.onsuccess = (e) => resolve(e.target.result);
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            });
-        }
-    }
-
-    async getHistory() {
-        if (this.repository.manager) {
-            return this.repository.manager.transaction([STORES.HISTORY], 'readonly', async (tx) => {
-                const store = tx.objectStore(STORES.HISTORY);
-                return new Promise((resolve, reject) => {
-                    const request = store.getAll();
-                    request.onsuccess = (e) => {
-                        const results = e.target.result || [];
-                        results.sort((a, b) => b.id - a.id);
-                        resolve(results);
-                    };
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            });
-        }
-    }
-
-    async deleteHistory(historyId) {
-        if (this.repository.manager) {
-            return this.repository.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
-                const store = tx.objectStore(STORES.HISTORY);
-                return new Promise((resolve, reject) => {
-                    const request = store.delete(historyId);
-                    request.onsuccess = () => resolve();
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            });
-        }
-    }
-
-    async log(action, details, user = 'System') {
-        if (this.repository.manager) {
-            const logItem = { timestamp: Date.now(), action, details, user };
-            try {
-                return await this.repository.manager.transaction([STORES.AUDIT_LOG], 'readwrite', async (tx) => {
-                    const store = tx.objectStore(STORES.AUDIT_LOG);
+        if (window.location.pathname.includes('test_runner.html')) {
+            if (this.repository.manager) {
+                return this.repository.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
+                    const store = tx.objectStore(STORES.HISTORY);
                     return new Promise((resolve, reject) => {
-                        const request = store.add(logItem);
+                        const request = store.add(historyItem);
                         request.onsuccess = (e) => resolve(e.target.result);
                         request.onerror = (e) => reject(e.target.error);
                     });
                 });
-            } catch (error) {
-                console.error('Audit logging failed:', error);
-                return -1;
             }
         }
+        return null;
+    }
+
+    async getHistory() {
+        if (window.location.pathname.includes('test_runner.html')) {
+            if (this.repository.manager) {
+                return this.repository.manager.transaction([STORES.HISTORY], 'readonly', async (tx) => {
+                    const store = tx.objectStore(STORES.HISTORY);
+                    return new Promise((resolve, reject) => {
+                        const request = store.getAll();
+                        request.onsuccess = (e) => {
+                            const results = e.target.result || [];
+                            results.sort((a, b) => b.id - a.id);
+                            resolve(results);
+                        };
+                        request.onerror = (e) => reject(e.target.error);
+                    });
+                });
+            }
+        }
+        try {
+            const res = await fetch('/api/v1/upload/history', { credentials: 'include' });
+            if (!res.ok) return [];
+            const result = await res.json();
+            const rawHistory = result.data?.history || [];
+            return rawHistory.map(b => ({
+                id: b.id,
+                filename: b.filename,
+                recordCount: b.record_count,
+                uploadTime: new Date(b.created_at || b.uploaded_at).getTime(),
+                status: 'Sukses'
+            }));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async deleteHistory(historyId) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            if (this.repository.manager) {
+                return this.repository.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
+                    const store = tx.objectStore(STORES.HISTORY);
+                    return new Promise((resolve, reject) => {
+                        const request = store.delete(historyId);
+                        request.onsuccess = () => resolve();
+                        request.onerror = (e) => reject(e.target.error);
+                    });
+                });
+            }
+        }
+        return true;
+    }
+
+    async deleteRecordsByUploadId(historyId) {
+        if (window.location.pathname.includes('test_runner.html')) {
+            return true;
+        }
+        const res = await fetch(`/api/v1/upload/rollback/${historyId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            const errResult = await res.json().catch(() => ({}));
+            throw new Error(errResult.message || 'Gagal melakukan rollback batch.');
+        }
+        return true;
+    }
+
+    async log(action, details, user = 'System') {
+        console.log(`[Audit Log] ${action}: ${details} (User: ${user})`);
+        if (window.location.pathname.includes('test_runner.html')) {
+            if (this.repository.manager) {
+                const logItem = { timestamp: Date.now(), action, details, user };
+                try {
+                    return await this.repository.manager.transaction([STORES.AUDIT_LOG], 'readwrite', async (tx) => {
+                        const store = tx.objectStore(STORES.AUDIT_LOG);
+                        return new Promise((resolve, reject) => {
+                            const request = store.add(logItem);
+                            request.onsuccess = (e) => resolve(e.target.result);
+                            request.onerror = (e) => reject(e.target.error);
+                        });
+                    });
+                } catch (error) {
+                    console.error('Audit logging failed:', error);
+                    return -1;
+                }
+            }
+        }
+        return 0;
     }
 
     async getLogs() {

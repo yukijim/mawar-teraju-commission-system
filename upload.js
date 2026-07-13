@@ -305,122 +305,33 @@ const Upload = {
             return;
         }
 
-        try {
-            App.showToast('Memproses Fail', 'Sedang membaca fail Excel...', 'info');
-            const workbook = await window.ExcelParser.parseFileToWorkbook(file);
-            
-            const sheetNames = workbook.SheetNames;
-            const hasComm = sheetNames.some(n => n.toLowerCase().includes('dispatcher comm') || n.toLowerCase().includes('comm'));
-            const hasDed = sheetNames.some(n => n.toLowerCase().includes('penalty') || n.toLowerCase().includes('deduction'));
-
-            const validationContainer = document.getElementById('validation-container');
-            const listItems = document.getElementById('validation-list-items');
-
-            if (hasComm && hasDed) {
-                App.showToast('Memproses Fail', 'Fail Excel disatukan dikesan. Menganalisis Laporan Komisen & Butiran Potongan...', 'info');
-                const analysisResult = window.ExcelParser.validateAndMapWorkbook(workbook);
-
-                if (!analysisResult.isValid) {
-                    if (listItems) {
-                        listItems.innerHTML = '';
-                        const li = document.createElement('li');
-                        li.textContent = analysisResult.error;
-                        listItems.appendChild(li);
-                    }
-                    if (validationContainer) validationContainer.style.display = 'block';
-                    this.clearFile('commission');
-                    this.clearFile('deduction');
-                    return;
-                }
-
-                if (validationContainer) validationContainer.style.display = 'none';
-
-                this.tempCommissionFile = file;
-                this.tempCommissionRecords = analysisResult.commissionRecords;
-                this.tempDeductionFile = file;
-                this.tempDeductionRecords = analysisResult.deductionRecords;
-                this.tempDispatcherMappings = analysisResult.dispatcherMappings;
-
-                document.getElementById('comm-file-name').textContent = file.name;
-                document.getElementById('comm-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB (${analysisResult.commissionRecords.length} rekod)`;
-                document.getElementById('comm-upload-zone').style.display = 'none';
-                document.getElementById('comm-file-details').style.display = 'flex';
-
-                document.getElementById('ded-file-name').textContent = file.name;
-                document.getElementById('ded-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB (${analysisResult.deductionRecords.length} rekod)`;
-                document.getElementById('ded-upload-zone').style.display = 'none';
-                document.getElementById('ded-file-details').style.display = 'flex';
-
-                this.updatePublishButtonState();
-                App.showToast('Selesai Validasi', 'Berjaya mengimport data komisen dan potongan daripada fail disatukan.', 'success');
-            } else {
-                App.showToast('Memproses Fail', `Menganalisis skema fail ${type === 'commission' ? 'Komisen' : 'Potongan'}...`, 'info');
-                const analysisResult = window.ExcelParser.validateAndMapWorkbook(workbook);
-
-                if (!analysisResult.isValid) {
-                    if (listItems) {
-                        listItems.innerHTML = '';
-                        const li = document.createElement('li');
-                        li.textContent = `${type.toUpperCase()}: ${analysisResult.error}`;
-                        listItems.appendChild(li);
-                    }
-                    if (validationContainer) validationContainer.style.display = 'block';
-                    this.clearFile(type);
-                    return;
-                }
-
-                if (validationContainer) validationContainer.style.display = 'none';
-
-                if (type === 'commission') {
-                    this.tempCommissionFile = file;
-                    this.tempCommissionRecords = analysisResult.commissionRecords;
-                    this.tempDispatcherMappings = analysisResult.dispatcherMappings;
-                    
-                    document.getElementById('comm-file-name').textContent = file.name;
-                    document.getElementById('comm-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB (${analysisResult.commissionRecords.length} rekod)`;
-                    document.getElementById('comm-upload-zone').style.display = 'none';
-                    document.getElementById('comm-file-details').style.display = 'flex';
-                } else {
-                    this.tempDeductionFile = file;
-                    if (this.tempDispatcherMappings) {
-                        const masterMap = {};
-                        this.tempDispatcherMappings.forEach(m => {
-                            masterMap[m.dispatcher_id] = m.ic_number;
-                        });
-                        analysisResult.deductionRecords.forEach(d => {
-                            if (!d.ic_number && masterMap[d.dispatcher_id]) {
-                                d.ic_number = masterMap[d.dispatcher_id];
-                            }
-                        });
-                    }
-                    this.tempDeductionRecords = analysisResult.deductionRecords;
-
-                    document.getElementById('ded-file-name').textContent = file.name;
-                    document.getElementById('ded-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB (${analysisResult.deductionRecords.length} rekod)`;
-                    document.getElementById('ded-upload-zone').style.display = 'none';
-                    document.getElementById('ded-file-details').style.display = 'flex';
-                }
-
-                this.updatePublishButtonState();
-                App.showToast('Fail Disahkan', `Laporan ${type === 'commission' ? 'Komisen' : 'Potongan'} lulus validasi skema.`, 'success');
-            }
-        } catch (error) {
-            window.ErrorHandler.handle(error, 'Parser Batch File');
-            this.clearFile(type);
+        if (type === 'commission') {
+            this.tempCommissionFile = file;
+            document.getElementById('comm-file-name').textContent = file.name;
+            document.getElementById('comm-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            document.getElementById('comm-upload-zone').style.display = 'none';
+            document.getElementById('comm-file-details').style.display = 'flex';
+        } else {
+            this.tempDeductionFile = file;
+            document.getElementById('ded-file-name').textContent = file.name;
+            document.getElementById('ded-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            document.getElementById('ded-upload-zone').style.display = 'none';
+            document.getElementById('ded-file-details').style.display = 'flex';
         }
+
+        this.updatePublishButtonState();
+        App.showToast('Fail Dipilih', `Fail ${type === 'commission' ? 'Komisen' : 'Potongan'} sedia untuk diimport.`, 'success');
     },
 
     clearFile(type) {
         if (type === 'commission') {
             this.tempCommissionFile = null;
-            this.tempCommissionRecords = [];
             const input = document.getElementById('comm-file-input');
             if (input) input.value = '';
             document.getElementById('comm-upload-zone').style.display = 'flex';
             document.getElementById('comm-file-details').style.display = 'none';
         } else {
             this.tempDeductionFile = null;
-            this.tempDeductionRecords = [];
             const input = document.getElementById('ded-file-input');
             if (input) input.value = '';
             document.getElementById('ded-upload-zone').style.display = 'flex';
@@ -431,8 +342,8 @@ const Upload = {
 
     updatePublishButtonState() {
         const nameVal = document.getElementById('batch-name-input').value.trim();
-        const hasComm = this.tempCommissionRecords.length > 0;
-        const hasDed = this.tempDeductionRecords.length > 0;
+        const hasComm = !!this.tempCommissionFile;
+        const hasDed = !!this.tempDeductionFile;
         
         const btnPublish = document.getElementById('btn-publish-batch');
         if (btnPublish) {
@@ -456,7 +367,7 @@ const Upload = {
     },
 
     /**
-     * Commits a draft or published batch to IndexedDB.
+     * Commits a draft or published batch to PostgreSQL via multipart REST API upload.
      */
     async saveBatch(status) {
         const batchName = document.getElementById('batch-name-input').value.trim();
@@ -465,8 +376,8 @@ const Upload = {
             return;
         }
 
-        if (status === 'published' && (this.tempCommissionRecords.length === 0 || this.tempDeductionRecords.length === 0)) {
-            App.showToast('Laporan Tidak Lengkap', 'Kedua-dua fail (Laporan Komisen & Butiran Potongan) wajib dimuat naik sebelum diterbitkan.', 'danger');
+        if (!this.tempCommissionFile || !this.tempDeductionFile) {
+            App.showToast('Fail Tidak Lengkap', 'Kedua-dua fail (Laporan Komisen & Butiran Potongan) wajib dipilih sebelum diimport.', 'danger');
             return;
         }
 
@@ -480,72 +391,181 @@ const Upload = {
         if (btnPublish) btnPublish.disabled = true;
         if (progressContainer) progressContainer.style.display = 'block';
 
-        const editIdVal = document.getElementById('edit-batch-id').value;
-
         try {
-            let batchId;
-            let existingBatch = null;
+            const { month, year } = parsePeriodFromName(batchName);
 
-            if (editIdVal) {
-                batchId = parseInt(editIdVal);
-                existingBatch = await window.DB.getBatch(batchId);
-            } else {
-                batchId = await window.DB.createBatch(batchName, status);
-                existingBatch = await window.DB.getBatch(batchId);
+            // 1. Upload Commission file
+            if (progressBar) progressBar.style.width = '25%';
+            if (progressPercent) progressPercent.textContent = '25%';
+            App.showToast('Memuat Naik', 'Menghantar Laporan Komisen ke pelayan...', 'info');
+
+            const commFormData = new FormData();
+            commFormData.append('file', this.tempCommissionFile);
+            commFormData.append('month', month);
+            commFormData.append('year', year);
+            commFormData.append('name', batchName);
+            commFormData.append('overwrite', 'true');
+
+            const commRes = await fetch('/api/v1/upload/commission', {
+                method: 'POST',
+                body: commFormData,
+                credentials: 'include'
+            });
+
+            if (!commRes.ok) {
+                const errResult = await commRes.json().catch(() => ({}));
+                throw new Error(errResult.message || 'Gagal memuat naik Laporan Komisen.');
             }
 
-            if (progressBar) progressBar.style.width = '30%';
-            if (progressPercent) progressPercent.textContent = '30%';
+            const commData = await commRes.json();
+            const commBatchId = commData.data.batchId;
+            const commSummary = commData.data.summary;
 
-            const batch = {
-                id: batchId,
-                name: batchName,
-                status: status,
-                month: existingBatch ? existingBatch.month : 6,
-                year: existingBatch ? existingBatch.year : 2026,
-                active: existingBatch ? existingBatch.active : 0,
-                createdTime: existingBatch ? existingBatch.createdTime : Date.now(),
-                publishedTime: status === 'published' ? Date.now() : (existingBatch ? existingBatch.publishedTime : null),
-                commissionFilename: this.tempCommissionFile ? this.tempCommissionFile.name : (existingBatch ? existingBatch.commissionFilename : ''),
-                deductionFilename: this.tempDeductionFile ? this.tempDeductionFile.name : (existingBatch ? existingBatch.deductionFilename : ''),
-                commissionCount: this.tempCommissionRecords.length,
-                deductionCount: this.tempDeductionRecords.length
-            };
+            // Fetch commission records from backend to display
+            const commDetails = await fetch(`/api/v1/upload/${commBatchId}`, { credentials: 'include' }).then(r => r.json());
+            const commRecords = commDetails.data?.records || [];
 
-            if (progressBar) progressBar.style.width = '60%';
-            if (progressPercent) progressPercent.textContent = '60%';
+            // 2. Upload Deduction file
+            if (progressBar) progressBar.style.width = '55%';
+            if (progressPercent) progressPercent.textContent = '55%';
+            App.showToast('Memuat Naik', 'Menghantar Butiran Potongan ke pelayan...', 'info');
 
+            const dedFormData = new FormData();
+            dedFormData.append('file', this.tempDeductionFile);
+            dedFormData.append('month', month);
+            dedFormData.append('year', year);
+            dedFormData.append('name', batchName);
+            dedFormData.append('overwrite', 'true');
+
+            const dedRes = await fetch('/api/v1/upload/deduction', {
+                method: 'POST',
+                body: dedFormData,
+                credentials: 'include'
+            });
+
+            if (!dedRes.ok) {
+                const errResult = await dedRes.json().catch(() => ({}));
+                throw new Error(errResult.message || 'Gagal memuat naik Butiran Potongan.');
+            }
+
+            const dedData = await dedRes.json();
+            const dedBatchId = dedData.data.batchId;
+            const dedSummary = dedData.data.summary;
+
+            // Fetch deduction records from backend to display
+            const dedDetails = await fetch(`/api/v1/upload/${dedBatchId}`, { credentials: 'include' }).then(r => r.json());
+            const dedRecords = dedDetails.data?.records || [];
+
+            if (progressBar) progressBar.style.width = '80%';
+            if (progressPercent) progressPercent.textContent = '80%';
+
+            // 3. Publishing if status is 'published'
             if (status === 'published') {
-                batch.active = 1;
-                await window.DB.setActiveBatch(batchId);
+                App.showToast('Menerbitkan', 'Mengaktifkan batch komisen...', 'info');
+                await fetch(`/api/v1/upload/publish/${commBatchId}`, { method: 'POST', credentials: 'include' });
+                await fetch(`/api/v1/upload/publish/${dedBatchId}`, { method: 'POST', credentials: 'include' });
             }
-
-            // Atomic transactional database write with automatic rollback on failure
-            await window.DB.saveBatchData(
-                batchId,
-                batch,
-                this.tempCommissionRecords,
-                this.tempDeductionRecords,
-                this.tempDispatcherMappings || []
-            );
 
             if (progressBar) progressBar.style.width = '100%';
             if (progressPercent) progressPercent.textContent = '100%';
 
-            // Audit Trail Log
-            await window.DB.log(
-                `Simpan Batch (${status === 'published' ? 'Terbit' : 'Draf'})`,
-                `Batch "${batchName}" disimpan dengan ${this.tempCommissionRecords.length} rekod komisen dan ${this.tempDeductionRecords.length} rekod potongan.`,
-                'Admin'
-            );
-
             App.showToast(
-                'Batch Disimpan',
+                'Import Selesai',
                 `Batch "${batchName}" berjaya disimpan sebagai ${status === 'published' ? 'Terbit & Aktif' : 'Draf'}.`,
                 'success'
             );
 
-            this.resetBatchForm();
+            // Display backend validation summary & imported records
+            const validationContainer = document.getElementById('validation-container');
+            const listItems = document.getElementById('validation-list-items');
+
+            if (validationContainer && listItems) {
+                validationContainer.style.display = 'block';
+                validationContainer.style.background = 'rgba(16, 185, 129, 0.05)';
+                validationContainer.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                
+                const header = validationContainer.querySelector('.validation-header');
+                if (header) {
+                    header.style.color = 'var(--success)';
+                    header.innerHTML = '<i data-lucide="check-circle"></i> <span>Ringkasan Validasi & Import Pelayan</span>';
+                }
+
+                listItems.innerHTML = `
+                    <div style="margin-bottom: 1rem;">
+                        <h5 style="margin: 0 0 0.25rem 0; color: var(--text-primary);">1. Laporan Komisen</h5>
+                        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; list-style-type: disc;">
+                            <li><strong>Jumlah Diimport:</strong> ${commSummary.recordsImported} rekod</li>
+                            <li><strong>Dilangkau:</strong> ${commSummary.recordsSkipped}</li>
+                            <li><strong>Pendua:</strong> ${commSummary.duplicates}</li>
+                            <li><strong>Ralat:</strong> ${commSummary.errors}</li>
+                        </ul>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <h5 style="margin: 0 0 0.25rem 0; color: var(--text-primary);">2. Butiran Potongan</h5>
+                        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; list-style-type: disc;">
+                            <li><strong>Jumlah Diimport:</strong> ${dedSummary.recordsImported} rekod</li>
+                            <li><strong>Dilangkau:</strong> ${dedSummary.recordsSkipped}</li>
+                            <li><strong>Pendua:</strong> ${dedSummary.duplicates}</li>
+                            <li><strong>Ralat:</strong> ${dedSummary.errors}</li>
+                        </ul>
+                    </div>
+                `;
+
+                if (commRecords.length > 0) {
+                    const previewTitle = document.createElement('h5');
+                    previewTitle.style.margin = '1rem 0 0.5rem 0';
+                    previewTitle.style.color = 'var(--text-primary)';
+                    previewTitle.textContent = `Senarai Rekod Komisen Diimport (Pratinjau 50 rekod teratas)`;
+                    listItems.appendChild(previewTitle);
+
+                    const tableDiv = document.createElement('div');
+                    tableDiv.style.maxHeight = '150px';
+                    tableDiv.style.overflowY = 'auto';
+                    tableDiv.style.border = '1px solid var(--border-color)';
+                    tableDiv.style.borderRadius = '6px';
+                    tableDiv.style.marginTop = '0.5rem';
+
+                    const table = document.createElement('table');
+                    table.className = 'data-table';
+                    table.style.fontSize = '0.7rem';
+                    table.style.width = '100%';
+
+                    const keys = ['dispatcher_id', 'name', 'ic_number', 'total_commission', 'nett_commission', 'final_amount_to_pay'];
+                    
+                    const thead = document.createElement('thead');
+                    const headerTr = document.createElement('tr');
+                    keys.forEach(k => {
+                        const th = document.createElement('th');
+                        th.textContent = k.replace(/_/g, ' ').toUpperCase();
+                        headerTr.appendChild(th);
+                    });
+                    thead.appendChild(headerTr);
+                    table.appendChild(thead);
+
+                    const tbody = document.createElement('tbody');
+                    commRecords.slice(0, 50).forEach(rec => {
+                        const tr = document.createElement('tr');
+                        keys.forEach(k => {
+                            const td = document.createElement('td');
+                            td.textContent = rec[k] !== null && rec[k] !== undefined ? rec[k] : '';
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    tableDiv.appendChild(table);
+                    listItems.appendChild(tableDiv);
+                }
+
+                if (window.UI) window.UI.renderIcons();
+            }
+
+            document.getElementById('batch-name-input').value = '';
+            document.getElementById('edit-batch-id').value = '';
+            this.clearFile('commission');
+            this.clearFile('deduction');
+            if (progressContainer) progressContainer.style.display = 'none';
+
             window.Dashboard.loadDashboardStats();
             this.switchTab('batch-list');
         } catch (error) {
@@ -562,35 +582,19 @@ const Upload = {
      */
     async editDraft(batchId) {
         try {
-            const batch = await window.DB.getBatch(batchId);
+            const response = await fetch(`/api/v1/upload/${batchId}`, { credentials: 'include' });
+            if (!response.ok) return;
+
+            const resData = await response.json();
+            const batch = resData.data?.batch;
             if (!batch) return;
 
             this.switchTab('create-batch');
             document.getElementById('edit-batch-id').value = batch.id;
             document.getElementById('batch-name-input').value = batch.name;
-            document.getElementById('create-batch-title').innerHTML = `<i data-lucide="edit-3" style="color: var(--primary);"></i> Edit Draf Batch "${batch.name}"`;
+            document.getElementById('create-batch-title').innerHTML = `<i data-lucide="edit-3" style="color: var(--primary);"></i> Kemas Kini Batch "${batch.name}"`;
 
-            // Load details visually if filenames exist
-            if (batch.commissionFilename) {
-                this.tempCommissionFile = { name: batch.commissionFilename };
-                document.getElementById('comm-file-name').textContent = batch.commissionFilename;
-                document.getElementById('comm-file-size').textContent = `${batch.commissionCount} rekod disimpan`;
-                document.getElementById('comm-upload-zone').style.display = 'none';
-                document.getElementById('comm-file-details').style.display = 'flex';
-                this.tempCommissionRecords = new Array(batch.commissionCount).fill({});
-            }
-
-            if (batch.deductionFilename) {
-                this.tempDeductionFile = { name: batch.deductionFilename };
-                document.getElementById('ded-file-name').textContent = batch.deductionFilename;
-                document.getElementById('ded-file-size').textContent = `${batch.deductionCount} rekod disimpan`;
-                document.getElementById('ded-upload-zone').style.display = 'none';
-                document.getElementById('ded-file-details').style.display = 'flex';
-                this.tempDeductionRecords = new Array(batch.deductionCount).fill({});
-            }
-
-            this.updatePublishButtonState();
-            App.showToast('Draf Dimuatkan', `Batch "${batch.name}" sedia untuk diedit.`, 'info');
+            App.showToast('Batch Dipilih', `Batch "${batch.name}" sedia untuk dikemas kini. Sila muat naik fail baharu.`, 'info');
         } catch (error) {
             window.ErrorHandler.handle(error, 'Load Draft Batch');
         }
@@ -642,69 +646,12 @@ const Upload = {
         try {
             document.getElementById('batch-name-input').value = "Julai 2026";
             
-            this.tempCommissionFile = { name: 'komisen_julai_2026_simulasi.xlsx', size: 10240 };
-            this.tempDeductionFile = { name: 'potongan_julai_2026_simulasi.xlsx', size: 8192 };
+            const commBlob = new Blob(["mock commission data"], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            const dedBlob = new Blob(["mock deduction data"], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
             
-            this.tempCommissionRecords = [
-                {
-                    ic_number: "900101141234",
-                    name: "Ahmad Bin Ali",
-                    parcel_qty: 150,
-                    parcel_yoyi: 10,
-                    net_parcel: 140,
-                    commission_rate: 161.00,
-                    exclude_extra_weight_yoyi: 5,
-                    extra_weight_commission: 20.00,
-                    total_commission: 181.00,
-                    addition_refund_15june26: 15.00,
-                    addition_pickup_commission: 25.00,
-                    nett_commission: 161.00,
-                    final_amount_to_pay: 161.00,
-                    komisen: 161.00
-                },
-                {
-                    ic_number: "850202085678",
-                    name: "Chong Wei Kang",
-                    parcel_qty: 200,
-                    parcel_yoyi: 15,
-                    net_parcel: 185,
-                    commission_rate: 212.75,
-                    exclude_extra_weight_yoyi: 0,
-                    extra_weight_commission: 35.00,
-                    total_commission: 247.75,
-                    addition_refund_15june26: 0.00,
-                    addition_pickup_commission: 50.00,
-                    nett_commission: 282.75,
-                    final_amount_to_pay: 282.75,
-                    komisen: 282.75
-                }
-            ];
+            this.tempCommissionFile = new File([commBlob], 'komisen_julai_2026_simulasi.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            this.tempDeductionFile = new File([dedBlob], 'potongan_julai_2026_simulasi.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             
-            this.tempDeductionRecords = [
-                {
-                    ic_number: "900101141234",
-                    name: "Ahmad Bin Ali",
-                    deduction_advance: 50.00,
-                    deduction_pending_cod: 0.00,
-                    deduction_hq_penalty: 10.00,
-                    deduction_duitnow_penalty: 0.00,
-                    deduction_late_cod_penalty: 0.00,
-                    deduction_lost_individual: 0.00,
-                    deduction_lost_parcel_hub: 0.00
-                },
-                {
-                    ic_number: "850202085678",
-                    name: "Chong Wei Kang",
-                    deduction_advance: 0.00,
-                    deduction_pending_cod: 0.00,
-                    deduction_hq_penalty: 15.00,
-                    deduction_duitnow_penalty: 0.00,
-                    deduction_late_cod_penalty: 0.00,
-                    deduction_lost_individual: 0.00,
-                    deduction_lost_parcel_hub: 0.00
-                }
-            ];
-
             document.getElementById('comm-file-name').textContent = this.tempCommissionFile.name;
             document.getElementById('comm-file-size').textContent = '10.0 KB';
             document.getElementById('comm-upload-zone').style.display = 'none';
