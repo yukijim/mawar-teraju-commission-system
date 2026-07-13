@@ -198,13 +198,20 @@ const Upload = {
      * Commits a draft or published batch to PostgreSQL via multipart REST API upload.
      */
     async saveBatch(status) {
+        console.log('[DEBUG] Upload.saveBatch triggered. Target Status:', status);
         const batchName = document.getElementById('batch-name-input').value.trim();
+        console.log('[DEBUG] Upload.saveBatch input batchName:', batchName);
+        console.log('[DEBUG] Upload.saveBatch tempCommissionFile:', this.tempCommissionFile);
+        console.log('[DEBUG] Upload.saveBatch tempDeductionFile:', this.tempDeductionFile);
+
         if (!batchName) {
+            console.warn('[Upload.saveBatch Validation Failed] Batch name is empty');
             App.showToast('Nama Batch Kosong', 'Sila masukkan nama bagi tempoh komisen batch.', 'warning');
             return;
         }
 
         if (!this.tempCommissionFile || !this.tempDeductionFile) {
+            console.warn('[Upload.saveBatch Validation Failed] Missing required files. Commission:', this.tempCommissionFile, 'Deduction:', this.tempDeductionFile);
             App.showToast('Fail Tidak Lengkap', 'Kedua-dua fail (Laporan Komisen & Butiran Potongan) wajib dipilih sebelum diimport.', 'danger');
             return;
         }
