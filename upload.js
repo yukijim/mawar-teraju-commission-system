@@ -612,13 +612,22 @@ const Upload = {
             const wb = XLSX.utils.book_new();
             let headers, sampleRows;
             if (type === 'commission') {
-                headers = window.ExcelParser.COMMISSION_HEADERS.map(h => h.label);
+                headers = [
+                    "Delivery Dispatcher ID", "Delivery Dispatcher Name", "Parcel Quantity", "Parcel YOYI", 
+                    "Net Parcel", "RM1.15/Parcel Commission", "Exclude Extra Weight YOYI", "Extra Weight Commission", 
+                    "Total Commission", "ADDITION: REFUND 15JUNE26", "ADDITION: PICKUP COMMISSION", 
+                    "NETT COMMISSION", "FINAL AMOUNT TO PAY"
+                ];
                 sampleRows = [
                     ["900101-14-1234", "Ahmad Bin Ali", 150, 10, 140, 161.00, 5, 20.00, 181.00, 15.00, 25.00, 161.00, 161.00],
                     ["850202-08-5678", "Chong Wei Kang", 200, 15, 185, 212.75, 0, 35.00, 247.75, 0.00, 50.00, 282.75, 282.75]
                 ];
             } else {
-                headers = window.ExcelParser.DEDUCTION_HEADERS.map(h => h.label);
+                headers = [
+                    "Delivery Dispatcher ID", "Delivery Dispatcher Name", "DEDUCTION: ADVANCE", 
+                    "DEDUCTION: PENDING COD", "DEDUCTION: HQ PENALTY", "DEDUCTION: DUITNOW PENALTY", 
+                    "DEDUCTION: LATE COD PENALTY", "DEDUCTION: LOST INDIVIDUAL", "DEDUCTION: LOST PARCEL HUB"
+                ];
                 sampleRows = [
                     ["900101-14-1234", "Ahmad Bin Ali", 50.00, 0.00, 10.00, 0.00, 0.00, 0.00, 0.00],
                     ["850202-08-5678", "Chong Wei Kang", 0.00, 0.00, 15.00, 0.00, 0.00, 0.00, 0.00]

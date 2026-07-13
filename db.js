@@ -721,34 +721,10 @@ function groupAndMergeBatches(rawHistory) {
 }
 
 /**
- * Service orchestrating commission batch data logic, delegating database calls.
- * Can switch repository implementation dynamically (swappable PostgreSQL/IndexedDB).
+ * Repository implementation for production PostgreSQL backend REST API.
  */
-class CommissionService {
-    constructor(repository) {
-        this.repository = repository;
-    }
-
-    setRepository(repository) {
-        this.repository = repository;
-    }
-
-    async open() {
-        if (this.repository.manager && typeof this.repository.manager.open === 'function') {
-            return this.repository.manager.open();
-        }
-    }
-
-    async transaction(storeNames, mode, callback) {
-        if (this.repository.manager && typeof this.repository.manager.transaction === 'function') {
-            return this.repository.manager.transaction(storeNames, mode, callback);
-        }
-    }
-
+class PostgresRestRepository extends CommissionRepository {
     async getBatch(batchId) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.getBatch(batchId);
-        }
         try {
             const res = await fetch(`/api/v1/upload/${batchId}`, { credentials: 'include' });
             if (!res.ok) return null;
@@ -760,9 +736,6 @@ class CommissionService {
     }
 
     async getBatches() {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.getBatches();
-        }
         try {
             const res = await fetch('/api/v1/upload/history', { credentials: 'include' });
             if (!res.ok) return [];
@@ -776,31 +749,19 @@ class CommissionService {
     }
 
     async createBatch(name, status) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.createBatch(name, status);
-        }
         return null;
     }
 
     async updateBatch(batch) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.updateBatch(batch);
-        }
         return null;
     }
 
     async getActiveBatch() {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.getActiveBatch();
-        }
         const batches = await this.getBatches();
         return batches.find(b => b.active) || null;
     }
 
     async setActiveBatch(batchId) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.setActiveBatch(batchId);
-        }
         const batches = await this.getBatches();
         const logicalBatch = batches.find(b => b.commissionBatchId === batchId || b.deductionBatchId === batchId || b.id === batchId);
         
@@ -827,9 +788,6 @@ class CommissionService {
     }
 
     async deleteBatch(batchId) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.deleteBatch(batchId);
-        }
         const res = await fetch(`/api/v1/upload/rollback/${batchId}`, {
             method: 'POST',
             credentials: 'include'
@@ -837,23 +795,11 @@ class CommissionService {
         return res.ok;
     }
 
-    async getCommissionRecord(batchId, ic) {
-        return this.repository.getCommissionRecord(batchId, ic);
-    }
-
-    async getDeductionRecord(batchId, ic) {
-        return this.repository.getDeductionRecord(batchId, ic);
-    }
-
-    async getBatchStats(batchId) {
-        return this.repository.getBatchStats(batchId);
-    }
+    async getCommissionRecord(batchId, ic) { return null; }
+    async getDeductionRecord(batchId, ic) { return null; }
+    async getBatchStats(batchId) { return null; }
 
     async searchByIc(rawIc) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.searchByIc(rawIc);
-        }
-
         const cleanIc = rawIc.toString().replace(/[\s-]/g, '');
         if (!cleanIc) return [];
 
@@ -931,53 +877,18 @@ class CommissionService {
 
     async searchByIC(rawIc) { return this.searchByIc(rawIc); }
 
-    async importCommissionRecords(batchId, list) { return this.repository.importCommissionRecords(batchId, list); }
-    async importDeductionRecords(batchId, list) { return this.repository.importDeductionRecords(batchId, list); }
-    async deleteCommissionRecordsByBatchId(batchId) { return this.repository.deleteCommissionRecordsByBatchId(batchId); }
-    async deleteDeductionRecordsByBatchId(batchId) { return this.repository.deleteDeductionRecordsByBatchId(batchId); }
+    async importCommissionRecords(batchId, list) { return { success: true }; }
+    async importDeductionRecords(batchId, list) { return { success: true }; }
+    async deleteCommissionRecordsByBatchId(batchId) { return true; }
+    async deleteDeductionRecordsByBatchId(batchId) { return true; }
 
-    async getDispatcherMapping(dispatcherId) { return this.repository.getDispatcherMapping(dispatcherId); }
-    async importDispatcherMappings(list) { return this.repository.importDispatcherMappings(list); }
+    async getDispatcherMapping(dispatcherId) { return null; }
+    async importDispatcherMappings(list) { return { success: true }; }
     async saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return this.repository.saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList);
-        }
         return { success: true };
     }
 
-    async addHistory(historyItem) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            if (this.repository.manager) {
-                return this.repository.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
-                    const store = tx.objectStore(STORES.HISTORY);
-                    return new Promise((resolve, reject) => {
-                        const request = store.add(historyItem);
-                        request.onsuccess = (e) => resolve(e.target.result);
-                        request.onerror = (e) => reject(e.target.error);
-                    });
-                });
-            }
-        }
-        return null;
-    }
-
     async getHistory() {
-        if (window.location.pathname.includes('test_runner.html')) {
-            if (this.repository.manager) {
-                return this.repository.manager.transaction([STORES.HISTORY], 'readonly', async (tx) => {
-                    const store = tx.objectStore(STORES.HISTORY);
-                    return new Promise((resolve, reject) => {
-                        const request = store.getAll();
-                        request.onsuccess = (e) => {
-                            const results = e.target.result || [];
-                            results.sort((a, b) => b.id - a.id);
-                            resolve(results);
-                        };
-                        request.onerror = (e) => reject(e.target.error);
-                    });
-                });
-            }
-        }
         try {
             const res = await fetch('/api/v1/upload/history', { credentials: 'include' });
             if (!res.ok) return [];
@@ -995,26 +906,7 @@ class CommissionService {
         }
     }
 
-    async deleteHistory(historyId) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            if (this.repository.manager) {
-                return this.repository.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
-                    const store = tx.objectStore(STORES.HISTORY);
-                    return new Promise((resolve, reject) => {
-                        const request = store.delete(historyId);
-                        request.onsuccess = () => resolve();
-                        request.onerror = (e) => reject(e.target.error);
-                    });
-                });
-            }
-        }
-        return true;
-    }
-
     async deleteRecordsByUploadId(historyId) {
-        if (window.location.pathname.includes('test_runner.html')) {
-            return true;
-        }
         const res = await fetch(`/api/v1/upload/rollback/${historyId}`, {
             method: 'POST',
             credentials: 'include'
@@ -1025,103 +917,78 @@ class CommissionService {
         }
         return true;
     }
+}
+
+/**
+ * Service orchestrating commission batch data logic, delegating database calls.
+ * Can switch repository implementation dynamically (swappable PostgreSQL/IndexedDB).
+ */
+class CommissionService {
+    constructor(repository) {
+        this.repository = repository;
+    }
+
+    setRepository(repository) {
+        this.repository = repository;
+    }
+
+    async open() {
+        if (this.repository.manager && typeof this.repository.manager.open === 'function') {
+            return this.repository.manager.open();
+        }
+    }
+
+    async transaction(storeNames, mode, callback) {
+        if (this.repository.manager && typeof this.repository.manager.transaction === 'function') {
+            return this.repository.manager.transaction(storeNames, mode, callback);
+        }
+    }
+
+    async getBatch(batchId) { return this.repository.getBatch(batchId); }
+    async getBatches() { return this.repository.getBatches(); }
+    async createBatch(name, status) { return this.repository.createBatch(name, status); }
+    async updateBatch(batch) { return this.repository.updateBatch(batch); }
+    async getActiveBatch() { return this.repository.getActiveBatch(); }
+    async setActiveBatch(batchId) { return this.repository.setActiveBatch(batchId); }
+    async deleteBatch(batchId) { return this.repository.deleteBatch(batchId); }
+
+    async getCommissionRecord(batchId, ic) { return this.repository.getCommissionRecord(batchId, ic); }
+    async getDeductionRecord(batchId, ic) { return this.repository.getDeductionRecord(batchId, ic); }
+    async getBatchStats(batchId) { return this.repository.getBatchStats(batchId); }
+    async searchByIc(rawIc) { return this.repository.searchByIc(rawIc); }
+    async searchByIC(rawIc) { return this.searchByIc(rawIc); }
+
+    async importCommissionRecords(batchId, list) { return this.repository.importCommissionRecords(batchId, list); }
+    async importDeductionRecords(batchId, list) { return this.repository.importDeductionRecords(batchId, list); }
+    async deleteCommissionRecordsByBatchId(batchId) { return this.repository.deleteCommissionRecordsByBatchId(batchId); }
+    async deleteDeductionRecordsByBatchId(batchId) { return this.repository.deleteDeductionRecordsByBatchId(batchId); }
+
+    async getDispatcherMapping(dispatcherId) { return this.repository.getDispatcherMapping(dispatcherId); }
+    async importDispatcherMappings(list) { return this.repository.importDispatcherMappings(list); }
+    async saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList) {
+        return this.repository.saveBatchData(batchId, batchMeta, commissionList, deductionList, mappingList);
+    }
+
+    async addHistory(historyItem) { return this.repository.addHistory ? this.repository.addHistory(historyItem) : null; }
+    async getHistory() { return this.repository.getHistory(); }
+    async deleteHistory(historyId) { return this.repository.deleteHistory ? this.repository.deleteHistory(historyId) : true; }
+    async deleteRecordsByUploadId(historyId) { return this.repository.deleteRecordsByUploadId(historyId); }
 
     async log(action, details, user = 'System') {
         console.log(`[Audit Log] ${action}: ${details} (User: ${user})`);
-        if (window.location.pathname.includes('test_runner.html')) {
-            if (this.repository.manager) {
-                const logItem = { timestamp: Date.now(), action, details, user };
-                try {
-                    return await this.repository.manager.transaction([STORES.AUDIT_LOG], 'readwrite', async (tx) => {
-                        const store = tx.objectStore(STORES.AUDIT_LOG);
-                        return new Promise((resolve, reject) => {
-                            const request = store.add(logItem);
-                            request.onsuccess = (e) => resolve(e.target.result);
-                            request.onerror = (e) => reject(e.target.error);
-                        });
-                    });
-                } catch (error) {
-                    console.error('Audit logging failed:', error);
-                    return -1;
-                }
-            }
-        }
-        return 0;
+        return this.repository.log ? this.repository.log(action, details, user) : 0;
     }
 
-    async getLogs() {
-        if (this.repository.manager) {
-            return this.repository.manager.transaction([STORES.AUDIT_LOG], 'readonly', async (tx) => {
-                const store = tx.objectStore(STORES.AUDIT_LOG);
-                return new Promise((resolve, reject) => {
-                    const request = store.getAll();
-                    request.onsuccess = (e) => {
-                        const results = e.target.result || [];
-                        results.sort((a, b) => b.timestamp - a.timestamp);
-                        resolve(results);
-                    };
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            });
-        }
-    }
+    async getLogs() { return this.repository.getLogs ? this.repository.getLogs() : []; }
+    async clearAuditLogs() { return this.repository.clearAuditLogs ? this.repository.clearAuditLogs() : true; }
 
-    async clearAuditLogs() {
-        if (this.repository.manager) {
-            return this.repository.manager.transaction([STORES.AUDIT_LOG], 'readwrite', async (tx) => {
-                const store = tx.objectStore(STORES.AUDIT_LOG);
-                return new Promise((resolve, reject) => {
-                    const request = store.clear();
-                    request.onsuccess = () => resolve();
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            });
-        }
-    }
+    async clearAllRecords() { return this.repository.clearAllRecords ? this.repository.clearAllRecords() : true; }
 
-    async clearAllRecords() { return this.repository.clearAllRecords(); }
-
-    async exportBackup() {
-        if (this.repository.manager) {
-            const backup = {
-                version: DB_VERSION,
-                exportedAt: Date.now(),
-                history: [],
-                records: [],
-                audit_log: []
-            };
-            return this.repository.manager.transaction([STORES.HISTORY, STORES.RECORDS, STORES.AUDIT_LOG], 'readonly', async (tx) => {
-                backup.history = await new Promise((res, rej) => {
-                    const req = tx.objectStore(STORES.HISTORY).getAll();
-                    req.onsuccess = () => res(req.result || []); req.onerror = () => rej(req.error);
-                });
-                backup.records = await new Promise((res, rej) => {
-                    const req = tx.objectStore(STORES.RECORDS).getAll();
-                    req.onsuccess = () => res(req.result || []); req.onerror = () => rej(req.error);
-                });
-                backup.audit_log = await new Promise((res, rej) => {
-                    const req = tx.objectStore(STORES.AUDIT_LOG).getAll();
-                    req.onsuccess = () => res(req.result || []); req.onerror = () => rej(req.error);
-                });
-                return JSON.stringify(backup);
-            });
-        }
-    }
-
-    async restoreBackup(jsonString) {
-        if (this.repository.manager) {
-            let backup = JSON.parse(jsonString);
-            return this.repository.manager.transaction([STORES.HISTORY, STORES.RECORDS, STORES.AUDIT_LOG], 'readwrite', async (tx) => {
-                await tx.objectStore(STORES.HISTORY).clear();
-                await tx.objectStore(STORES.RECORDS).clear();
-                await tx.objectStore(STORES.AUDIT_LOG).clear();
-                for (const h of backup.history) tx.objectStore(STORES.HISTORY).add(h);
-                for (const r of backup.records) tx.objectStore(STORES.RECORDS).put(r);
-                for (const l of backup.audit_log) tx.objectStore(STORES.AUDIT_LOG).add(l);
-            });
-        }
-    }
+    async exportBackup() { return this.repository.exportBackup ? this.repository.exportBackup() : ''; }
+    async restoreBackup(jsonString) { return this.repository.restoreBackup ? this.repository.restoreBackup(jsonString) : true; }
 }
 
-// Instantiate and attach globally
-window.DB = new CommissionService(new IndexedDBRepository());
+// Instantiate swappable repository based on page environment
+const isTestRunner = window.location.pathname.includes('test_runner.html');
+const repository = isTestRunner ? new IndexedDBRepository() : new PostgresRestRepository();
+window.DB = new CommissionService(repository);
