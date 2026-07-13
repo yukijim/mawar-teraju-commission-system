@@ -237,10 +237,12 @@
             localStorage.removeItem('mt_commission_admin_hash');
             await window.Auth.initAuth();
             const correct = await window.Auth.verifyAdminPassword('mawar123');
-            assert.equal(correct, true, 'mawar123 adalah kata laluan betul');
+            const correctSuccess = typeof correct === 'boolean' ? correct : correct.success;
+            assert.equal(correctSuccess, true, 'mawar123 adalah kata laluan betul');
             
             const incorrect = await window.Auth.verifyAdminPassword('salah123');
-            assert.equal(incorrect, false, 'salah123 adalah kata laluan salah');
+            const incorrectSuccess = typeof incorrect === 'boolean' ? incorrect : incorrect.success;
+            assert.equal(incorrectSuccess, false, 'salah123 adalah kata laluan salah');
         });
 
         test('Auth.changeAdminPassword', 'Sistem boleh menukar kata laluan admin', async () => {
@@ -251,10 +253,12 @@
             assert.equal(changeRes.success, true, 'Penukaran kata laluan berjaya');
             
             const oldVerify = await window.Auth.verifyAdminPassword('mawar123');
-            assert.equal(oldVerify, false, 'Kata laluan lama dinyahaktifkan');
+            const oldVerifySuccess = typeof oldVerify === 'boolean' ? oldVerify : oldVerify.success;
+            assert.equal(oldVerifySuccess, false, 'Kata laluan lama dinyahaktifkan');
             
             const newVerify = await window.Auth.verifyAdminPassword('baru123');
-            assert.equal(newVerify, true, 'Kata laluan baru diaktifkan');
+            const newVerifySuccess = typeof newVerify === 'boolean' ? newVerify : newVerify.success;
+            assert.equal(newVerifySuccess, true, 'Kata laluan baru diaktifkan');
             
             // Restore password
             await window.Auth.changeAdminPassword('baru123', 'mawar123');

@@ -16,7 +16,8 @@ const Admin = {
         if (!pwdInput) return;
 
         try {
-            const success = await window.Auth.verifyAdminPassword(pwdInput.value);
+            const response = await window.Auth.verifyAdminPassword(pwdInput.value);
+            const success = typeof response === 'boolean' ? response : (response && response.success);
             if (success) {
                 pwdInput.value = '';
                 if (window.UI) {
@@ -27,7 +28,8 @@ const Admin = {
                 }
             } else {
                 if (window.UI) {
-                    window.UI.showToast('Gagal Log Masuk', 'Kata laluan yang anda masukkan salah. Sila cuba lagi.', 'danger');
+                    const failMsg = (response && response.message) ? response.message : 'Kata laluan yang anda masukkan salah. Sila cuba lagi.';
+                    window.UI.showToast('Gagal Log Masuk', failMsg, 'danger');
                 }
                 pwdInput.focus();
             }

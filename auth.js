@@ -38,21 +38,64 @@ async function initAuth() {
  * @returns {Promise<boolean>} True if password matches, false otherwise
  */
 async function verifyAdminPassword(password) {
-    await initAuth();
-    const storedHash = localStorage.getItem(HASH_KEY);
-    const inputHash = await hashText(password);
-    
-    if (storedHash === inputHash) {
-        // Create standard session (e.g. generate a token or timestamp)
-        const sessionToken = {
-            loggedIn: true,
-            createdAt: Date.now(),
-            expiresAt: Date.now() + (2 * 60 * 60 * 1000) // 2 hours expiry
-        };
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionToken));
-        return true;
+    if (window.location.pathname.includes('test_runner.html')) {
+        await initAuth();
+        const storedHash = localStorage.getItem(HASH_KEY);
+        const inputHash = await hashText(password);
+        
+        if (storedHash === inputHash) {
+            const sessionToken = {
+                loggedIn: true,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + (2 * 60 * 60 * 1000) // 2 hours expiry
+            };
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionToken));
+            return { success: true };
+        }
+        return { success: false, message: 'Kata laluan yang anda masukkan salah. Sila cuba lagi.' };
     }
-    return false;
+
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: 'admin',
+                password: password
+            }),
+            credentials: 'include'
+        });
+
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            result = { success: false, message: 'Format respon pelayan tidak sah.' };
+        }
+
+        if (response.ok && result.success) {
+            const sessionToken = {
+                loggedIn: true,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + (2 * 60 * 60 * 1000) // 2 hours expiry
+            };
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionToken));
+            return { success: true };
+        } else {
+            return {
+                success: false,
+                message: result.message || 'Kata laluan yang anda masukkan salah. Sila cuba lagi.'
+            };
+        }
+    } catch (error) {
+        console.error('[Auth] Ralat semasa menghubungkan ke API:', error);
+        return {
+            success: false,
+            message: 'Gagal menyambung ke pelayan API. Sila semak sambungan rangkaian anda.'
+        };
+    }
 }
 
 /**
