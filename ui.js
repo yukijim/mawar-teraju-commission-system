@@ -199,3 +199,8 @@ const UI = {
 
 window.UI = UI;
 window.DomCache = DomCache;
+
+window.apiFetch = async function(url, options = {}) {
+    options.credentials = 'include';
+    return fetch(url, options);
+};

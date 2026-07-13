@@ -56,7 +56,7 @@ async function verifyAdminPassword(password) {
     }
 
     try {
-        const response = await fetch('/api/auth/login', {
+        const response = await window.apiFetch('/api/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -64,8 +64,7 @@ async function verifyAdminPassword(password) {
             body: JSON.stringify({
                 username: 'admin',
                 password: password
-            }),
-            credentials: 'include'
+            })
         });
 
         let result;

@@ -863,7 +863,7 @@ function groupAndMergeBatches(rawHistory) {
 class PostgresRestRepository extends CommissionRepository {
     async getBatch(batchId) {
         try {
-            const res = await fetch(`/api/v1/upload/${batchId}`, { credentials: 'include' });
+            const res = await window.apiFetch(`/api/v1/upload/${batchId}`);
             if (!res.ok) return null;
             const result = await res.json();
             return result.data?.batch || null;
@@ -874,7 +874,7 @@ class PostgresRestRepository extends CommissionRepository {
 
     async getBatches() {
         try {
-            const res = await fetch('/api/v1/upload/history', { credentials: 'include' });
+            const res = await window.apiFetch('/api/v1/upload/history');
             if (!res.ok) return [];
             const result = await res.json();
             const rawHistory = result.data?.history || [];
@@ -904,30 +904,26 @@ class PostgresRestRepository extends CommissionRepository {
         
         if (logicalBatch) {
             if (logicalBatch.commissionBatchId) {
-                await fetch(`/api/v1/upload/publish/${logicalBatch.commissionBatchId}`, {
-                    method: 'POST',
-                    credentials: 'include'
+                await window.apiFetch(`/api/v1/upload/publish/${logicalBatch.commissionBatchId}`, {
+                    method: 'POST'
                 });
             }
             if (logicalBatch.deductionBatchId) {
-                await fetch(`/api/v1/upload/publish/${logicalBatch.deductionBatchId}`, {
-                    method: 'POST',
-                    credentials: 'include'
+                await window.apiFetch(`/api/v1/upload/publish/${logicalBatch.deductionBatchId}`, {
+                    method: 'POST'
                 });
             }
             return true;
         }
-        await fetch(`/api/v1/upload/publish/${batchId}`, {
-            method: 'POST',
-            credentials: 'include'
+        await window.apiFetch(`/api/v1/upload/publish/${batchId}`, {
+            method: 'POST'
         });
         return true;
     }
 
     async deleteBatch(batchId) {
-        const res = await fetch(`/api/v1/upload/rollback/${batchId}`, {
-            method: 'POST',
-            credentials: 'include'
+        const res = await window.apiFetch(`/api/v1/upload/rollback/${batchId}`, {
+            method: 'POST'
         });
         return res.ok;
     }
@@ -941,9 +937,8 @@ class PostgresRestRepository extends CommissionRepository {
         if (!cleanIc) return [];
 
         try {
-            const response = await fetch(`/api/v1/search?ic_number=${cleanIc}`, {
-                method: 'GET',
-                credentials: 'include'
+            const response = await window.apiFetch(`/api/v1/search?ic_number=${cleanIc}`, {
+                method: 'GET'
             });
 
             if (!response.ok) {
@@ -1027,7 +1022,7 @@ class PostgresRestRepository extends CommissionRepository {
 
     async getHistory() {
         try {
-            const res = await fetch('/api/v1/upload/history', { credentials: 'include' });
+            const res = await window.apiFetch('/api/v1/upload/history');
             if (!res.ok) return [];
             const result = await res.json();
             const rawHistory = result.data?.history || [];
@@ -1044,9 +1039,8 @@ class PostgresRestRepository extends CommissionRepository {
     }
 
     async deleteRecordsByUploadId(historyId) {
-        const res = await fetch(`/api/v1/upload/rollback/${historyId}`, {
-            method: 'POST',
-            credentials: 'include'
+        const res = await window.apiFetch(`/api/v1/upload/rollback/${historyId}`, {
+            method: 'POST'
         });
         if (!res.ok) {
             const errResult = await res.json().catch(() => ({}));

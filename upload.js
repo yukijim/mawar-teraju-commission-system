@@ -241,10 +241,9 @@ const Upload = {
             commFormData.append('name', batchName);
             commFormData.append('overwrite', 'true');
 
-            const commRes = await fetch('/api/v1/upload/commission', {
+            const commRes = await window.apiFetch('/api/v1/upload/commission', {
                 method: 'POST',
-                body: commFormData,
-                credentials: 'include'
+                body: commFormData
             });
 
             if (!commRes.ok) {
@@ -257,7 +256,7 @@ const Upload = {
             const commSummary = commData.data.summary;
 
             // Fetch commission records from backend to display
-            const commDetails = await fetch(`/api/v1/upload/${commBatchId}`, { credentials: 'include' }).then(r => r.json());
+            const commDetails = await window.apiFetch(`/api/v1/upload/${commBatchId}`).then(r => r.json());
             const commRecords = commDetails.data?.records || [];
 
             // 2. Upload Deduction file
@@ -272,10 +271,9 @@ const Upload = {
             dedFormData.append('name', batchName);
             dedFormData.append('overwrite', 'true');
 
-            const dedRes = await fetch('/api/v1/upload/deduction', {
+            const dedRes = await window.apiFetch('/api/v1/upload/deduction', {
                 method: 'POST',
-                body: dedFormData,
-                credentials: 'include'
+                body: dedFormData
             });
 
             if (!dedRes.ok) {
@@ -288,7 +286,7 @@ const Upload = {
             const dedSummary = dedData.data.summary;
 
             // Fetch deduction records from backend to display
-            const dedDetails = await fetch(`/api/v1/upload/${dedBatchId}`, { credentials: 'include' }).then(r => r.json());
+            const dedDetails = await window.apiFetch(`/api/v1/upload/${dedBatchId}`).then(r => r.json());
             const dedRecords = dedDetails.data?.records || [];
 
             if (progressBar) progressBar.style.width = '80%';
@@ -297,8 +295,8 @@ const Upload = {
             // 3. Publishing if status is 'published'
             if (status === 'published') {
                 App.showToast('Menerbitkan', 'Mengaktifkan batch komisen...', 'info');
-                await fetch(`/api/v1/upload/publish/${commBatchId}`, { method: 'POST', credentials: 'include' });
-                await fetch(`/api/v1/upload/publish/${dedBatchId}`, { method: 'POST', credentials: 'include' });
+                await window.apiFetch(`/api/v1/upload/publish/${commBatchId}`, { method: 'POST' });
+                await window.apiFetch(`/api/v1/upload/publish/${dedBatchId}`, { method: 'POST' });
             }
 
             if (progressBar) progressBar.style.width = '100%';
@@ -417,7 +415,7 @@ const Upload = {
      */
     async editDraft(batchId) {
         try {
-            const response = await fetch(`/api/v1/upload/${batchId}`, { credentials: 'include' });
+            const response = await window.apiFetch(`/api/v1/upload/${batchId}`);
             if (!response.ok) return;
 
             const resData = await response.json();
