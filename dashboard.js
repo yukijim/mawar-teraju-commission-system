@@ -20,7 +20,7 @@ const Dashboard = {
             let totalRecordsCount = 0;
             if (activeBatch) {
                 totalRecordsCount = activeBatch.commissionCount;
-            } else {
+            } else if (window.location.pathname.includes('test_runner.html')) {
                 totalRecordsCount = await window.DB.transaction(['records'], 'readonly', async (tx) => {
                     const store = tx.objectStore('records');
                     return new Promise((resolve) => {
@@ -28,6 +28,8 @@ const Dashboard = {
                         req.onsuccess = () => resolve(req.result);
                     });
                 });
+            } else {
+                totalRecordsCount = 0;
             }
             
             const statsRecordsEl = window.DomCache.get('stats-total-records');

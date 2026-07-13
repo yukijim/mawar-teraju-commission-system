@@ -5,7 +5,7 @@
  */
 
 const DB_NAME = 'MawarTerajuCommissionDB';
-const DB_VERSION = 4;
+const DB_VERSION = 7;
 
 const STORES = {
     RECORDS: 'records', // Legacy
@@ -22,6 +22,9 @@ const STORES = {
  */
 class IndexedDBManager {
     constructor() {
+        if (!window.location.pathname.includes('test_runner.html')) {
+            throw new Error('Restricted: IndexedDBManager cannot be instantiated in production.');
+        }
         this.db = null;
     }
 
@@ -81,10 +84,14 @@ class IndexedDBManager {
                     commStore.createIndex('batchId', 'batchId', { unique: false });
                     commStore.createIndex('ic_number', 'ic_number', { unique: false });
                     commStore.createIndex('dispatcher_id', 'dispatcher_id', { unique: false });
+                    commStore.createIndex('batch_ic', ['batchId', 'ic_number'], { unique: false });
                 } else {
                     const store = tx.objectStore(STORES.COMMISSION_RECORDS);
                     if (!store.indexNames.contains('dispatcher_id')) {
                         store.createIndex('dispatcher_id', 'dispatcher_id', { unique: false });
+                    }
+                    if (!store.indexNames.contains('batch_ic')) {
+                        store.createIndex('batch_ic', ['batchId', 'ic_number'], { unique: false });
                     }
                 }
 
@@ -94,10 +101,14 @@ class IndexedDBManager {
                     dedStore.createIndex('batchId', 'batchId', { unique: false });
                     dedStore.createIndex('ic_number', 'ic_number', { unique: false });
                     dedStore.createIndex('dispatcher_id', 'dispatcher_id', { unique: false });
+                    dedStore.createIndex('batch_ic', ['batchId', 'ic_number'], { unique: false });
                 } else {
                     const store = tx.objectStore(STORES.DEDUCTION_RECORDS);
                     if (!store.indexNames.contains('dispatcher_id')) {
                         store.createIndex('dispatcher_id', 'dispatcher_id', { unique: false });
+                    }
+                    if (!store.indexNames.contains('batch_ic')) {
+                        store.createIndex('batch_ic', ['batchId', 'ic_number'], { unique: false });
                     }
                 }
 
@@ -168,6 +179,9 @@ class CommissionRepository {
 class IndexedDBRepository extends CommissionRepository {
     constructor() {
         super();
+        if (!window.location.pathname.includes('test_runner.html')) {
+            throw new Error('Restricted: IndexedDBRepository cannot be instantiated in production.');
+        }
         this.manager = new IndexedDBManager();
     }
 
@@ -537,6 +551,129 @@ class IndexedDBRepository extends CommissionRepository {
                 });
             }
         });
+    }
+
+    async log(action, details, user = 'System') {
+        if (this.manager) {
+            const logItem = { timestamp: Date.now(), action, details, user };
+            try {
+                return await this.manager.transaction([STORES.AUDIT_LOG], 'readwrite', async (tx) => {
+                    const store = tx.objectStore(STORES.AUDIT_LOG);
+                    return new Promise((resolve, reject) => {
+                        const request = store.add(logItem);
+                        request.onsuccess = (e) => resolve(e.target.result);
+                        request.onerror = (e) => reject(e.target.error);
+                    });
+                });
+            } catch (error) {
+                console.error('Audit logging failed:', error);
+                return -1;
+            }
+        }
+        return 0;
+    }
+
+    async getLogs() {
+        if (this.manager) {
+            return this.manager.transaction([STORES.AUDIT_LOG], 'readonly', async (tx) => {
+                const store = tx.objectStore(STORES.AUDIT_LOG);
+                return new Promise((resolve, reject) => {
+                    const request = store.getAll();
+                    request.onsuccess = (e) => {
+                        const results = e.target.result || [];
+                        results.sort((a, b) => b.timestamp - a.timestamp);
+                        resolve(results);
+                    };
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            });
+        }
+        return [];
+    }
+
+    async clearAuditLogs() {
+        if (this.manager) {
+            return this.manager.transaction([STORES.AUDIT_LOG], 'readwrite', async (tx) => {
+                const store = tx.objectStore(STORES.AUDIT_LOG);
+                return new Promise((resolve, reject) => {
+                    const request = store.clear();
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            });
+        }
+        return true;
+    }
+
+    async addHistory(historyItem) {
+        if (this.manager) {
+            return this.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
+                const store = tx.objectStore(STORES.HISTORY);
+                return new Promise((resolve, reject) => {
+                    const request = store.add(historyItem);
+                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            });
+        }
+        return null;
+    }
+
+    async deleteHistory(historyId) {
+        if (this.manager) {
+            return this.manager.transaction([STORES.HISTORY], 'readwrite', async (tx) => {
+                const store = tx.objectStore(STORES.HISTORY);
+                return new Promise((resolve, reject) => {
+                    const request = store.delete(historyId);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            });
+        }
+        return true;
+    }
+
+    async exportBackup() {
+        if (this.manager) {
+            const backup = {
+                version: DB_VERSION,
+                exportedAt: Date.now(),
+                history: [],
+                records: [],
+                audit_log: []
+            };
+            return this.manager.transaction([STORES.HISTORY, STORES.RECORDS, STORES.AUDIT_LOG], 'readonly', async (tx) => {
+                backup.history = await new Promise((res, rej) => {
+                    const req = tx.objectStore(STORES.HISTORY).getAll();
+                    req.onsuccess = () => res(req.result || []); req.onerror = () => rej(req.error);
+                });
+                backup.records = await new Promise((res, rej) => {
+                    const req = tx.objectStore(STORES.RECORDS).getAll();
+                    req.onsuccess = () => res(req.result || []); req.onerror = () => rej(req.error);
+                });
+                backup.audit_log = await new Promise((res, rej) => {
+                    const req = tx.objectStore(STORES.AUDIT_LOG).getAll();
+                    req.onsuccess = () => res(req.result || []); req.onerror = () => rej(req.error);
+                });
+                return JSON.stringify(backup);
+            });
+        }
+        return '';
+    }
+
+    async restoreBackup(jsonString) {
+        if (this.manager) {
+            let backup = JSON.parse(jsonString);
+            return this.manager.transaction([STORES.HISTORY, STORES.RECORDS, STORES.AUDIT_LOG], 'readwrite', async (tx) => {
+                await tx.objectStore(STORES.HISTORY).clear();
+                await tx.objectStore(STORES.RECORDS).clear();
+                await tx.objectStore(STORES.AUDIT_LOG).clear();
+                for (const h of backup.history) tx.objectStore(STORES.HISTORY).add(h);
+                for (const r of backup.records) tx.objectStore(STORES.RECORDS).put(r);
+                for (const l of backup.audit_log) tx.objectStore(STORES.AUDIT_LOG).add(l);
+            });
+        }
+        return true;
     }
 
     // Helper legacy methods

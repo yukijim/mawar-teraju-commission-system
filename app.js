@@ -168,48 +168,6 @@ const App = {
      * Delegates drag-and-drop or select parse flows to the Upload module.
      * @param {File} file - Selected Excel spreadsheet
      */
-    handleFileSelect(file) {
-        if (window.Upload) {
-            window.Upload.handleFileSelect(file);
-        }
-    },
-
-    /**
-     * Delegates file clear and dashboard reset actions to the Upload module.
-     */
-    cancelFileSelection() {
-        if (window.Upload) {
-            window.Upload.cancelFileSelection();
-        }
-    },
-
-    /**
-     * Delegates import commit transactions to the Upload module.
-     */
-    confirmAndImport() {
-        if (window.Upload) {
-            window.Upload.confirmAndImport();
-        }
-    },
-
-    /**
-     * Delegates spreadsheet template generation to the Upload module.
-     */
-    downloadTemplate() {
-        if (window.Upload) {
-            window.Upload.downloadTemplate();
-        }
-    },
-
-    /**
-     * Delegates simulation spreadsheets generation to the Upload module.
-     */
-    runTestUpload() {
-        if (window.Upload) {
-            window.Upload.runTestUpload();
-        }
-    },
-
     /**
      * Delegates dashboard stat updates to the Dashboard module.
      */

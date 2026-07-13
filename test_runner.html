@@ -152,7 +152,7 @@
 
     <!-- Script References under test -->
     <script src="auth.js"></script>
-    <script src="db.js"></script>
+    <script src="db.js?v=7"></script>
     <script>
     // Mock/Test ExcelParser for regression testing
     const ExcelParser = {
@@ -609,9 +609,9 @@
             assert.equal(logs[0].action, 'Ujian Regresi', 'Aktiviti sepadan');
         });
 
-        test('DB Schema Migration (v3 to v4)', 'Mengesahkan skema pangkalan data ditingkatkan ke v4 dengan store baru dispatcher_mappings', async () => {
+        test('DB Schema Migration (v3 to v4)', 'Mengesahkan skema pangkalan data ditingkatkan ke v7 dengan store baru dispatcher_mappings', async () => {
             const db = await window.DB.open();
-            assert.equal(db.version, 4, 'Versi pangkalan data ialah 4');
+            assert.equal(db.version, 7, 'Versi pangkalan data ialah 7');
             assert.ok(db.objectStoreNames.contains('dispatcher_mappings'), 'Store "dispatcher_mappings" wujud');
             
             const tx = db.transaction(['dispatcher_mappings'], 'readonly');
@@ -846,6 +846,25 @@
         async function runAllTests() {
             console.log('Memulakan ujian regresi...');
             document.getElementById('run-tests-btn').disabled = true;
+
+            // Close active DB connection if any and delete database to ensure fresh migration
+            try {
+                if (window.DB && window.DB.repository && window.DB.repository.manager && window.DB.repository.manager.db) {
+                    window.DB.repository.manager.db.close();
+                    window.DB.repository.manager.db = null;
+                }
+                await new Promise((resolve) => {
+                    const req = indexedDB.deleteDatabase('MawarTerajuCommissionDB');
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => resolve();
+                    req.onblocked = () => {
+                        console.warn('DB delete blocked.');
+                        resolve();
+                    };
+                });
+            } catch(e) {
+                console.warn('Failed to reset DB before tests:', e);
+            }
             
             const resultsArea = document.getElementById('results-area');
             resultsArea.innerHTML = '';
