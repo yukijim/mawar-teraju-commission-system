@@ -886,6 +886,35 @@
             assert.ok(selectionArea.innerHTML.includes('NSN3074054'), 'Mengandungi ID kedua');
         });
 
+        test('DB.searchByIc Multi-ID Profile Selection Handling (HAZLAN BIN HANAFI)', 'Memastikan carian IC dengan >1 Dispatcher ID (HAZLAN BIN HANAFI) memaparkan pilihan profil di UI', async () => {
+            let selectionArea = document.getElementById('search-selection-area');
+            if (!selectionArea) {
+                selectionArea = document.createElement('div');
+                selectionArea.id = 'search-selection-area';
+                document.body.appendChild(selectionArea);
+            }
+            
+            const mockRecordsById = {
+                'PJS3525221': [{ name: 'HAZLAN BIN HANAFI', dispatcher_id: 'PJS3525221' }],
+                'PJS3545024': [{ name: 'HAZLAN BIN HANAFI', dispatcher_id: 'PJS3545024' }]
+            };
+            const uniqueIds = ['PJS3525221', 'PJS3545024'];
+            
+            const mockDispatch = window.Dispatch || {
+                showDispatcherIdSelection: function(ids, records, ic, latency) {
+                    selectionArea.style.display = 'block';
+                    selectionArea.innerHTML = ids.map(id => `<button class="profile-btn">${id}</button>`).join('');
+                }
+            };
+            
+            mockDispatch.showDispatcherIdSelection(uniqueIds, mockRecordsById, '881012055547', 10);
+            
+            const buttons = selectionArea.querySelectorAll('.profile-btn, button');
+            assert.ok(buttons.length >= 2, 'Sekurang-kurangnya dua butang pemilihan dipaparkan');
+            assert.ok(selectionArea.innerHTML.includes('PJS3525221'), 'Mengandungi ID pertama Hazlan');
+            assert.ok(selectionArea.innerHTML.includes('PJS3545024'), 'Mengandungi ID kedua Hazlan');
+        });
+
         // =====================================================================
         // TEST RUNNER PROCESSOR
         // =====================================================================
