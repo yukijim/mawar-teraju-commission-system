@@ -32,23 +32,24 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
   });
 
   it('should REJECT upload if required columns are missing in Commission sheet', () => {
-    // Missing final_amount_to_pay
+    // Missing nett_commission
     const headers = [
       'Delivery Dispatcher ID',
       'Delivery Dispatcher Name',
       'Parcel Quantity',
-      'Net Parcel',
       'RM1.15/Parcel Commission',
-      'Exclude Extra Weight YOYI',
       'Extra Weight Commission',
       'Total Commission',
-      'NETT COMMISSION'
+      'ADDITION: REFUND 15JUNE26',
+      'ADDITION: PICKUP COMMISSION',
+      'system reg',
+      'add: sorter'
     ];
-    const wb = createMockWorkbook('Komisen', headers, [['DSP001', 'Test User', 100, 95, 109.25, 5, 10, 119.25, 119.25]]);
+    const wb = createMockWorkbook('Komisen', headers, [['DSP001', 'Test User', 100, 109.25, 10, 119.25, 15, 25, 'REG123', 5]]);
     
     assert.throws(() => {
       uploadService.validateExcelFormat(wb, 'COMMISSION');
-    }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: final_amount_to_pay/);
+    }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: nett_commission/);
   });
 
   it('should WARNING and proceed if extra unrecognized columns are present', () => {
@@ -56,16 +57,17 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
       'Delivery Dispatcher ID',
       'Delivery Dispatcher Name',
       'Parcel Quantity',
-      'Net Parcel',
       'RM1.15/Parcel Commission',
-      'Exclude Extra Weight YOYI',
       'Extra Weight Commission',
       'Total Commission',
+      'ADDITION: REFUND 15JUNE26',
+      'ADDITION: PICKUP COMMISSION',
+      'system reg',
+      'add: sorter',
       'NETT COMMISSION',
-      'FINAL AMOUNT TO PAY',
       'COL_TAMBAHAN_ASDF' // Extra column
     ];
-    const wb = createMockWorkbook('Commission', headers, [['DSP001', 'Test User', 100, 95, 109.25, 5, 10, 119.25, 119.25, 119.25, 'Ignore Me']]);
+    const wb = createMockWorkbook('Commission', headers, [['DSP001', 'Test User', 100, 109.25, 10, 119.25, 15, 25, 'REG123', 5, 119.25, 'Ignore Me']]);
     
     const result = uploadService.validateExcelFormat(wb, 'COMMISSION');
     assert.equal(result.isValid, true);
@@ -78,15 +80,16 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
       '  Delivery \r\n Dispatcher \t ID  ', // whitespace and newlines
       'Delivery Dispatcher Name',
       'Parcel\nQuantity',
-      'Net Parcel',
       'RM1.15/Parcel\r\nCommission',
-      'Exclude Extra Weight YOYI',
       'Extra Weight Commission',
       'Total Commission',
-      'NETT\nCOMMISSION',
-      'FINAL AMOUNT TO PAY'
+      'ADDITION:\nREFUND 15JUNE26',
+      'ADDITION: PICKUP\tCOMMISSION',
+      'system\r\nreg',
+      'add: sorter',
+      'NETT\nCOMMISSION'
     ];
-    const wb = createMockWorkbook('komisen', headers, [['DSP001', 'Test User', 100, 95, 109.25, 5, 10, 119.25, 119.25, 119.25]]);
+    const wb = createMockWorkbook('komisen', headers, [['DSP001', 'Test User', 100, 109.25, 10, 119.25, 15, 25, 'REG123', 5, 119.25]]);
     
     const result = uploadService.validateExcelFormat(wb, 'COMMISSION');
     assert.equal(result.isValid, true);

@@ -63,53 +63,30 @@ class UploadService {
   // Mapping rules matching excel.js
   COMMISSION_MAPPING_RULES = {
     dispatcher_id: ['delivery dispatcher id', 'dispatcher id', 'id dispatcher', 'id'],
+    ic_number: ['no ic', 'no. ic', 'nric', 'ic number', 'ic'],
     name: ['delivery dispatcher name', 'nama', 'name', 'nama penuh', 'fullname', 'full name', 'dispatch'],
     parcel_qty: ['parcel quantity', 'parcel qty', 'bilangan parcel', 'jumlah parcel'],
-    net_parcel: ['net parcel'],
-    exclude_extra_weight_yoyi: ['exclude extra weight yoyi'],
-    commission_rate: ['rm1.11/parcel commission', 'rm1.15/parcel commission', 'rm1.11 / parcel commission', 'rm1.15 / parcel commission', 'commission', 'komisen'],
-    diff_rate_new_joiner: ['diff rate new joiner', 'diff rate new joiner '],
-    count_pickup: ['count of pick up dispatcher name', 'count of pick up'],
+    parcel_commission: ['rm1.11/parcel commission', 'rm1.15/parcel commission', 'rm1.11 / parcel commission', 'rm1.15 / parcel commission', 'commission', 'komisen'],
     extra_weight_commission: ['extra weight commission', 'extra weight commission (=>5.01kg, add rm0.10/kg)'],
     total_commission: ['total commission'],
-    deduction_advance: ['deduction: advance', 'deduction: advance ', 'deduction advance', 'advance'],
-    deduction_pending_cod: ['deduction: pending cod', 'deduction: pending cod ', 'deduction pending cod', 'pending cod'],
-    deduction_hq_penalty: ['deduction: hq penalty', 'deduction: hq penalty ', 'deduction hq penalty', 'hq penalty'],
-    deduction_duitnow_penalty: ['deduction: duitnow penalty', 'deduction: duitnow penalty ', 'deduction duitnow penalty', 'duitnow penalty'],
-    deduction_late_cod_penalty: ['deduction: late cod penalty', 'deduction: late cod penalty ', 'deduction late cod penalty', 'late cod penalty'],
-    deduction_lost_individual: ['deduction: lost individual', 'deduction: lost individual ', 'deduction lost individual', 'lost individual'],
-    deduction_lost_parcel_hub: ['deduction: lost parcel hub', 'deduction: lost parcel hub ', 'deduction lost parcel hub', 'lost parcel hub'],
-    addition_pickup_commission: ['add: pickup commission', 'addition: pickup commission', 'pickup commission'],
-    addition_fuel_allowance: ['add: fuel allowance', 'fuel allowance', 'addition: refund 15june26', 'refund'],
-    addition_sorter: ['add: sorter', 'sorter'],
-    nett_commission: ['nett commission', 'net commission'],
-    final_amount_to_pay: ['final amount to pay', 'amount to pay'],
-    system_reg: ['system reg', 'system reg ', 'system_reg'],
-    ic_number: ['count digit', 'no ic', 'no. ic', 'nric', 'ic number', 'ic'],
-    parcel_qty_jms: ['parcel qty jms'],
-    status_payment: ['status', 'status_payment'],
-    date_payment: ['date payment', 'date payment ', 'date_payment'],
-    remark: ['remark farisha', 'remark']
+    refund_penalty: ['add: refund penalty', 'addition: refund 15june26', 'addition: refund', 'refund', 'add: fuel allowance', 'fuel allowance'],
+    pickup_commission: ['add: pickup commission', 'addition: pickup commission', 'pickup commission'],
+    others: ['system reg', 'others', 'other', 'system reg ', 'system_reg'],
+    sorter: ['add: sorter', 'sorter'],
+    nett_commission: ['nett commission', 'net commission']
   };
 
   DEDUCTION_MAPPING_RULES = {
     dispatcher_id: ['delivery dispatcher id', 'dispatcher id', 'id dispatcher', 'id'],
+    ic_number: ['no ic', 'no. ic', 'nric', 'ic number', 'ic'],
     name: ['delivery dispatcher name', 'nama', 'name', 'nama penuh'],
-    deduction_advance: ['deduction: advance', 'deduction advance', 'advance'],
-    deduction_pending_cod: ['deduction: pending cod', 'deduction pending cod', 'pending cod'],
-    deduction_hq_penalty: ['deduction: hq penalty', 'deduction hq penalty', 'hq penalty'],
-    deduction_duitnow_penalty: ['deduction: duitnow penalty', 'deduction duitnow penalty', 'duitnow penalty'],
-    deduction_late_cod_penalty: ['deduction: late cod penalty', 'deduction late cod penalty', 'late cod penalty'],
-    deduction_lost_individual: ['deduction: lost individual', 'deduction lost individual', 'lost individual'],
-    deduction_lost_parcel_hub: ['deduction: lost parcel hub', 'deduction lost parcel hub', 'lost parcel hub'],
-    lost_pic_signed: ['lost pic signed', 'lost pic signed '],
-    lost_rate: ['lost rate'],
-    total_all_lost_shared: ['total all lost shared', 'total all lost shared '],
-    lost_parcel_pic_signed: ['lost parcel pic signed'],
-    arbi_individual: ['arbi individual'],
-    rcgen_penalty: ['rcgen 03.07.26', 'rcgen'],
-    qc_penalty: ['qc'],
-    total_hq_penalty_detail: ['total hq penalty', 'total hq penalty ']
+    advance: ['deduction: advance', 'deduction advance', 'advance'],
+    pending_cod: ['deduction: pending cod', 'deduction pending cod', 'pending cod'],
+    hq_penalty: ['deduction: hq penalty', 'deduction hq penalty', 'hq penalty'],
+    duitnow_penalty: ['deduction: duitnow penalty', 'deduction duitnow penalty', 'duitnow penalty'],
+    late_cod_penalty: ['deduction: late cod penalty', 'deduction late cod penalty', 'late cod penalty'],
+    lost_individual: ['deduction: lost individual', 'deduction lost individual', 'lost individual'],
+    lost_parcel_hub: ['deduction: lost parcel hub', 'deduction lost parcel hub', 'lost parcel hub']
   };
 
   validateExcelFormat(workbook, type) {
@@ -127,7 +104,7 @@ class UploadService {
       if (!targetSheetName) {
         throw new AppError('Fail Excel tidak sah: Lembaran "Commission" atau "Komisen" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
-      requiredKeys = ['dispatcher_id', 'ic_number', 'name', 'parcel_qty', 'net_parcel', 'commission_rate', 'total_commission', 'nett_commission', 'final_amount_to_pay'];
+      requiredKeys = ['dispatcher_id', 'ic_number', 'name', 'parcel_qty', 'parcel_commission', 'extra_weight_commission', 'total_commission', 'refund_penalty', 'pickup_commission', 'others', 'sorter', 'nett_commission'];
       mappingRules = this.COMMISSION_MAPPING_RULES;
     } else if (type === 'DEDUCTION') {
       targetSheetName = sheetNames.find(n => {
@@ -138,7 +115,7 @@ class UploadService {
       if (!targetSheetName) {
         throw new AppError('Fail Excel tidak sah: Lembaran "Deduction" atau "Potongan" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
-      requiredKeys = ['dispatcher_id', 'name'];
+      requiredKeys = ['dispatcher_id', 'ic_number', 'name', 'advance', 'pending_cod', 'hq_penalty', 'duitnow_penalty', 'late_cod_penalty', 'lost_individual', 'lost_parcel_hub'];
       mappingRules = this.DEDUCTION_MAPPING_RULES;
     }
 
@@ -157,11 +134,11 @@ class UploadService {
       const cleanHeader = normalizeHeader(header);
       let recognized = false;
       for (const [key, aliases] of Object.entries(mappingRules)) {
-        const isRateMatch = key === 'commission_rate' && cleanHeader.includes('parcel commission');
-        const isRefundMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('refund');
-        const isFuelMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('fuel');
-        const isSorterMatch = key === 'addition_sorter' && cleanHeader.includes('sorter');
-        const isPickupMatch = key === 'addition_pickup_commission' && cleanHeader.includes('pickup');
+        const isRateMatch = key === 'parcel_commission' && cleanHeader.includes('parcel commission');
+        const isRefundMatch = key === 'refund_penalty' && cleanHeader.includes('refund');
+        const isFuelMatch = key === 'refund_penalty' && cleanHeader.includes('fuel');
+        const isSorterMatch = key === 'sorter' && cleanHeader.includes('sorter');
+        const isPickupMatch = key === 'pickup_commission' && cleanHeader.includes('pickup');
         if (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch) {
           matchedKeys.add(key);
           recognized = true;
@@ -272,11 +249,11 @@ class UploadService {
       Object.keys(firstRow).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.COMMISSION_MAPPING_RULES)) {
-          const isRateMatch = key === 'commission_rate' && cleanHeader.includes('parcel commission');
-          const isRefundMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('refund');
-          const isFuelMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('fuel');
-          const isSorterMatch = key === 'addition_sorter' && cleanHeader.includes('sorter');
-          const isPickupMatch = key === 'addition_pickup_commission' && cleanHeader.includes('pickup');
+          const isRateMatch = key === 'parcel_commission' && cleanHeader.includes('parcel commission');
+          const isRefundMatch = key === 'refund_penalty' && cleanHeader.includes('refund');
+          const isFuelMatch = key === 'refund_penalty' && cleanHeader.includes('fuel');
+          const isSorterMatch = key === 'sorter' && cleanHeader.includes('sorter');
+          const isPickupMatch = key === 'pickup_commission' && cleanHeader.includes('pickup');
           if (!commHeadersMap[key] && (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch)) {
             commHeadersMap[key] = header;
             break;
@@ -333,30 +310,30 @@ class UploadService {
             ic_number,
             name,
             parcel_qty: parseInt(row[commHeadersMap.parcel_qty], 10) || 0,
-            net_parcel: parseInt(row[commHeadersMap.net_parcel], 10) || 0,
-            exclude_extra_weight_yoyi: parseInt(row[commHeadersMap.exclude_extra_weight_yoyi], 10) || 0,
-            commission_rate: parseNumericValue(row[commHeadersMap.commission_rate]),
-            diff_rate_new_joiner: parseNumericValue(row[commHeadersMap.diff_rate_new_joiner]),
-            count_pickup: parseInt(row[commHeadersMap.count_pickup], 10) || 0,
+            net_parcel: 0,
+            exclude_extra_weight_yoyi: 0,
+            commission_rate: parseNumericValue(row[commHeadersMap.parcel_commission]),
+            diff_rate_new_joiner: 0,
+            count_pickup: 0,
             extra_weight_commission: parseNumericValue(row[commHeadersMap.extra_weight_commission]),
             total_commission: parseNumericValue(row[commHeadersMap.total_commission]),
-            addition_pickup_commission: parseNumericValue(row[commHeadersMap.addition_pickup_commission]),
-            addition_fuel_allowance: parseNumericValue(row[commHeadersMap.addition_fuel_allowance]),
-            addition_sorter: parseNumericValue(row[commHeadersMap.addition_sorter]),
-            deduction_advance: parseNumericValue(row[commHeadersMap.deduction_advance]),
-            deduction_pending_cod: parseNumericValue(row[commHeadersMap.deduction_pending_cod]),
-            deduction_hq_penalty: parseNumericValue(row[commHeadersMap.deduction_hq_penalty]),
-            deduction_duitnow_penalty: parseNumericValue(row[commHeadersMap.deduction_duitnow_penalty]),
-            deduction_late_cod_penalty: parseNumericValue(row[commHeadersMap.deduction_late_cod_penalty]),
-            deduction_lost_individual: parseNumericValue(row[commHeadersMap.deduction_lost_individual]),
-            deduction_lost_parcel_hub: parseNumericValue(row[commHeadersMap.deduction_lost_parcel_hub]),
+            addition_pickup_commission: parseNumericValue(row[commHeadersMap.pickup_commission]),
+            addition_fuel_allowance: parseNumericValue(row[commHeadersMap.refund_penalty]),
+            addition_sorter: parseNumericValue(row[commHeadersMap.sorter]),
+            deduction_advance: 0,
+            deduction_pending_cod: 0,
+            deduction_hq_penalty: 0,
+            deduction_duitnow_penalty: 0,
+            deduction_late_cod_penalty: 0,
+            deduction_lost_individual: 0,
+            deduction_lost_parcel_hub: 0,
             nett_commission: parseNumericValue(row[commHeadersMap.nett_commission]),
-            final_amount_to_pay: parseNumericValue(row[commHeadersMap.final_amount_to_pay]),
-            system_reg: row[commHeadersMap.system_reg] ? row[commHeadersMap.system_reg].toString().trim() : '',
-            parcel_qty_jms: parseInt(row[commHeadersMap.parcel_qty_jms], 10) || 0,
-            status_payment: row[commHeadersMap.status_payment] ? row[commHeadersMap.status_payment].toString().trim() : 'SUCCESS',
-            date_payment: row[commHeadersMap.date_payment] ? row[commHeadersMap.date_payment].toString().trim() : '',
-            remark: row[commHeadersMap.remark] ? row[commHeadersMap.remark].toString().trim() : ''
+            final_amount_to_pay: parseNumericValue(row[commHeadersMap.nett_commission]),
+            system_reg: row[commHeadersMap.others] ? row[commHeadersMap.others].toString().trim() : '',
+            parcel_qty_jms: 0,
+            status_payment: 'SUCCESS',
+            date_payment: '',
+            remark: ''
           });
 
           recordsImported++;
@@ -587,21 +564,21 @@ class UploadService {
             dispatcher_id,
             ic_number,
             name,
-            deduction_advance: parseNumericValue(row[dedHeadersMap.deduction_advance]),
-            deduction_pending_cod: parseNumericValue(row[dedHeadersMap.deduction_pending_cod]),
-            deduction_hq_penalty: parseNumericValue(row[dedHeadersMap.deduction_hq_penalty]),
-            deduction_duitnow_penalty: parseNumericValue(row[dedHeadersMap.deduction_duitnow_penalty]),
-            deduction_late_cod_penalty: parseNumericValue(row[dedHeadersMap.deduction_late_cod_penalty]),
-            deduction_lost_individual: parseNumericValue(row[dedHeadersMap.deduction_lost_individual]),
-            deduction_lost_parcel_hub: parseNumericValue(row[dedHeadersMap.deduction_lost_parcel_hub]),
-            lost_pic_signed: parseNumericValue(row[dedHeadersMap.lost_pic_signed]),
-            lost_rate: parseNumericValue(row[dedHeadersMap.lost_rate]),
-            total_all_lost_shared: parseNumericValue(row[dedHeadersMap.total_all_lost_shared]),
-            lost_parcel_pic_signed: parseNumericValue(row[dedHeadersMap.lost_parcel_pic_signed]),
-            arbi_individual: parseNumericValue(row[dedHeadersMap.arbi_individual]),
-            rcgen_penalty: parseNumericValue(row[dedHeadersMap.rcgen_penalty]),
-            qc_penalty: parseNumericValue(row[dedHeadersMap.qc_penalty]),
-            total_hq_penalty_detail: parseNumericValue(row[dedHeadersMap.total_hq_penalty_detail])
+            deduction_advance: parseNumericValue(row[dedHeadersMap.advance]),
+            deduction_pending_cod: parseNumericValue(row[dedHeadersMap.pending_cod]),
+            deduction_hq_penalty: parseNumericValue(row[dedHeadersMap.hq_penalty]),
+            deduction_duitnow_penalty: parseNumericValue(row[dedHeadersMap.duitnow_penalty]),
+            deduction_late_cod_penalty: parseNumericValue(row[dedHeadersMap.late_cod_penalty]),
+            deduction_lost_individual: parseNumericValue(row[dedHeadersMap.lost_individual]),
+            deduction_lost_parcel_hub: parseNumericValue(row[dedHeadersMap.lost_parcel_hub]),
+            lost_pic_signed: 0,
+            lost_rate: 0,
+            total_all_lost_shared: 0,
+            lost_parcel_pic_signed: 0,
+            arbi_individual: 0,
+            rcgen_penalty: 0,
+            qc_penalty: 0,
+            total_hq_penalty_detail: 0
           });
 
           recordsImported++;
