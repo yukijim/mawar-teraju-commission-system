@@ -1,6 +1,6 @@
 # EXCEL MAPPING SPECIFICATION
 
-This document details the official structure, formulas, data mapping rules, and database schemas aligned with the client's actual spreadsheet templates (`templat_commission_mawar_teraju.xlsx` and `templat_deduction_mawar_teraju.xlsx`) as the Single Source of Truth.
+This document details the official structure, mapping rules, and database schemas aligned with the client's actual spreadsheet templates (`templat_commission_mawar_teraju.xlsx` and `templat_deduction_mawar_teraju.xlsx`) as the single source of truth.
 
 ---
 
@@ -8,10 +8,10 @@ This document details the official structure, formulas, data mapping rules, and 
 
 All calculations are parsed from two main sheets. Column configurations are as follows:
 
-### A. Commission Sheet (Sheet Name: `"Commission"`, `"Komisen"`, or `"Dispatcher Comm"`)
+### A. Commission Sheet (Sheet Name: `"Commission"` or `"Komisen"`)
 *   **Purpose**: Generates the primary Commission Report and PDF layout.
 *   **Columns & Data Types**:
-    1.  `Delivery Dispatcher ID` (Col A) - `String` (Contains NRIC, e.g. `900101-14-1234`)
+    1.  `Delivery Dispatcher ID` (Col A) - `String` (Contains the NRIC directly, e.g. `070614-10-1708`, no external VLOOKUP reference)
     2.  `Delivery Dispatcher Name` (Col B) - `String` (Full dispatcher name)
     3.  `Parcel Quantity` (Col C) - `Number` (Total parcels)
     4.  `Parcel YOYI` (Col D) - `Number` (YOYI exceptions)
@@ -20,12 +20,12 @@ All calculations are parsed from two main sheets. Column configurations are as f
     7.  `Exclude Extra Weight YOYI` (Col G) - `Number` (Parcel for extra weight weight exclusions)
     8.  `Extra Weight Commission` (Col H) - `Number` (Extra weight commission)
     9.  `Total Commission` (Col I) - `Number` (Total gross commission)
-    10. `ADDITION: REFUND 15JUNE26` (Col J) - `Number` (Addition refund, stored in others/allowance)
+    10. `ADDITION: REFUND 15JUNE26` (Col J) - `Number` (Addition refund allowance)
     11. `ADDITION: PICKUP COMMISSION` (Col K) - `Number` (Addition pickup commission)
     12. `NETT COMMISSION` (Col L) - `Number` (Net commission before rounding)
     13. `FINAL AMOUNT TO PAY` (Col M) - `Number` (Final rounded amount paid)
 
-### B. Deduction Sheet (Sheet Name: `"Deduction"`, `"Potongan"`, or `"Details Penalty"`)
+### B. Deduction Sheet (Sheet Name: `"Deduction"` or `"Potongan"`)
 *   **Purpose**: Generates the Deduction Details Report and PDF layout.
 *   **Columns & Data Types**:
     1.  `Delivery Dispatcher ID` (Col A) - `String` (Contains ID or NRIC snapshot)
@@ -54,13 +54,13 @@ All calculations are parsed from two main sheets. Column configurations are as f
 
 To verify calculations and mapping accuracy, the client's official templates are verified against these test records:
 
-### Case 1: Ahmad Bin Ali
-*   **Input NRIC**: `900101-14-1234`
+### Case 1: Mohamad Azlan Bin Jaapar
+*   **Input NRIC**: `070614-10-1708` (mapped to Dispatcher ID `NSN3052004`)
 *   **Calculated Values**:
     *   `Parcel Quantity` = `150`
     *   `Net Parcel` = `140`
     *   `Total Commission` = `181.00` (Gross commission including Extra Weight)
-    *   `Total Deductions` = `60.00` (Advance `20.00` + HQ Penalty `20.00` + Lost `20.00`)
+    *   `Total Deductions` = `60.00` (Advance `50.00` + HQ Penalty `10.00`)
     *   `Final Amount to Pay` = `161.00`
 
 ### Case 2: Chong Wei Kang
@@ -69,4 +69,4 @@ To verify calculations and mapping accuracy, the client's official templates are
     *   `Parcel Quantity` = `200`
     *   `Total Commission` = `247.75`
     *   `Total Deductions` = `15.00` (HQ Penalty `15.00`)
-    *   `Final Amount to Pay` = `282.75` (including additions)
+    *   `Final Amount to Pay` = `282.75`

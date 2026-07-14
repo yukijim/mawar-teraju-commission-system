@@ -52,7 +52,7 @@ Punca kebenaran (Source of Truth) bagi hubungan pemetaan antara ID Dispatcher te
 | Nama Medan (Property) | Jenis Data | Penerangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |
 | `dispatcher_id` | String | ID Dispatcher unik (PK) | `"NSN3052004"` |
-| `ic_number` | String | Nombor Kad Pengenalan | `"920605055111"` |
+| `ic_number` | String | Nombor Kad Pengenalan | `"070614101708"` |
 | `name` | String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
 | `last_updated` | Number | Cap masa kemaskini terakhir | `1783430536579` |
 
@@ -72,7 +72,7 @@ Menyimpan nilai komisen akhir yang telah dikira. Tiada formula Excel disimpan.
 | `id` | Number | ID Kunci Utama (PK) | `1` |
 | `batchId` | Number | Rujukan ke `batches.id` (FK) | `1` |
 | `dispatcher_id` | String | Rujukan ke `dispatcher_mappings.dispatcher_id` (FK) | `"NSN3052004"` |
-| `ic_number` | String | No. IC yang dipetakan | `"920605055111"` |
+| `ic_number` | String | No. IC yang dipetakan | `"070614101708"` |
 | `name` | String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
 | `parcel_qty` | Number | Jumlah parcel yang dihantar | `2335` |
 | `net_parcel` | Number | Parcel pengecualian YOYI | `2` |
@@ -95,7 +95,7 @@ Menyimpan nilai komisen akhir yang telah dikira. Tiada formula Excel disimpan.
 ---
 
 ### D. Store: `deduction_records`
-Menyimpan semua perincian potongan akhir dari sheet `Details Penalty` dan potongan ringkasan dari `Dispatcher Comm`.
+Menyimpan semua perincian potongan akhir dari sheet `Deduction` dan potongan ringkasan dari `Commission`.
 *   **Key Path**: `id` (Auto Increment: `true`)
 *   **Index**:
     *   `batchId` (Unique: `false`)
@@ -108,14 +108,14 @@ Menyimpan semua perincian potongan akhir dari sheet `Details Penalty` dan potong
 | `id` | Number | ID Kunci Utama (PK) | `1` |
 | `batchId` | Number | Rujukan ke `batches.id` (FK) | `1` |
 | `dispatcher_id` | String | Rujukan ke `dispatcher_mappings.dispatcher_id` (FK) | `"NSN3052004"` |
-| `ic_number` | String | No. IC yang dipetakan | `"920605055111"` |
+| `ic_number` | String | No. IC yang dipetakan | `"070614101708"` |
 | `name` | String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
 | **Butiran Potongan Am**: | | | |
 | `deduction_advance` | Number | Potongan pinjaman pendahuluan | `0.00` |
 | `deduction_pending_cod` | Number | Potongan COD tertangguh | `0.00` |
 | `deduction_duitnow_penalty` | Number | Potongan denda DuitNow | `0.00` |
 | `deduction_late_cod_penalty`| Number | Potongan denda COD lewat | `0.00` |
-| **Butiran Potongan Denda (Details Penalty)**: | | | |
+| **Butiran Potongan Denda (Deduction)**: | | | |
 | `lost_pic_signed` | Number | Potongan lost parcel PIC signed | `10.8856` |
 | `lost_rate` | Number | Potongan kadar lost parcel | `0.00` |
 | `total_all_lost_shared` | Number | Jumlah denda lost parcel hub | `10.8856` |

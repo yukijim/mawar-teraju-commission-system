@@ -112,6 +112,83 @@ class UploadService {
     total_hq_penalty_detail: ['total hq penalty', 'total hq penalty ']
   };
 
+  validateExcelFormat(workbook, type) {
+    const sheetNames = workbook.SheetNames;
+    let targetSheetName = null;
+    let requiredKeys = [];
+    let mappingRules = {};
+
+    if (type === 'COMMISSION') {
+      targetSheetName = sheetNames.find(n => {
+        if (!n) return false;
+        const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+        return normalized === 'dispatcher comm' || normalized === 'commission' || normalized === 'komisen';
+      });
+      if (!targetSheetName) {
+        throw new AppError('Fail Excel tidak sah: Lembaran "Commission" atau "Komisen" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
+      }
+      requiredKeys = ['dispatcher_id', 'ic_number', 'name', 'parcel_qty', 'net_parcel', 'commission_rate', 'total_commission', 'nett_commission', 'final_amount_to_pay'];
+      mappingRules = this.COMMISSION_MAPPING_RULES;
+    } else if (type === 'DEDUCTION') {
+      targetSheetName = sheetNames.find(n => {
+        if (!n) return false;
+        const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+        return normalized === 'details penalty' || normalized === 'deduction' || normalized === 'potongan';
+      });
+      if (!targetSheetName) {
+        throw new AppError('Fail Excel tidak sah: Lembaran "Deduction" atau "Potongan" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
+      }
+      requiredKeys = ['dispatcher_id', 'name'];
+      mappingRules = this.DEDUCTION_MAPPING_RULES;
+    }
+
+    const sheet = workbook.Sheets[targetSheetName];
+    const rows = getSheetRows(sheet);
+    if (rows.length === 0) {
+      throw new AppError('Fail Excel tidak sah: Lembaran kosong atau tidak mempunyai rekod.', 400, 'UPLOAD_INVALID_TEMPLATE');
+    }
+
+    const firstRow = rows[0];
+    const originalHeaders = Object.keys(firstRow);
+    const matchedKeys = new Set();
+    const warnings = [];
+
+    originalHeaders.forEach(header => {
+      const cleanHeader = normalizeHeader(header);
+      let recognized = false;
+      for (const [key, aliases] of Object.entries(mappingRules)) {
+        const isRateMatch = key === 'commission_rate' && cleanHeader.includes('parcel commission');
+        const isRefundMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('refund');
+        const isFuelMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('fuel');
+        const isSorterMatch = key === 'addition_sorter' && cleanHeader.includes('sorter');
+        const isPickupMatch = key === 'addition_pickup_commission' && cleanHeader.includes('pickup');
+        if (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch) {
+          matchedKeys.add(key);
+          recognized = true;
+          break;
+        }
+      }
+      if (!recognized && cleanHeader !== '') {
+        warnings.push(`Amaran: Kolum tidak dikenali "${header}" dijumpai dan akan diabaikan.`);
+      }
+    });
+
+    if (!matchedKeys.has('ic_number') && matchedKeys.has('dispatcher_id')) {
+      matchedKeys.add('ic_number');
+    }
+
+    const missingKeys = requiredKeys.filter(key => !matchedKeys.has(key));
+    if (missingKeys.length > 0) {
+      throw new AppError(`Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: ${missingKeys.join(', ')}`, 400, 'UPLOAD_INVALID_TEMPLATE');
+    }
+
+    return {
+      isValid: true,
+      sheetName: targetSheetName,
+      warnings
+    };
+  }
+
   /**
    * Calculates SHA-256 checksum of a buffer
    */
@@ -131,9 +208,21 @@ class UploadService {
    * Imports a Commission Excel sheet in DRAFT status
    */
   async importCommission(fileBuffer, filename, uploaderId, reqBody, req) {
+    let workbook;
+    try {
+      workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    } catch (err) {
+      throw new AppError('Failed to read Excel workbook. File might be corrupted.', 400, 'UPLOAD_INVALID_TEMPLATE');
+    }
+
+    const validation = this.validateExcelFormat(workbook, 'COMMISSION');
+    const commSheetName = validation.sheetName;
+    const commSheet = workbook.Sheets[commSheetName];
+    const commRows = getSheetRows(commSheet);
+
     const startTime = Date.now();
     const checksum = this.calculateChecksum(fileBuffer);
-    const tempBatchId = crypto.randomUUID(); // Pre-generate UUID for tracking progress
+    const tempBatchId = crypto.randomUUID();
 
     const month = parseInt(reqBody.month, 10);
     const year = parseInt(reqBody.year, 10);
@@ -144,13 +233,11 @@ class UploadService {
       throw new AppError('Month and Year are required fields.', 400, 'UPLOAD_VALIDATION_ERROR');
     }
 
-    // Check Lock: Prevent concurrent duplicate uploads
     if (this.activeLocks.has(checksum)) {
       throw new AppError('This file is currently being processed. Please wait.', 409, 'UPLOAD_BATCH_LOCKED');
     }
     this.activeLocks.add(checksum);
 
-    // Initial Progress Setup
     this.uploadProgress.set(tempBatchId, {
       status: 'VALIDATING',
       progress: 10,
@@ -161,7 +248,6 @@ class UploadService {
     await auditLogService.logSuccessLogin(uploaderId, req, { action: 'UPLOAD_STARTED', filename, type: 'COMMISSION', tempBatchId });
 
     try {
-      // 1. Check duplicate file
       const existingBatch = await uploadRepository.findBatchByChecksum(checksum);
       if (existingBatch) {
         if (!overwrite) {
@@ -170,7 +256,6 @@ class UploadService {
         if (req.user.role !== 'ADMIN') {
           throw new AppError('Only administrators are allowed to overwrite uploaded batches.', 403, 'UPLOAD_FORBIDDEN');
         }
-        // Prevent overwrite during import
         if (this.isBatchLocked(existingBatch.id)) {
           throw new AppError('The duplicate batch is currently undergoing an active import process. Overwrite rejected.', 409, 'UPLOAD_BATCH_LOCKED');
         }
@@ -178,39 +263,6 @@ class UploadService {
 
       this.uploadProgress.set(tempBatchId, { status: 'VALIDATING', progress: 20, totalRecords: 0, processedRecords: 0 });
 
-      // 2. Parse workbook securely
-      let workbook;
-      try {
-        workbook = XLSX.read(fileBuffer, { type: 'buffer' });
-      } catch (err) {
-        throw new AppError('Failed to read Excel workbook. File might be corrupted.', 400, 'UPLOAD_INVALID_TEMPLATE');
-      }
-
-      const sheetNames = workbook.SheetNames;
-      const commSheetName = sheetNames.find(n => {
-        if (!n) return false;
-        const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
-        return normalized === 'dispatcher comm' || normalized === 'commission' || normalized === 'komisen';
-      });
-
-      if (process.env.NODE_ENV === 'uat') {
-        console.log(`[UAT LOG] Excel Upload: filename=${filename}, size=${fileBuffer.length} bytes, SheetNames=${JSON.stringify(sheetNames)}, selectedSheet=${commSheetName || 'none'}`);
-      }
-
-      if (!commSheetName) {
-        const err = new AppError('Lembaran "Dispatcher Comm" atau "Commission" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
-        err.expected = 'Dispatcher Comm / Commission';
-        err.availableSheets = sheetNames;
-        throw err;
-      }
-
-      const commSheet = workbook.Sheets[commSheetName];
-      const commRows = getSheetRows(commSheet);
-      if (commRows.length === 0) {
-        throw new AppError('Sheet "Dispatcher Comm / Commission" is empty or contains no records.', 400, 'UPLOAD_INVALID_TEMPLATE');
-      }
-
-      // Map headers dynamically
       const firstRow = commRows[0];
       const commHeadersMap = {};
       Object.keys(this.COMMISSION_MAPPING_RULES).forEach(key => {
@@ -232,16 +284,8 @@ class UploadService {
         }
       });
 
-      // Fallback: If ic_number is missing, use dispatcher_id column (e.g. Column A holds IC)
       if (!commHeadersMap.ic_number && commHeadersMap.dispatcher_id) {
         commHeadersMap.ic_number = commHeadersMap.dispatcher_id;
-      }
-
-      // Validate required fields
-      const requiredCommKeys = ['dispatcher_id', 'ic_number', 'name', 'parcel_qty', 'net_parcel', 'commission_rate', 'total_commission', 'nett_commission', 'final_amount_to_pay'];
-      const missingFields = requiredCommKeys.filter(key => !commHeadersMap[key]);
-      if (missingFields.length > 0) {
-        throw new AppError(`Missing required template columns: ${missingFields.join(', ')}`, 400, 'UPLOAD_INVALID_TEMPLATE');
       }
 
       // 3. Process rows and check duplicates (Batch ID, Dispatcher ID, IC Number)
@@ -391,6 +435,7 @@ class UploadService {
         const duration = Date.now() - startTime;
         return {
           batchId: batch.id,
+          warnings: validation.warnings,
           summary: {
             recordsImported,
             recordsSkipped,
@@ -418,6 +463,18 @@ class UploadService {
    * Imports a Deduction Excel sheet in DRAFT status
    */
   async importDeduction(fileBuffer, filename, uploaderId, reqBody, req) {
+    let workbook;
+    try {
+      workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    } catch (err) {
+      throw new AppError('Failed to read Excel workbook. File might be corrupted.', 400, 'UPLOAD_INVALID_TEMPLATE');
+    }
+
+    const validation = this.validateExcelFormat(workbook, 'DEDUCTION');
+    const dedSheetName = validation.sheetName;
+    const dedSheet = workbook.Sheets[dedSheetName];
+    const dedRows = getSheetRows(dedSheet);
+
     const startTime = Date.now();
     const checksum = this.calculateChecksum(fileBuffer);
     const tempBatchId = crypto.randomUUID();
@@ -446,7 +503,6 @@ class UploadService {
     await auditLogService.logSuccessLogin(uploaderId, req, { action: 'UPLOAD_STARTED', filename, type: 'DEDUCTION', tempBatchId });
 
     try {
-      // 1. Check duplicate
       const existingBatch = await uploadRepository.findBatchByChecksum(checksum);
       if (existingBatch) {
         if (!overwrite) {
@@ -462,31 +518,6 @@ class UploadService {
 
       this.uploadProgress.set(tempBatchId, { status: 'VALIDATING', progress: 20, totalRecords: 0, processedRecords: 0 });
 
-      // 2. Parse workbook securely
-      let workbook;
-      try {
-        workbook = XLSX.read(fileBuffer, { type: 'buffer' });
-      } catch (err) {
-        throw new AppError('Failed to read Excel workbook. File might be corrupted.', 400, 'UPLOAD_INVALID_TEMPLATE');
-      }
-
-      const sheetNames = workbook.SheetNames;
-      const dedSheetName = sheetNames.find(n => {
-        if (!n) return false;
-        const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
-        return normalized === 'details penalty' || normalized === 'deduction' || normalized === 'potongan';
-      });
-      if (!dedSheetName) {
-        throw new AppError('Lembaran "Details Penalty" atau "Deduction" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
-      }
-
-      const dedSheet = workbook.Sheets[dedSheetName];
-      const dedRows = getSheetRows(dedSheet);
-      if (dedRows.length === 0) {
-        throw new AppError('Sheet "Details Penalty / Deduction" is empty or contains no records.', 400, 'UPLOAD_INVALID_TEMPLATE');
-      }
-
-      // Map headers dynamically
       const firstRow = dedRows[0];
       const dedHeadersMap = {};
       Object.keys(this.DEDUCTION_MAPPING_RULES).forEach(key => {
@@ -502,13 +533,6 @@ class UploadService {
           }
         }
       });
-
-      // Validate required fields
-      const requiredDedKeys = ['dispatcher_id', 'name'];
-      const missingFields = requiredDedKeys.filter(key => !dedHeadersMap[key]);
-      if (missingFields.length > 0) {
-        throw new AppError(`Missing required template columns: ${missingFields.join(', ')}`, 400, 'UPLOAD_INVALID_TEMPLATE');
-      }
 
       // 3. Process rows and check duplicates (Batch ID + Dispatcher ID + IC)
       const deductionRecords = [];
@@ -652,6 +676,7 @@ class UploadService {
         const duration = Date.now() - startTime;
         return {
           batchId: batch.id,
+          warnings: validation.warnings,
           summary: {
             recordsImported,
             recordsSkipped,

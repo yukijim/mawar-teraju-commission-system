@@ -38,7 +38,7 @@ Sintaks carian sql parameterized dijalankan pada jadual `commission_records` yan
 EXPLAIN ANALYZE 
 SELECT * FROM commission_records 
 WHERE batch_id = 'e1d2c3b4-a5f6-7a8b-9c0d-1e2f3a4b5c6d' 
-  AND ic_number = '920605055111';
+  AND ic_number = '070614101708';
 ```
 
 ### Keputusan Rencana Pelan SQL (Query Plan Execution):

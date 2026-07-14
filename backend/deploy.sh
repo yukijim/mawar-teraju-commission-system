@@ -24,6 +24,11 @@ echo ">>> Pulling latest commits from current branch..."
 git fetch
 git pull
 
+# Remove test-only files to prevent public access/info disclosure on production
+echo ">>> Excluding test-runner and test files from production..."
+rm -f ../test_runner.html
+rm -rf tests
+
 # Install only production dependencies
 echo ">>> Installing production npm dependencies..."
 npm install --omit=dev --no-audit --no-fund
