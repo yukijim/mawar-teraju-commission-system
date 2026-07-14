@@ -21,3 +21,4 @@ CREATE TABLE IF NOT EXISTS report_downloads (
 );
 
 CREATE INDEX IF NOT EXISTS idx_downloads_dispatcher ON report_downloads(dispatcher_id);
+CREATE INDEX IF NOT EXISTS idx_deduction_dispatcher ON deduction_records(dispatcher_id);

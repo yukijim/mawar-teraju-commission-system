@@ -455,20 +455,75 @@ class IndexedDBRepository extends CommissionRepository {
         return { commission: commCount, deduction: dedCount };
     }
 
+    async getCommissionRecordByDispatcherId(batchId, dispatcherId) {
+        return this.manager.transaction([STORES.COMMISSION_RECORDS], 'readonly', async (tx) => {
+            const store = tx.objectStore(STORES.COMMISSION_RECORDS);
+            const index = store.index('dispatcher_id');
+            return new Promise((resolve, reject) => {
+                const request = index.openCursor(IDBKeyRange.only(dispatcherId));
+                request.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        if (cursor.value.batchId === batchId) {
+                            resolve(cursor.value);
+                        } else {
+                            cursor.continue();
+                        }
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        });
+    }
+
+    async getDeductionRecordByDispatcherId(batchId, dispatcherId) {
+        return this.manager.transaction([STORES.DEDUCTION_RECORDS], 'readonly', async (tx) => {
+            const store = tx.objectStore(STORES.DEDUCTION_RECORDS);
+            const index = store.index('dispatcher_id');
+            return new Promise((resolve, reject) => {
+                const request = index.openCursor(IDBKeyRange.only(dispatcherId));
+                request.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        if (cursor.value.batchId === batchId) {
+                            resolve(cursor.value);
+                        } else {
+                            cursor.continue();
+                        }
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        });
+    }
+
     async searchByIc(rawIc) {
         const cleanIc = rawIc.toString().replace(/[\s-]/g, '');
         if (!cleanIc) return [];
 
         const activeBatch = await this.getActiveBatch();
         if (activeBatch) {
-            const commission = await this.getCommissionRecord(activeBatch.id, cleanIc);
-            const deduction = await this.getDeductionRecord(activeBatch.id, cleanIc);
+            const isId = /[a-zA-Z]/.test(cleanIc);
+            let commission = null;
+            let deduction = null;
+
+            if (isId) {
+                commission = await this.getCommissionRecordByDispatcherId(activeBatch.id, cleanIc);
+                deduction = await this.getDeductionRecordByDispatcherId(activeBatch.id, cleanIc);
+            } else {
+                commission = await this.getCommissionRecord(activeBatch.id, cleanIc);
+                deduction = await this.getDeductionRecord(activeBatch.id, cleanIc);
+            }
 
             if (!commission && !deduction) return [];
 
             // Perform client side join of commission and deduction records
             const merged = {
-                ic_number: cleanIc,
+                ic_number: commission ? commission.ic_number : (deduction ? deduction.ic_number : cleanIc),
                 dispatcher_id: commission ? commission.dispatcher_id : (deduction ? deduction.dispatcher_id : ''),
                 name: commission ? commission.name : (deduction ? deduction.name : ''),
                 batchId: activeBatch.id,
@@ -948,7 +1003,9 @@ class PostgresRestRepository extends CommissionRepository {
         if (!cleanIc) return [];
 
         try {
-            const response = await window.apiFetch(`/api/v1/search?ic_number=${cleanIc}`, {
+            const isId = /[a-zA-Z]/.test(cleanIc);
+            const queryParam = isId ? `dispatcher_id=${cleanIc}` : `ic_number=${cleanIc}`;
+            const response = await window.apiFetch(`/api/v1/search?${queryParam}`, {
                 method: 'GET'
             });
 

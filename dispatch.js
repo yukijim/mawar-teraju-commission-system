@@ -20,19 +20,24 @@ const Dispatch = {
         if (!input) return;
 
         input.addEventListener('input', (e) => {
-            let val = e.target.value.replace(/[^0-9]/g, '');
-            let formatted = '';
-            
-            if (val.length > 0) {
-                formatted += val.substring(0, 6);
+            let val = e.target.value;
+            const hasLetters = /[a-zA-Z]/.test(val);
+            if (hasLetters) {
+                e.target.value = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            } else {
+                let clean = val.replace(/[^0-9]/g, '');
+                let formatted = '';
+                if (clean.length > 0) {
+                    formatted += clean.substring(0, 6);
+                }
+                if (clean.length > 6) {
+                    formatted += '-' + clean.substring(6, 8);
+                }
+                if (clean.length > 8) {
+                    formatted += '-' + clean.substring(8, 12);
+                }
+                e.target.value = formatted;
             }
-            if (val.length > 6) {
-                formatted += '-' + val.substring(6, 8);
-            }
-            if (val.length > 8) {
-                formatted += '-' + val.substring(8, 12);
-            }
-            e.target.value = formatted;
         });
 
         this.isFormatterBound = true;
