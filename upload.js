@@ -446,24 +446,25 @@ const Upload = {
             let headers, sampleRows;
             if (type === 'commission') {
                 headers = [
-                    "Delivery Dispatcher ID", "Delivery Dispatcher Name", "Parcel Quantity", "Parcel YOYI", 
-                    "Net Parcel", "RM1.15/Parcel Commission", "Exclude Extra Weight YOYI", "Extra Weight Commission", 
-                    "Total Commission", "ADDITION: REFUND 15JUNE26", "ADDITION: PICKUP COMMISSION", 
-                    "NETT COMMISSION", "FINAL AMOUNT TO PAY"
+                    "Delivery Dispatcher IC No.", "Delivery Dispatcher ID", "Delivery Dispatcher Name", 
+                    "Parcel Quantity", "Parcel Commission", "Extra Weight Commission", "Total Commission", 
+                    "ADD: REFUND PENALTY", "ADD: PICKUP COMMISSION", "ADD: OTHERS", "ADD: SORTER", 
+                    "NETT COMMISSION"
                 ];
                 sampleRows = [
-                    ["900101-14-1234", "Ahmad Bin Ali", 150, 10, 140, 161.00, 5, 20.00, 181.00, 15.00, 25.00, 161.00, 161.00],
-                    ["850202-08-5678", "Chong Wei Kang", 200, 15, 185, 212.75, 0, 35.00, 247.75, 0.00, 50.00, 282.75, 282.75]
+                    ["070614-10-1708", "NSN3052004", "Mohamad Azlan Bin Jaapar", 150, 1.15, 8.50, 181.00, 5.00, 15.30, 0.00, 0.00, 201.30],
+                    ["850202-08-5678", "DSP999", "Chong Wei Kang", 200, 1.15, 0.00, 230.00, 0.00, 50.00, 0.00, 0.00, 280.00]
                 ];
             } else {
                 headers = [
-                    "Delivery Dispatcher ID", "Delivery Dispatcher Name", "DEDUCTION: ADVANCE", 
-                    "DEDUCTION: PENDING COD", "DEDUCTION: HQ PENALTY", "DEDUCTION: DUITNOW PENALTY", 
-                    "DEDUCTION: LATE COD PENALTY", "DEDUCTION: LOST INDIVIDUAL", "DEDUCTION: LOST PARCEL HUB"
+                    "Delivery Dispatcher IC No.", "Delivery Dispatcher ID", "Delivery Dispatcher Name", 
+                    "DEDUCTION: ADVANCE", "DEDUCTION: PENDING COD", "DEDUCTION: HQ PENALTY", 
+                    "DEDUCTION: DUITNOW PENALTY", "DEDUCTION: LATE COD PENALTY", 
+                    "DEDUCTION: LOST INDIVIDUAL", "DEDUCTION: LOST PARCEL HUB"
                 ];
                 sampleRows = [
-                    ["900101-14-1234", "Ahmad Bin Ali", 50.00, 0.00, 10.00, 0.00, 0.00, 0.00, 0.00],
-                    ["850202-08-5678", "Chong Wei Kang", 0.00, 0.00, 15.00, 0.00, 0.00, 0.00, 0.00]
+                    ["070614-10-1708", "NSN3052004", "Mohamad Azlan Bin Jaapar", 50.00, 0.00, 10.00, 0.00, 0.00, 0.00, 0.00],
+                    ["850202-08-5678", "DSP999", "Chong Wei Kang", 0.00, 0.00, 15.00, 0.00, 0.00, 0.00, 0.00]
                 ];
             }
 
