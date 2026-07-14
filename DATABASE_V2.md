@@ -36,8 +36,8 @@ Menyimpan maklumat kumpulan batch bayaran komisen mengikut bulan/tahun.
 | `year` | Number | Tahun bayaran (4 digit) | `2026` |
 | `status` | String | Status batch (`"draft"`, `"published"`, `"archived"`) | `"published"` |
 | `active` | Number | Bendera carian aktif (`1` = Ya, `0` = Tidak) | `1` |
-| `commission_file` | String | Nama fail asal komisen | `"24-NSN305 DSP COMMISSION JUN 2026.xlsx"` |
-| `deduction_file` | String | Nama fail asal potongan | `"24-NSN305 DSP COMMISSION JUN 2026.xlsx"` |
+| `commission_file` | String | Nama fail asal komisen | `"commission_jun_2026.xlsx"` |
+| `deduction_file` | String | Nama fail asal potongan | `"deduction_jun_2026.xlsx"` |
 | `created_time` | Number | Cap masa penciptaan (timestamp) | `1783430513425` |
 | `published_time` | Number | Cap masa diterbitkan | `1783430536579` |
 
@@ -74,20 +74,15 @@ Menyimpan nilai komisen akhir yang telah dikira. Tiada formula Excel disimpan.
 | `dispatcher_id` | String | Rujukan ke `dispatcher_mappings.dispatcher_id` (FK) | `"NSN3052004"` |
 | `ic_number` | String | No. IC yang dipetakan | `"070614101708"` |
 | `name` | String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
-| `parcel_qty` | Number | Jumlah parcel yang dihantar | `2335` |
-| `net_parcel` | Number | Parcel pengecualian YOYI | `2` |
-| `exclude_extra_weight_yoyi` | Number | Kuantiti parcel ditolak YOYI | `2333` |
-| `commission_rate` | Number | Komisen asas (RM1.11 per parcel) | `2591.85` |
-| `diff_rate_new_joiner` | Number | Denda/pelarasan kadar new joiner | `0.00` |
-| `count_pickup` | Number | Kiraan pickup dispatcher | `0` |
-| `extra_weight_commission` | Number | Komisen berat tambahan akhir | `50.00` |
-| `total_commission` | Number | Jumlah kasar komisen (F - G + I) | `2641.85` |
+| `parcel_qty` | Number | Jumlah parcel yang dihantar | `150` |
+| `commission_rate` | Number | Komisen asas (RM1.15 per parcel) | `172.50` |
+| `extra_weight_commission` | Number | Komisen berat tambahan akhir | `8.50` |
+| `total_commission` | Number | Jumlah kasar komisen | `181.00` |
 | `addition_pickup_commission`| Number | Komisen pickup tambahan | `15.30` |
-| `addition_fuel_allowance` | Number | Elaun minyak tambahan | `0.00` |
+| `addition_fuel_allowance` | Number | Elaun minyak tambahan / refund penalty | `5.00` |
 | `addition_sorter` | Number | Elaun sorter tambahan | `0.00` |
-| `nett_commission` | Number | Komisen bersih sebelum pembundaran | `2646.2644` |
-| `final_amount_to_pay` | Number | Bayaran akhir bersih (pembundaran 2 dp) | `2646.26` |
-| `system_reg` | String | Nombor rujukan sistem pendaftaran | `"SN001"` |
+| `nett_commission` | Number | Komisen bersih sebelum pembundaran | `201.30` |
+| `final_amount_to_pay` | Number | Bayaran akhir bersih (pembundaran 2 dp) | `201.30` |
 | `status_payment` | String | Status bayaran semasa | `"SUCCESS"` |
 | `date_payment` | String | Tarikh bayaran diproses | `"2026-06-15"` |
 | `remark` | String | Catatan admin | `""` |
@@ -95,7 +90,7 @@ Menyimpan nilai komisen akhir yang telah dikira. Tiada formula Excel disimpan.
 ---
 
 ### D. Store: `deduction_records`
-Menyimpan semua perincian potongan akhir dari sheet `Deduction` dan potongan ringkasan dari `Commission`.
+Menyimpan semua perincian potongan akhir dari sheet `Deduction`.
 *   **Key Path**: `id` (Auto Increment: `true`)
 *   **Index**:
     *   `batchId` (Unique: `false`)
@@ -110,17 +105,10 @@ Menyimpan semua perincian potongan akhir dari sheet `Deduction` dan potongan rin
 | `dispatcher_id` | String | Rujukan ke `dispatcher_mappings.dispatcher_id` (FK) | `"NSN3052004"` |
 | `ic_number` | String | No. IC yang dipetakan | `"070614101708"` |
 | `name` | String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
-| **Butiran Potongan Am**: | | | |
-| `deduction_advance` | Number | Potongan pinjaman pendahuluan | `0.00` |
+| `deduction_advance` | Number | Potongan pinjaman pendahuluan | `50.00` |
 | `deduction_pending_cod` | Number | Potongan COD tertangguh | `0.00` |
+| `deduction_hq_penalty` | Number | Potongan denda HQ | `10.00` |
 | `deduction_duitnow_penalty` | Number | Potongan denda DuitNow | `0.00` |
 | `deduction_late_cod_penalty`| Number | Potongan denda COD lewat | `0.00` |
-| **Butiran Potongan Denda (Deduction)**: | | | |
-| `lost_pic_signed` | Number | Potongan lost parcel PIC signed | `10.8856` |
-| `lost_rate` | Number | Potongan kadar lost parcel | `0.00` |
-| `total_all_lost_shared` | Number | Jumlah denda lost parcel hub | `10.8856` |
-| `lost_parcel_pic_signed` | Number | Potongan denda lost parcel individu | `0.00` |
-| `arbi_individual` | Number | Potongan denda ARBI | `0.00` |
-| `rcgen_penalty` | Number | Potongan denda RCGEN | `0.00` |
-| `qc_penalty` | Number | Potongan denda QC | `0.00` |
-| `total_hq_penalty_detail` | Number | Jumlah keseluruhan denda HQ | `0.00` |
+| `deduction_lost_individual` | Number | Potongan lost parcel individu | `0.00` |
+| `deduction_lost_parcel_hub` | Number | Potongan lost parcel hub | `0.00` |
