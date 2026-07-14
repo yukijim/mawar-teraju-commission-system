@@ -62,31 +62,31 @@ class UploadService {
 
   // Mapping rules matching excel.js
   COMMISSION_MAPPING_RULES = {
-    dispatcher_id: ['delivery dispatcher id', 'dispatcher id', 'id dispatcher', 'id'],
-    ic_number: ['no ic', 'no. ic', 'nric', 'ic number', 'ic'],
-    name: ['delivery dispatcher name', 'nama', 'name', 'nama penuh', 'fullname', 'full name', 'dispatch'],
-    parcel_qty: ['parcel quantity', 'parcel qty', 'bilangan parcel', 'jumlah parcel'],
-    parcel_commission: ['rm1.11/parcel commission', 'rm1.15/parcel commission', 'rm1.11 / parcel commission', 'rm1.15 / parcel commission', 'commission', 'komisen'],
-    extra_weight_commission: ['extra weight commission', 'extra weight commission (=>5.01kg, add rm0.10/kg)'],
+    ic_number: ['delivery dispatcher ic no', 'delivery dispatcher ic no.'],
+    dispatcher_id: ['delivery dispatcher id'],
+    name: ['delivery dispatcher name'],
+    parcel_qty: ['parcel quantity'],
+    parcel_commission: ['parcel commission'],
+    extra_weight_commission: ['extra weight commission'],
     total_commission: ['total commission'],
-    refund_penalty: ['add: refund penalty', 'addition: refund 15june26', 'addition: refund', 'refund', 'add: fuel allowance', 'fuel allowance'],
-    pickup_commission: ['add: pickup commission', 'addition: pickup commission', 'pickup commission'],
-    others: ['system reg', 'others', 'other', 'system reg ', 'system_reg'],
-    sorter: ['add: sorter', 'sorter'],
-    nett_commission: ['nett commission', 'net commission']
+    refund_penalty: ['add refund penalty', 'add: refund penalty'],
+    pickup_commission: ['add pickup commission', 'add: pickup commission'],
+    others: ['add others', 'add: others'],
+    sorter: ['add sorter', 'add: sorter'],
+    nett_commission: ['nett commission']
   };
 
   DEDUCTION_MAPPING_RULES = {
-    dispatcher_id: ['delivery dispatcher id', 'dispatcher id', 'id dispatcher', 'id'],
-    ic_number: ['no ic', 'no. ic', 'nric', 'ic number', 'ic'],
-    name: ['delivery dispatcher name', 'nama', 'name', 'nama penuh'],
-    advance: ['deduction: advance', 'deduction advance', 'advance'],
-    pending_cod: ['deduction: pending cod', 'deduction pending cod', 'pending cod'],
-    hq_penalty: ['deduction: hq penalty', 'deduction hq penalty', 'hq penalty'],
-    duitnow_penalty: ['deduction: duitnow penalty', 'deduction duitnow penalty', 'duitnow penalty'],
-    late_cod_penalty: ['deduction: late cod penalty', 'deduction late cod penalty', 'late cod penalty'],
-    lost_individual: ['deduction: lost individual', 'deduction lost individual', 'lost individual'],
-    lost_parcel_hub: ['deduction: lost parcel hub', 'deduction lost parcel hub', 'lost parcel hub']
+    ic_number: ['delivery dispatcher ic no', 'delivery dispatcher ic no.'],
+    dispatcher_id: ['delivery dispatcher id'],
+    name: ['delivery dispatcher name'],
+    advance: ['deduction advance', 'deduction: advance'],
+    pending_cod: ['deduction pending cod', 'deduction: pending cod'],
+    hq_penalty: ['deduction hq penalty', 'deduction: hq penalty'],
+    duitnow_penalty: ['deduction duitnow penalty', 'deduction: duitnow penalty'],
+    late_cod_penalty: ['deduction late cod penalty', 'deduction: late cod penalty'],
+    lost_individual: ['deduction lost individual', 'deduction: lost individual'],
+    lost_parcel_hub: ['deduction lost parcel hub', 'deduction: lost parcel hub']
   };
 
   validateExcelFormat(workbook, type) {
@@ -99,23 +99,31 @@ class UploadService {
       targetSheetName = sheetNames.find(n => {
         if (!n) return false;
         const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
-        return normalized === 'dispatcher comm' || normalized === 'commission' || normalized === 'komisen';
+        return normalized === 'commission' || normalized === 'komisen';
       });
       if (!targetSheetName) {
         throw new AppError('Fail Excel tidak sah: Lembaran "Commission" atau "Komisen" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
-      requiredKeys = ['dispatcher_id', 'ic_number', 'name', 'parcel_qty', 'parcel_commission', 'extra_weight_commission', 'total_commission', 'refund_penalty', 'pickup_commission', 'others', 'sorter', 'nett_commission'];
+      requiredKeys = [
+        'ic_number', 'dispatcher_id', 'name', 'parcel_qty', 'parcel_commission', 
+        'extra_weight_commission', 'total_commission', 'refund_penalty', 
+        'pickup_commission', 'others', 'sorter', 'nett_commission'
+      ];
       mappingRules = this.COMMISSION_MAPPING_RULES;
     } else if (type === 'DEDUCTION') {
       targetSheetName = sheetNames.find(n => {
         if (!n) return false;
         const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
-        return normalized === 'details penalty' || normalized === 'deduction' || normalized === 'potongan';
+        return normalized === 'deduction' || normalized === 'potongan';
       });
       if (!targetSheetName) {
         throw new AppError('Fail Excel tidak sah: Lembaran "Deduction" atau "Potongan" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
-      requiredKeys = ['dispatcher_id', 'ic_number', 'name', 'advance', 'pending_cod', 'hq_penalty', 'duitnow_penalty', 'late_cod_penalty', 'lost_individual', 'lost_parcel_hub'];
+      requiredKeys = [
+        'ic_number', 'dispatcher_id', 'name', 'advance', 'pending_cod', 
+        'hq_penalty', 'duitnow_penalty', 'late_cod_penalty', 
+        'lost_individual', 'lost_parcel_hub'
+      ];
       mappingRules = this.DEDUCTION_MAPPING_RULES;
     }
 
@@ -134,12 +142,7 @@ class UploadService {
       const cleanHeader = normalizeHeader(header);
       let recognized = false;
       for (const [key, aliases] of Object.entries(mappingRules)) {
-        const isRateMatch = key === 'parcel_commission' && cleanHeader.includes('parcel commission');
-        const isRefundMatch = key === 'refund_penalty' && cleanHeader.includes('refund');
-        const isFuelMatch = key === 'refund_penalty' && cleanHeader.includes('fuel');
-        const isSorterMatch = key === 'sorter' && cleanHeader.includes('sorter');
-        const isPickupMatch = key === 'pickup_commission' && cleanHeader.includes('pickup');
-        if (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch) {
+        if (aliases.includes(cleanHeader)) {
           matchedKeys.add(key);
           recognized = true;
           break;
@@ -149,10 +152,6 @@ class UploadService {
         warnings.push(`Amaran: Kolum tidak dikenali "${header}" dijumpai dan akan diabaikan.`);
       }
     });
-
-    if (!matchedKeys.has('ic_number') && matchedKeys.has('dispatcher_id')) {
-      matchedKeys.add('ic_number');
-    }
 
     const missingKeys = requiredKeys.filter(key => !matchedKeys.has(key));
     if (missingKeys.length > 0) {
@@ -249,21 +248,12 @@ class UploadService {
       Object.keys(firstRow).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.COMMISSION_MAPPING_RULES)) {
-          const isRateMatch = key === 'parcel_commission' && cleanHeader.includes('parcel commission');
-          const isRefundMatch = key === 'refund_penalty' && cleanHeader.includes('refund');
-          const isFuelMatch = key === 'refund_penalty' && cleanHeader.includes('fuel');
-          const isSorterMatch = key === 'sorter' && cleanHeader.includes('sorter');
-          const isPickupMatch = key === 'pickup_commission' && cleanHeader.includes('pickup');
-          if (!commHeadersMap[key] && (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch)) {
+          if (aliases.includes(cleanHeader)) {
             commHeadersMap[key] = header;
             break;
           }
         }
       });
-
-      if (!commHeadersMap.ic_number && commHeadersMap.dispatcher_id) {
-        commHeadersMap.ic_number = commHeadersMap.dispatcher_id;
-      }
 
       // 3. Process rows and check duplicates (Batch ID, Dispatcher ID, IC Number)
       const dispatcherMappings = [];
@@ -504,7 +494,7 @@ class UploadService {
       Object.keys(firstRow).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.DEDUCTION_MAPPING_RULES)) {
-          if (!dedHeadersMap[key] && aliases.includes(cleanHeader)) {
+          if (aliases.includes(cleanHeader)) {
             dedHeadersMap[key] = header;
             break;
           }
@@ -530,6 +520,7 @@ class UploadService {
       dedRows.forEach(row => {
         try {
           const rawId = row[dedHeadersMap.dispatcher_id];
+          const rawIc = row[dedHeadersMap.ic_number];
           const rawName = row[dedHeadersMap.name];
 
           if (!rawId || rawId.toString().trim() === '') {
@@ -540,7 +531,11 @@ class UploadService {
           const dispatcher_id = rawId.toString().trim();
           const name = rawName ? rawName.toString().trim() : '';
 
-          let ic_number = dbMappings[dispatcher_id] || '';
+          const rawIcString = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+          let ic_number = rawIcString;
+          if (!ic_number || ic_number.length < 9) {
+            ic_number = dbMappings[dispatcher_id] || '';
+          }
           if (!ic_number) {
             // Check if dispatcher_id itself is a valid 12-digit IC (dashes/spaces stripped)
             const cleanId = dispatcher_id.replace(/[\s-]/g, '');
