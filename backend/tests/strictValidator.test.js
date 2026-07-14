@@ -52,6 +52,86 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: nett_commission/);
   });
 
+  it('should REJECT if ADD: SORTER column missing', () => {
+    // Missing 'add: sorter' column
+    const headers = [
+      'Delivery Dispatcher ID',
+      'Delivery Dispatcher Name',
+      'Parcel Quantity',
+      'RM1.15/Parcel Commission',
+      'Extra Weight Commission',
+      'Total Commission',
+      'ADDITION: REFUND 15JUNE26',
+      'ADDITION: PICKUP COMMISSION',
+      'system reg',
+      'NETT COMMISSION'
+    ];
+    const wb = createMockWorkbook('Komisen', headers, [['DSP001', 'Test User', 100, 109.25, 10, 119.25, 15, 25, 'REG123', 119.25]]);
+    
+    assert.throws(() => {
+      uploadService.validateExcelFormat(wb, 'COMMISSION');
+    }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: sorter/);
+  });
+
+  it('should REJECT if ADD: REFUND PENALTY column missing', () => {
+    // Missing 'ADDITION: REFUND 15JUNE26' column
+    const headers = [
+      'Delivery Dispatcher ID',
+      'Delivery Dispatcher Name',
+      'Parcel Quantity',
+      'RM1.15/Parcel Commission',
+      'Extra Weight Commission',
+      'Total Commission',
+      'ADDITION: PICKUP COMMISSION',
+      'system reg',
+      'add: sorter',
+      'NETT COMMISSION'
+    ];
+    const wb = createMockWorkbook('Komisen', headers, [['DSP001', 'Test User', 100, 109.25, 10, 119.25, 25, 'REG123', 5, 119.25]]);
+    
+    assert.throws(() => {
+      uploadService.validateExcelFormat(wb, 'COMMISSION');
+    }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: refund_penalty/);
+  });
+
+  it('should REJECT if DEDUCTION: HQ PENALTY column missing', () => {
+    // Missing 'DEDUCTION: HQ PENALTY' column in Deduction sheet
+    const headers = [
+      'Delivery Dispatcher ID',
+      'Delivery Dispatcher Name',
+      'DEDUCTION: ADVANCE',
+      'DEDUCTION: PENDING COD',
+      'DEDUCTION: DUITNOW PENALTY',
+      'DEDUCTION: LATE COD PENALTY',
+      'DEDUCTION: LOST INDIVIDUAL',
+      'DEDUCTION: LOST PARCEL HUB'
+    ];
+    const wb = createMockWorkbook('Potongan', headers, [['DSP001', 'Test User', 50, 0, 0, 0, 0, 0]]);
+    
+    assert.throws(() => {
+      uploadService.validateExcelFormat(wb, 'DEDUCTION');
+    }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: hq_penalty/);
+  });
+
+  it('should REJECT if DEDUCTION: LOST PARCEL HUB column missing', () => {
+    // Missing 'DEDUCTION: LOST PARCEL HUB' column in Deduction sheet
+    const headers = [
+      'Delivery Dispatcher ID',
+      'Delivery Dispatcher Name',
+      'DEDUCTION: ADVANCE',
+      'DEDUCTION: PENDING COD',
+      'DEDUCTION: HQ PENALTY',
+      'DEDUCTION: DUITNOW PENALTY',
+      'DEDUCTION: LATE COD PENALTY',
+      'DEDUCTION: LOST INDIVIDUAL'
+    ];
+    const wb = createMockWorkbook('Potongan', headers, [['DSP001', 'Test User', 50, 0, 10, 0, 0, 0]]);
+    
+    assert.throws(() => {
+      uploadService.validateExcelFormat(wb, 'DEDUCTION');
+    }, /Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: lost_parcel_hub/);
+  });
+
   it('should WARNING and proceed if extra unrecognized columns are present', () => {
     const headers = [
       'Delivery Dispatcher ID',
