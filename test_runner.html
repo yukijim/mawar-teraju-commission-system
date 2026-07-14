@@ -152,7 +152,7 @@
 
     <!-- Script References under test -->
     <script src="auth.js"></script>
-    <script src="db.js?v=7"></script>
+    <script src="db.js?v=8"></script>
     <script>
     // Mock/Test ExcelParser for regression testing
     const ExcelParser = {
@@ -282,12 +282,21 @@
             commOriginalHeaders.forEach(header => {
                 const cleanHeader = this.normalizeHeader(header);
                 for (const [key, aliases] of Object.entries(this.MAPPING_RULES)) {
-                    if (!commHeadersMap[key] && aliases.includes(cleanHeader)) {
+                    const isRateMatch = key === 'commission_rate' && cleanHeader.includes('parcel commission');
+                    const isRefundMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('refund');
+                    const isFuelMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('fuel');
+                    const isSorterMatch = key === 'addition_sorter' && cleanHeader.includes('sorter');
+                    const isPickupMatch = key === 'addition_pickup_commission' && cleanHeader.includes('pickup');
+                    if (!commHeadersMap[key] && (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch)) {
                         commHeadersMap[key] = header;
                         break;
                     }
                 }
             });
+
+            if (!commHeadersMap.ic_number && commHeadersMap.dispatcher_id) {
+                commHeadersMap.ic_number = commHeadersMap.dispatcher_id;
+            }
 
             const requiredCommKeys = ['dispatcher_id', 'ic_number', 'name'];
             const missingCommFields = [];
@@ -609,14 +618,17 @@
             assert.equal(logs[0].action, 'Ujian Regresi', 'Aktiviti sepadan');
         });
 
-        test('DB Schema Migration (v3 to v4)', 'Mengesahkan skema pangkalan data ditingkatkan ke v7 dengan store baru dispatcher_mappings', async () => {
+        test('DB Schema Migration (v3 to v4)', 'Mengesahkan skema pangkalan data ditingkatkan ke v8 dengan store baru dispatcher_mappings', async () => {
             const db = await window.DB.open();
-            assert.equal(db.version, 7, 'Versi pangkalan data ialah 7');
+            assert.equal(db.version, 8, 'Versi pangkalan data ialah 8');
             assert.ok(db.objectStoreNames.contains('dispatcher_mappings'), 'Store "dispatcher_mappings" wujud');
             
             const tx = db.transaction(['dispatcher_mappings'], 'readonly');
             const store = tx.objectStore('dispatcher_mappings');
             assert.ok(store.indexNames.contains('ic_number'), 'Index "ic_number" wujud dalam dispatcher_mappings');
+            
+            const idx = store.index('ic_number');
+            assert.equal(idx.unique, false, 'Index "ic_number" tidak unik');
         });
 
         test('DB Transaction Rollback', 'Mengesahkan rollback jika ralat berlaku semasa saveBatchData', async () => {

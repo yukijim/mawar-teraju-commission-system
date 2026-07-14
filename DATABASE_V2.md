@@ -47,7 +47,7 @@ Menyimpan maklumat kumpulan batch bayaran komisen mengikut bulan/tahun.
 Punca kebenaran (Source of Truth) bagi hubungan pemetaan antara ID Dispatcher tempatan dan No. IC rasmi.
 *   **Key Path**: `dispatcher_id` (Unique ID, cth: `"NSN3052004"`)
 *   **Index**:
-    *   `ic_number` (Unique: `true`) - Nombor IC 12-digit (tanpa sengkang) untuk carian pantas.
+    *   `ic_number` (Unique: `false`) - Nombor IC 12-digit (tanpa sengkang) untuk carian pantas.
 
 | Nama Medan (Property) | Jenis Data | Penerangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |
@@ -65,7 +65,7 @@ Menyimpan nilai komisen akhir yang telah dikira. Tiada formula Excel disimpan.
     *   `batchId` (Unique: `false`)
     *   `dispatcher_id` (Unique: `false`)
     *   `ic_number` (Unique: `false`)
-    *   `batch_ic` (Unique: `true`, Composite: `['batchId', 'ic_number']`)
+    *   `batch_ic` (Unique: `false`, Composite: `['batchId', 'ic_number']`)
 
 | Nama Medan (Property) | Jenis Data | Penerangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |
@@ -101,7 +101,7 @@ Menyimpan semua perincian potongan akhir dari sheet `Details Penalty` dan potong
     *   `batchId` (Unique: `false`)
     *   `dispatcher_id` (Unique: `false`)
     *   `ic_number` (Unique: `false`)
-    *   `batch_ic` (Unique: `true`, Composite: `['batchId', 'ic_number']`)
+    *   `batch_ic` (Unique: `false`, Composite: `['batchId', 'ic_number']`)
 
 | Nama Medan (Property) | Jenis Data | Penerangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |

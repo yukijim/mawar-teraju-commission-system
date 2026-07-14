@@ -81,9 +81,11 @@ const Dispatch = {
 
             const resultsArea = window.DomCache.get('search-results-area');
             const emptyArea = window.DomCache.get('search-empty-area');
+            const selectionArea = document.getElementById('search-selection-area');
 
             if (records.length === 0) {
                 if (resultsArea) resultsArea.style.display = 'none';
+                if (selectionArea) selectionArea.style.display = 'none';
                 
                 const searchedIcEl = window.DomCache.get('searched-ic-number');
                 if (searchedIcEl) searchedIcEl.textContent = rawIc;
@@ -94,128 +96,261 @@ const Dispatch = {
                 await window.DB.log('Carian IC (Gagal)', `Carian dilakukan bagi IC ${rawIc}. Tiada rekod dijumpai. (Tempoh: ${latency}ms)`, 'Dispatch');
             } else {
                 if (emptyArea) emptyArea.style.display = 'none';
-
-                // Save reference in memory
-                const record = records[0];
-                this.currentSearchedRecord = record;
-
-                // Math calculations for split views
-                const grossComm = Number(record.nett_commission || record.total_commission || 0);
-                const totalDeds = Number(record.deduction_advance || 0) +
-                                  Number(record.deduction_pending_cod || 0) +
-                                  Number(record.deduction_hq_penalty || 0) +
-                                  Number(record.deduction_duitnow_penalty || 0) +
-                                  Number(record.deduction_late_cod_penalty || 0) +
-                                  Number(record.deduction_lost_individual || 0) +
-                                  Number(record.deduction_lost_parcel_hub || 0);
-                const netComm = Number(record.final_amount_to_pay || (grossComm - totalDeds));
-
-                // Populate elements
-                const nameEl = window.DomCache.get('result-rider-name');
-                const icEl = window.DomCache.get('result-rider-ic');
-                const batchEl = document.getElementById('result-batch-name');
-                const grossEl = document.getElementById('result-gross-commission');
-                const dedEl = document.getElementById('result-total-deductions');
-                const netEl = window.DomCache.get('result-total-commission');
-
-                if (nameEl) nameEl.textContent = record.name || record.nama;
-                if (icEl) icEl.textContent = rawIc;
-                if (batchEl) batchEl.textContent = record.batchName || 'Legacy / N/A';
-                if (grossEl) grossEl.textContent = `RM ${grossComm.toFixed(2)}`;
-                if (dedEl) dedEl.textContent = `RM ${totalDeds.toFixed(2)}`;
-                if (netEl) netEl.textContent = `RM ${netComm.toFixed(2)}`;
-
-                // Detailed view fields
-                const detailsContainer = window.DomCache.get('search-details-container');
-                if (detailsContainer) {
-                    detailsContainer.innerHTML = '';
-
-                    const displayFields = [
-                        { key: 'dispatcher_id', label: 'Delivery Dispatcher ID', type: 'string' },
-                        { key: 'ic_number', label: 'No. IC', type: 'string' },
-                        { key: 'name', label: 'Delivery Dispatcher Name', type: 'string' },
-                        { key: 'parcel_qty', label: 'Parcel Quantity', type: 'number' },
-                        { key: 'net_parcel', label: 'Net Parcel', type: 'number' },
-                        { key: 'exclude_extra_weight_yoyi', label: 'Exclude Extra Weight YOYI', type: 'number' },
-                        { key: 'commission_rate', label: 'RM1.11/Parcel Commission', type: 'currency' },
-                        { key: 'diff_rate_new_joiner', label: 'DIFF RATE NEW JOINER ', type: 'currency' },
-                        { key: 'count_pickup', label: 'Count of Pick Up Dispatcher Name', type: 'number' },
-                        { key: 'extra_weight_commission', label: 'Extra Weight Commission (=>5.01kg, Add RM0.10/kg)', type: 'currency' },
-                        { key: 'total_commission', label: 'Total Commission', type: 'currency' },
-                        { key: 'deduction_advance', label: 'DEDUCTION: ADVANCE', type: 'currency' },
-                        { key: 'deduction_pending_cod', label: 'DEDUCTION: PENDING COD', type: 'currency' },
-                        { key: 'deduction_hq_penalty', label: 'DEDUCTION: HQ PENALTY', type: 'currency' },
-                        { key: 'deduction_duitnow_penalty', label: 'DEDUCTION: DUITNOW PENALTY', type: 'currency' },
-                        { key: 'deduction_late_cod_penalty', label: 'DEDUCTION: LATE COD PENALTY', type: 'currency' },
-                        { key: 'deduction_lost_individual', label: 'DEDUCTION: LOST INDIVIDUAL', type: 'currency' },
-                        { key: 'deduction_lost_parcel_hub', label: 'DEDUCTION: LOST PARCEL HUB', type: 'currency' },
-                        { key: 'addition_pickup_commission', label: 'ADD: PICKUP COMMISSION', type: 'currency' },
-                        { key: 'addition_fuel_allowance', label: 'ADD: FUEL ALLOWANCE', type: 'currency' },
-                        { key: 'addition_sorter', label: 'ADD: SORTER', type: 'currency' },
-                        { key: 'nett_commission', label: 'NETT COMMISSION', type: 'currency' },
-                        { key: 'final_amount_to_pay', label: 'FINAL AMOUNT TO PAY', type: 'currency' },
-                        { key: 'status_payment', label: 'STATUS', type: 'string' },
-                        { key: 'date_payment', label: 'DATE PAYMENT', type: 'string' },
-                        { key: 'remark', label: 'REMARK FARISHA', type: 'string' }
-                    ];
-
-                    const block = document.createElement('div');
-                    block.className = 'card';
-                    block.style.background = 'rgba(255, 255, 255, 0.02)';
-                    block.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-                    block.style.padding = '1.5rem';
-
-                    let detailHeaderHtml = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem;">
-                            <h4 style="color: var(--info); font-size: 1rem;">Rekod Komisen & Potongan Aktif</h4>
-                            <span style="font-weight: 700; color: var(--primary); font-size: 1.1rem; font-family: var(--font-heading);">
-                                RM ${netComm.toFixed(2)}
-                            </span>
-                        </div>
-                    `;
-
-                    let fieldsHtml = '';
-                    displayFields.forEach(field => {
-                        let val = record[field.key];
-                        let displayValue = val;
-
-                        if (field.type === 'currency') {
-                            displayValue = `RM ${Number(val || 0).toFixed(2)}`;
-                        } else if (field.type === 'number') {
-                            displayValue = Number(val || 0).toLocaleString('ms-MY');
-                        } else if (field.key === 'ic_number' && val) {
-                            let raw = val.toString();
-                            if (raw.length === 12) {
-                                displayValue = `${raw.substring(0, 6)}-${raw.substring(6, 8)}-${raw.substring(8, 12)}`;
-                            }
-                        }
-
-                        fieldsHtml += `
-                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem;">
-                                <span style="color: var(--text-secondary); text-transform: none;">${field.label}</span>
-                                <span style="color: var(--text-primary); font-weight: 600;">${displayValue}</span>
-                            </div>
-                        `;
-                    });
-
-                    block.innerHTML = detailHeaderHtml + fieldsHtml;
-                    detailsContainer.appendChild(block);
-                }
-
-                // Update print timestamp
-                const printTimestampEl = document.getElementById('print-timestamp');
-                if (printTimestampEl) {
-                    printTimestampEl.textContent = new Date().toLocaleString('ms-MY');
-                }
-
                 if (resultsArea) resultsArea.style.display = 'block';
 
-                await window.DB.log('Carian IC (Sukses)', `Carian bagi IC ${rawIc} menjumpai rekod komisen. (Tempoh: ${latency}ms)`, 'Dispatch');
-            }
+                // Group records by unique dispatcher_id
+                const recordsById = {};
+                records.forEach(r => {
+                    const id = r.dispatcher_id || 'N/A';
+                    if (!recordsById[id]) {
+                        recordsById[id] = [];
+                    }
+                    recordsById[id].push(r);
+                });
 
-            if (window.UI) {
-                window.UI.renderIcons();
+                const uniqueIds = Object.keys(recordsById);
+
+                if (uniqueIds.length > 1) {
+                    // Step 1: Prompt to select Dispatcher ID
+                    this.showDispatcherIdSelection(uniqueIds, recordsById, rawIc, latency);
+                } else {
+                    // Only 1 Dispatcher ID, proceed to check periods
+                    const dispatcherId = uniqueIds[0];
+                    const dispatcherRecords = recordsById[dispatcherId];
+                    this.processDispatcherRecords(dispatcherId, dispatcherRecords, rawIc, latency);
+                }
             }
+        } catch (error) {
+            window.ErrorHandler.handle(error, 'Search');
+        }
+    },
+
+    showDispatcherIdSelection(uniqueIds, recordsById, rawIc, latency) {
+        const selectionArea = document.getElementById('search-selection-area');
+        const summaryCard = document.getElementById('result-summary-card');
+        const printButtons = document.getElementById('result-pdf-buttons');
+        const detailsContainer = window.DomCache.get('search-details-container');
+        const detailsTitle = document.getElementById('result-detail-title');
+
+        // Hide actual result details while selecting
+        if (summaryCard) summaryCard.style.display = 'none';
+        if (printButtons) printButtons.style.display = 'none';
+        if (detailsTitle) detailsTitle.style.display = 'none';
+        if (detailsContainer) detailsContainer.style.display = 'none';
+
+        selectionArea.style.display = 'block';
+        selectionArea.innerHTML = `
+            <div class="card" style="border-left: 4px solid var(--info); padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.05);">
+                <h4 style="margin-bottom: 0.5rem; color: var(--info); display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="user-check"></i> Sila Pilih Profil Dispatcher
+                </h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">No. IC ini mempunyai lebih daripada satu Profil/Dispatcher ID:</p>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    ${uniqueIds.map(id => {
+                        const name = recordsById[id][0].name || recordsById[id][0].nama || 'N/A';
+                        return `
+                            <button class="btn btn-secondary" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem; width: 100%; border: 1px solid rgba(255, 255, 255, 0.1);" onclick="Dispatch.selectDispatcherId('${id}')">
+                                <i data-lucide="user" style="margin-right: 0.5rem; color: var(--primary);"></i> 
+                                <strong style="color: var(--primary); margin-right: 0.5rem;">${id}</strong> - ${name}
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+        window.UI.renderIcons();
+
+        // Save records and context in temp state
+        this.tempRecordsById = recordsById;
+        this.tempRawIc = rawIc;
+        this.tempLatency = latency;
+    },
+
+    selectDispatcherId(id) {
+        const records = this.tempRecordsById[id];
+        this.processDispatcherRecords(id, records, this.tempRawIc, this.tempLatency);
+    },
+
+    processDispatcherRecords(dispatcherId, records, rawIc, latency) {
+        const selectionArea = document.getElementById('search-selection-area');
+        
+        // Group by period/batch
+        if (records.length > 1) {
+            // Prompt to select period/batch
+            const summaryCard = document.getElementById('result-summary-card');
+            const printButtons = document.getElementById('result-pdf-buttons');
+            const detailsContainer = window.DomCache.get('search-details-container');
+            const detailsTitle = document.getElementById('result-detail-title');
+
+            if (summaryCard) summaryCard.style.display = 'none';
+            if (printButtons) printButtons.style.display = 'none';
+            if (detailsTitle) detailsTitle.style.display = 'none';
+            if (detailsContainer) detailsContainer.style.display = 'none';
+
+            selectionArea.style.display = 'block';
+            selectionArea.innerHTML = `
+                <div class="card" style="border-left: 4px solid var(--info); padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.05);">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--info); display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="calendar"></i> Sila Pilih Tempoh Laporan
+                    </h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Profil <strong>${dispatcherId}</strong> mempunyai rekod bagi tempoh berikut:</p>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        ${records.map((rec, idx) => {
+                            const batchName = rec.batch_name || rec.batchName || `Batch ID ${rec.batch_id || rec.batchId}`;
+                            return `
+                                <button class="btn btn-secondary" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem; width: 100%; border: 1px solid rgba(255, 255, 255, 0.1);" onclick="Dispatch.selectRecord(${idx})">
+                                    <i data-lucide="file-text" style="margin-right: 0.5rem; color: var(--info);"></i> 
+                                    <strong style="color: var(--info); margin-right: 0.5rem;">${batchName}</strong> (Bersih: RM ${Number(rec.final_amount_to_pay || rec.nett_commission || 0).toFixed(2)})
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            window.UI.renderIcons();
+
+            this.tempSelectedRecords = records;
+            this.tempRawIc = rawIc;
+            this.tempLatency = latency;
+        } else {
+            // Only 1 record, display it directly
+            selectionArea.style.display = 'none';
+            this.renderFinalRecord(records[0], rawIc, latency);
+        }
+    },
+
+    selectRecord(idx) {
+        const selectionArea = document.getElementById('search-selection-area');
+        selectionArea.style.display = 'none';
+        this.renderFinalRecord(this.tempSelectedRecords[idx], this.tempRawIc, this.tempLatency);
+    },
+
+    renderFinalRecord(record, rawIc, latency) {
+        // Restore display of elements
+        const summaryCard = document.getElementById('result-summary-card');
+        const printButtons = document.getElementById('result-pdf-buttons');
+        const detailsContainer = window.DomCache.get('search-details-container');
+        const detailsTitle = document.getElementById('result-detail-title');
+
+        if (summaryCard) summaryCard.style.display = 'block';
+        if (printButtons) printButtons.style.display = 'flex';
+        if (detailsTitle) detailsTitle.style.display = 'flex';
+        if (detailsContainer) detailsContainer.style.display = 'flex';
+
+        this.currentSearchedRecord = record;
+
+        // Math calculations for split views
+        const grossComm = Number(record.nett_commission || record.total_commission || 0);
+        const totalDeds = Number(record.deduction_advance || 0) +
+                          Number(record.deduction_pending_cod || 0) +
+                          Number(record.deduction_hq_penalty || 0) +
+                          Number(record.deduction_duitnow_penalty || 0) +
+                          Number(record.deduction_late_cod_penalty || 0) +
+                          Number(record.deduction_lost_individual || 0) +
+                          Number(record.deduction_lost_parcel_hub || 0);
+        const netComm = Number(record.final_amount_to_pay || (grossComm - totalDeds));
+
+        // Populate elements
+        const nameEl = window.DomCache.get('result-rider-name');
+        const icEl = window.DomCache.get('result-rider-ic');
+        const batchEl = document.getElementById('result-batch-name');
+        const grossEl = document.getElementById('result-gross-commission');
+        const dedEl = document.getElementById('result-total-deductions');
+        const netEl = window.DomCache.get('result-total-commission');
+
+        if (nameEl) nameEl.textContent = record.name || record.nama;
+        if (icEl) icEl.textContent = rawIc;
+        if (batchEl) batchEl.textContent = record.batch_name || record.batchName || 'Legacy / N/A';
+        if (grossEl) grossEl.textContent = `RM ${grossComm.toFixed(2)}`;
+        if (dedEl) dedEl.textContent = `RM ${totalDeds.toFixed(2)}`;
+        if (netEl) netEl.textContent = `RM ${netComm.toFixed(2)}`;
+
+        // Detailed view fields
+        if (detailsContainer) {
+            detailsContainer.innerHTML = '';
+
+            const displayFields = [
+                { key: 'dispatcher_id', label: 'Delivery Dispatcher ID', type: 'string' },
+                { key: 'ic_number', label: 'No. IC', type: 'string' },
+                { key: 'name', label: 'Delivery Dispatcher Name', type: 'string' },
+                { key: 'parcel_qty', label: 'Parcel Quantity', type: 'number' },
+                { key: 'net_parcel', label: 'Net Parcel', type: 'number' },
+                { key: 'exclude_extra_weight_yoyi', label: 'Exclude Extra Weight YOYI', type: 'number' },
+                { key: 'commission_rate', label: 'RM1.11/Parcel Commission', type: 'currency' },
+                { key: 'diff_rate_new_joiner', label: 'DIFF RATE NEW JOINER ', type: 'currency' },
+                { key: 'count_pickup', label: 'Count of Pick Up Dispatcher Name', type: 'number' },
+                { key: 'extra_weight_commission', label: 'Extra Weight Commission (=>5.01kg, Add RM0.10/kg)', type: 'currency' },
+                { key: 'total_commission', label: 'Total Commission', type: 'currency' },
+                { key: 'deduction_advance', label: 'DEDUCTION: ADVANCE', type: 'currency' },
+                { key: 'deduction_pending_cod', label: 'DEDUCTION: PENDING COD', type: 'currency' },
+                { key: 'deduction_hq_penalty', label: 'DEDUCTION: HQ PENALTY', type: 'currency' },
+                { key: 'deduction_duitnow_penalty', label: 'DEDUCTION: DUITNOW PENALTY', type: 'currency' },
+                { key: 'deduction_late_cod_penalty', label: 'DEDUCTION: LATE COD PENALTY', type: 'currency' },
+                { key: 'deduction_lost_individual', label: 'DEDUCTION: LOST INDIVIDUAL', type: 'currency' },
+                { key: 'deduction_lost_parcel_hub', label: 'DEDUCTION: LOST PARCEL HUB', type: 'currency' },
+                { key: 'addition_pickup_commission', label: 'ADD: PICKUP COMMISSION', type: 'currency' },
+                { key: 'addition_fuel_allowance', label: 'ADD: FUEL ALLOWANCE', type: 'currency' },
+                { key: 'addition_sorter', label: 'ADD: SORTER', type: 'currency' },
+                { key: 'nett_commission', label: 'NETT COMMISSION', type: 'currency' },
+                { key: 'final_amount_to_pay', label: 'FINAL AMOUNT TO PAY', type: 'currency' },
+                { key: 'status_payment', label: 'STATUS', type: 'string' },
+                { key: 'date_payment', label: 'DATE PAYMENT', type: 'string' },
+                { key: 'remark', label: 'REMARK FARISHA', type: 'string' }
+            ];
+
+            const block = document.createElement('div');
+            block.className = 'card';
+            block.style.background = 'rgba(255, 255, 255, 0.02)';
+            block.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+            block.style.padding = '1.5rem';
+
+            let detailHeaderHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                    <h4 style="color: var(--info); font-size: 1rem;">Rekod Komisen & Potongan Aktif</h4>
+                    <span style="font-weight: 700; color: var(--primary); font-size: 1.1rem; font-family: var(--font-heading);">
+                        RM ${netComm.toFixed(2)}
+                    </span>
+                </div>
+            `;
+
+            let fieldsHtml = '';
+            displayFields.forEach(field => {
+                let val = record[field.key];
+                let displayValue = val;
+
+                if (field.type === 'currency') {
+                    displayValue = `RM ${Number(val || 0).toFixed(2)}`;
+                } else if (field.type === 'number') {
+                    displayValue = Number(val || 0).toLocaleString('ms-MY');
+                } else if (field.key === 'ic_number' && val) {
+                    let raw = val.toString();
+                    if (raw.length === 12) {
+                        displayValue = `${raw.substring(0, 6)}-${raw.substring(6, 8)}-${raw.substring(8, 12)}`;
+                    }
+                }
+
+                fieldsHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem;">
+                        <span style="color: var(--text-secondary); text-transform: none;">${field.label}</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">${displayValue}</span>
+                    </div>
+                `;
+            });
+
+            block.innerHTML = detailHeaderHtml + fieldsHtml;
+            detailsContainer.appendChild(block);
+        }
+
+        // Update print timestamp
+        const printTimestampEl = document.getElementById('print-timestamp');
+        if (printTimestampEl) {
+            printTimestampEl.textContent = new Date().toLocaleString('ms-MY');
+        }
+
+        window.DB.log('Carian IC (Sukses)', `Carian bagi IC ${rawIc} menjumpai rekod komisen. (Tempoh: ${latency}ms)`, 'Dispatch').catch(() => {});
+        if (window.UI) {
+            window.UI.renderIcons();
+        }
         } catch (error) {
             window.ErrorHandler.handle(error, 'Search');
         }

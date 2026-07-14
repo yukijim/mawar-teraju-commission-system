@@ -218,7 +218,7 @@ CREATE INDEX idx_batches_previous_batch_id ON batches(previous_batch_id);
 CREATE TABLE dispatcher_mappings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     dispatcher_id VARCHAR(100) UNIQUE NOT NULL,
-    ic_number VARCHAR(20) UNIQUE NOT NULL,
+    ic_number VARCHAR(20) NOT NULL, -- Unique constraint removed to support 1-to-many lookup
     name VARCHAR(255) NOT NULL,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -267,7 +267,7 @@ CREATE TABLE commission_records (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
-    CONSTRAINT uq_commission_batch_ic UNIQUE (batch_id, ic_number)
+    CONSTRAINT uq_commission_batch_dispatcher UNIQUE (batch_id, dispatcher_id)
 );
 CREATE INDEX idx_commission_records_batch ON commission_records(batch_id);
 CREATE INDEX idx_commission_records_ic ON commission_records(ic_number);
@@ -302,8 +302,21 @@ CREATE TABLE deduction_records (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
-    CONSTRAINT uq_deduction_batch_ic UNIQUE (batch_id, ic_number)
+    CONSTRAINT uq_deduction_batch_dispatcher UNIQUE (batch_id, dispatcher_id)
 );
 CREATE INDEX idx_deduction_records_batch ON deduction_records(batch_id);
 CREATE INDEX idx_deduction_records_ic ON deduction_records(ic_number);
+
+#### 9. Table: `report_downloads`
+```sql
+CREATE TABLE report_downloads (
+    id SERIAL PRIMARY KEY,
+    dispatcher_id VARCHAR(100) NOT NULL,
+    batch_id UUID NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+    report_type VARCHAR(50) NOT NULL CHECK (report_type IN ('COMMISSION', 'DEDUCTION')),
+    downloaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45)
+);
+CREATE INDEX idx_downloads_dispatcher ON report_downloads(dispatcher_id);
+```
 ```

@@ -14,14 +14,14 @@ Dokumen ini menyediakan rumusan status pembangunan terkini bagi Commission Looku
 | **Jumlah Modul Siap (Total Modules)** | **23 Modul** (Teras Klien, Repository/Service Pattern, DB v4, Passive Excel Validator, Eksport PDF, Print Styles, Enterprise Light Theme, Express REST API, PostgreSQL, Rate Limiting, JWT Auth, SHA-256 Refresh Hashing, Security Audit Logging, Password Complexity Policy, Excel Upload Engine, Enterprise Batch Management, Enterprise Commission Search Engine, PDF Report Engine & Hardening, Dashboard Analytics, Backup & Monitoring, Production Readiness & VPS Deployment) |
 | **Modul Belum Siap (Pending Modules)** | **None** |
 | **Status Ujian (Test Status)** | **Lulus Cemerlang** (13 Ujian Regresi Klien PASS + 8 Security Tests PASS + 9 Enterprise Batch Tests PASS + 11 Search Engine Tests PASS + 5 PDF Report Engine Tests PASS + 5 Dashboard & Monitor Tests PASS + 3 Post-Deploy Smoke Tests PASS) |
-| **Tarikh Kemas Kini (Last Updated)** | 2026-07-13 |
+| **Tarikh Kemas Kini (Last Updated)** | 2026-07-14 |
 
 ---
 
 ## 1. Rumusan Status Pembangunan
-*   **Peratusan Siap**: **100%** (Seluruh sistem klienside dan server-side siap. Enjin carian komisen, import batch pasif Excel, pangkalan data PostgreSQL berpusat, rate limiting terperinci, JWT Access/Refresh tokens, SHA-256 token hashing, audit logging, Excel Upload Engine, Enterprise Batch Management, Enterprise Commission Search Engine, PDF Report Engine, Dashboard Analytics, Backup & Monitoring, and Production Readiness VPS Deployment disokong sepenuhnya).
+*   **Peratusan Siap**: **100%** (Seluruh sistem klienside dan server-side siap. Enjin carian komisen dengan carian 2-langkah, import batch pasif Excel mengikut templat rasmi, pangkalan data PostgreSQL berpusat dengan constraints dilonggarkan, rate limiting terperinci, JWT Access/Refresh tokens, SHA-256 token hashing, audit logging, Excel Upload Engine, Enterprise Batch Management, Enterprise Commission Search Engine, PDF Report Engine, Dashboard Analytics, Backup & Monitoring, and Production Readiness VPS Deployment disokong sepenuhnya).
 *   **Kesihatan Sistem**: Cemerlang (13 Klien + 41 Backend Ujian Lulus 100%).
-*   **Versi Semasa**: `v1.0.0`
+*   **Versi Semasa**: `v1.0.0` (Production Candidate)
 
 ---
 

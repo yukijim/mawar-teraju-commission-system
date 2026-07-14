@@ -406,8 +406,11 @@
 
             <!-- Search Results Area -->
             <div id="search-results-area" style="display: none;">
+                <!-- Selection Wrapper (Multiple IDs/Periods) -->
+                <div id="search-selection-area" style="display: none; margin-bottom: 2rem;"></div>
+
                 <!-- Result Summary Info -->
-                <div class="card" style="border-left: 4px solid var(--primary); margin-bottom: 2rem;">
+                <div id="result-summary-card" class="card" style="border-left: 4px solid var(--primary); margin-bottom: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
                         <div>
                             <span class="badge badge-success" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; margin-bottom: 0.5rem;">Carian Dijumpai</span>
@@ -436,7 +439,7 @@
                     </div>
                     
                     <!-- PDF Action Buttons -->
-                    <div style="display: flex; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; flex-wrap: wrap;">
+                    <div id="result-pdf-buttons" style="display: flex; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="App.downloadCommissionReportPDF()" style="flex: 1; min-width: 200px;">
                             <i data-lucide="download-cloud"></i> Download Commission Report (PDF)
                         </button>
@@ -447,7 +450,7 @@
                 </div>
 
                 <!-- Detailed Records Table / Grid -->
-                <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <h3 id="result-detail-title" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i data-lucide="clipboard-list" style="color: var(--info);"></i> Perincian Rekod Komisen
                 </h3>
 

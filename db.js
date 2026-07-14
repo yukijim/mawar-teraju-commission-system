@@ -5,7 +5,7 @@
  */
 
 const DB_NAME = 'MawarTerajuCommissionDB';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 const STORES = {
     RECORDS: 'records', // Legacy
@@ -115,8 +115,19 @@ class IndexedDBManager {
                 // 7. Dispatcher Mappings Store (V4 New)
                 if (!db.objectStoreNames.contains(STORES.DISPATCHER_MAPPINGS)) {
                     const mapStore = db.createObjectStore(STORES.DISPATCHER_MAPPINGS, { keyPath: 'dispatcher_id' });
-                    mapStore.createIndex('ic_number', 'ic_number', { unique: true });
+                    mapStore.createIndex('ic_number', 'ic_number', { unique: false });
                     console.log('Store "dispatcher_mappings" dicipta.');
+                } else {
+                    const mapStore = tx.objectStore(STORES.DISPATCHER_MAPPINGS);
+                    if (mapStore.indexNames.contains('ic_number')) {
+                        const index = mapStore.index('ic_number');
+                        if (index.unique) {
+                            mapStore.deleteIndex('ic_number');
+                            mapStore.createIndex('ic_number', 'ic_number', { unique: false });
+                        }
+                    } else {
+                        mapStore.createIndex('ic_number', 'ic_number', { unique: false });
+                    }
                 }
             };
         });

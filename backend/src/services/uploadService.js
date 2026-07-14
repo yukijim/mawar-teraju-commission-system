@@ -67,20 +67,20 @@ class UploadService {
     parcel_qty: ['parcel quantity', 'parcel qty', 'bilangan parcel', 'jumlah parcel'],
     net_parcel: ['net parcel'],
     exclude_extra_weight_yoyi: ['exclude extra weight yoyi'],
-    commission_rate: ['rm1.11/parcel commission', 'rm1.11 / parcel commission', 'rm1.11/parcel commission', 'commission', 'komisen'],
+    commission_rate: ['rm1.11/parcel commission', 'rm1.15/parcel commission', 'rm1.11 / parcel commission', 'rm1.15 / parcel commission', 'commission', 'komisen'],
     diff_rate_new_joiner: ['diff rate new joiner', 'diff rate new joiner '],
     count_pickup: ['count of pick up dispatcher name', 'count of pick up'],
     extra_weight_commission: ['extra weight commission', 'extra weight commission (=>5.01kg, add rm0.10/kg)'],
     total_commission: ['total commission'],
-    deduction_advance: ['deduction: advance', 'deduction: advance ', 'deduction advance'],
-    deduction_pending_cod: ['deduction: pending cod', 'deduction: pending cod ', 'deduction pending cod'],
-    deduction_hq_penalty: ['deduction: hq penalty', 'deduction: hq penalty ', 'deduction hq penalty'],
-    deduction_duitnow_penalty: ['deduction: duitnow penalty', 'deduction: duitnow penalty ', 'deduction duitnow penalty'],
-    deduction_late_cod_penalty: ['deduction: late cod penalty', 'deduction: late cod penalty ', 'deduction late cod penalty'],
-    deduction_lost_individual: ['deduction: lost individual', 'deduction: lost individual ', 'deduction lost individual'],
-    deduction_lost_parcel_hub: ['deduction: lost parcel hub', 'deduction: lost parcel hub ', 'deduction lost parcel hub'],
+    deduction_advance: ['deduction: advance', 'deduction: advance ', 'deduction advance', 'advance'],
+    deduction_pending_cod: ['deduction: pending cod', 'deduction: pending cod ', 'deduction pending cod', 'pending cod'],
+    deduction_hq_penalty: ['deduction: hq penalty', 'deduction: hq penalty ', 'deduction hq penalty', 'hq penalty'],
+    deduction_duitnow_penalty: ['deduction: duitnow penalty', 'deduction: duitnow penalty ', 'deduction duitnow penalty', 'duitnow penalty'],
+    deduction_late_cod_penalty: ['deduction: late cod penalty', 'deduction: late cod penalty ', 'deduction late cod penalty', 'late cod penalty'],
+    deduction_lost_individual: ['deduction: lost individual', 'deduction: lost individual ', 'deduction lost individual', 'lost individual'],
+    deduction_lost_parcel_hub: ['deduction: lost parcel hub', 'deduction: lost parcel hub ', 'deduction lost parcel hub', 'lost parcel hub'],
     addition_pickup_commission: ['add: pickup commission', 'addition: pickup commission', 'pickup commission'],
-    addition_fuel_allowance: ['add: fuel allowance', 'fuel allowance'],
+    addition_fuel_allowance: ['add: fuel allowance', 'fuel allowance', 'addition: refund 15june26', 'refund'],
     addition_sorter: ['add: sorter', 'sorter'],
     nett_commission: ['nett commission', 'net commission'],
     final_amount_to_pay: ['final amount to pay', 'amount to pay'],
@@ -95,6 +95,13 @@ class UploadService {
   DEDUCTION_MAPPING_RULES = {
     dispatcher_id: ['delivery dispatcher id', 'dispatcher id', 'id dispatcher', 'id'],
     name: ['delivery dispatcher name', 'nama', 'name', 'nama penuh'],
+    deduction_advance: ['deduction: advance', 'deduction advance', 'advance'],
+    deduction_pending_cod: ['deduction: pending cod', 'deduction pending cod', 'pending cod'],
+    deduction_hq_penalty: ['deduction: hq penalty', 'deduction hq penalty', 'hq penalty'],
+    deduction_duitnow_penalty: ['deduction: duitnow penalty', 'deduction duitnow penalty', 'duitnow penalty'],
+    deduction_late_cod_penalty: ['deduction: late cod penalty', 'deduction late cod penalty', 'late cod penalty'],
+    deduction_lost_individual: ['deduction: lost individual', 'deduction lost individual', 'lost individual'],
+    deduction_lost_parcel_hub: ['deduction: lost parcel hub', 'deduction lost parcel hub', 'lost parcel hub'],
     lost_pic_signed: ['lost pic signed', 'lost pic signed '],
     lost_rate: ['lost rate'],
     total_all_lost_shared: ['total all lost shared', 'total all lost shared '],
@@ -183,7 +190,7 @@ class UploadService {
       const commSheetName = sheetNames.find(n => {
         if (!n) return false;
         const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
-        return normalized === 'dispatcher comm';
+        return normalized === 'dispatcher comm' || normalized === 'commission' || normalized === 'komisen';
       });
 
       if (process.env.NODE_ENV === 'uat') {
@@ -191,8 +198,8 @@ class UploadService {
       }
 
       if (!commSheetName) {
-        const err = new AppError('Lembaran "Dispatcher Comm" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
-        err.expected = 'Dispatcher Comm';
+        const err = new AppError('Lembaran "Dispatcher Comm" atau "Commission" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        err.expected = 'Dispatcher Comm / Commission';
         err.availableSheets = sheetNames;
         throw err;
       }
@@ -200,7 +207,7 @@ class UploadService {
       const commSheet = workbook.Sheets[commSheetName];
       const commRows = getSheetRows(commSheet);
       if (commRows.length === 0) {
-        throw new AppError('Sheet "Dispatcher Comm" is empty or contains no records.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        throw new AppError('Sheet "Dispatcher Comm / Commission" is empty or contains no records.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
 
       // Map headers dynamically
@@ -213,12 +220,22 @@ class UploadService {
       Object.keys(firstRow).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.COMMISSION_MAPPING_RULES)) {
-          if (!commHeadersMap[key] && aliases.includes(cleanHeader)) {
+          const isRateMatch = key === 'commission_rate' && cleanHeader.includes('parcel commission');
+          const isRefundMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('refund');
+          const isFuelMatch = key === 'addition_fuel_allowance' && cleanHeader.includes('fuel');
+          const isSorterMatch = key === 'addition_sorter' && cleanHeader.includes('sorter');
+          const isPickupMatch = key === 'addition_pickup_commission' && cleanHeader.includes('pickup');
+          if (!commHeadersMap[key] && (aliases.includes(cleanHeader) || isRateMatch || isRefundMatch || isFuelMatch || isSorterMatch || isPickupMatch)) {
             commHeadersMap[key] = header;
             break;
           }
         }
       });
+
+      // Fallback: If ic_number is missing, use dispatcher_id column (e.g. Column A holds IC)
+      if (!commHeadersMap.ic_number && commHeadersMap.dispatcher_id) {
+        commHeadersMap.ic_number = commHeadersMap.dispatcher_id;
+      }
 
       // Validate required fields
       const requiredCommKeys = ['dispatcher_id', 'ic_number', 'name', 'parcel_qty', 'net_parcel', 'commission_rate', 'total_commission', 'nett_commission', 'final_amount_to_pay'];
@@ -454,15 +471,19 @@ class UploadService {
       }
 
       const sheetNames = workbook.SheetNames;
-      const dedSheetName = sheetNames.find(n => n.toLowerCase().includes('penalty') || n.toLowerCase().includes('deduction'));
+      const dedSheetName = sheetNames.find(n => {
+        if (!n) return false;
+        const normalized = n.normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+        return normalized === 'details penalty' || normalized === 'deduction' || normalized === 'potongan';
+      });
       if (!dedSheetName) {
-        throw new AppError('Lembaran "Details Penalty" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        throw new AppError('Lembaran "Details Penalty" atau "Deduction" tidak dijumpai dalam fail Excel.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
 
       const dedSheet = workbook.Sheets[dedSheetName];
       const dedRows = getSheetRows(dedSheet);
       if (dedRows.length === 0) {
-        throw new AppError('Sheet "Details Penalty" is empty or contains no records.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        throw new AppError('Sheet "Details Penalty / Deduction" is empty or contains no records.', 400, 'UPLOAD_INVALID_TEMPLATE');
       }
 
       // Map headers dynamically
@@ -518,10 +539,16 @@ class UploadService {
           const dispatcher_id = rawId.toString().trim();
           const name = rawName ? rawName.toString().trim() : '';
 
-          const ic_number = dbMappings[dispatcher_id] || '';
+          let ic_number = dbMappings[dispatcher_id] || '';
           if (!ic_number) {
-            recordsSkipped++;
-            return;
+            // Check if dispatcher_id itself is a valid 12-digit IC (dashes/spaces stripped)
+            const cleanId = dispatcher_id.replace(/[\s-]/g, '');
+            if (/^\d{12}$/.test(cleanId)) {
+              ic_number = cleanId;
+            } else {
+              recordsSkipped++;
+              return;
+            }
           }
 
           // Detect duplicate records: Batch ID + Dispatcher ID + IC Number
@@ -536,6 +563,13 @@ class UploadService {
             dispatcher_id,
             ic_number,
             name,
+            deduction_advance: parseNumericValue(row[dedHeadersMap.deduction_advance]),
+            deduction_pending_cod: parseNumericValue(row[dedHeadersMap.deduction_pending_cod]),
+            deduction_hq_penalty: parseNumericValue(row[dedHeadersMap.deduction_hq_penalty]),
+            deduction_duitnow_penalty: parseNumericValue(row[dedHeadersMap.deduction_duitnow_penalty]),
+            deduction_late_cod_penalty: parseNumericValue(row[dedHeadersMap.deduction_late_cod_penalty]),
+            deduction_lost_individual: parseNumericValue(row[dedHeadersMap.deduction_lost_individual]),
+            deduction_lost_parcel_hub: parseNumericValue(row[dedHeadersMap.deduction_lost_parcel_hub]),
             lost_pic_signed: parseNumericValue(row[dedHeadersMap.lost_pic_signed]),
             lost_rate: parseNumericValue(row[dedHeadersMap.lost_rate]),
             total_all_lost_shared: parseNumericValue(row[dedHeadersMap.total_all_lost_shared]),
