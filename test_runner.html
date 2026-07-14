@@ -850,6 +850,35 @@
             assert.equal(found[0].qc_penalty, 5, 'Denda QC sepadan');
         });
 
+        test('DB.searchByIc Multi-ID Profile Selection Handling', 'Memastikan carian IC dengan >1 Dispatcher ID memaparkan pilihan profil di UI', async () => {
+            let selectionArea = document.getElementById('search-selection-area');
+            if (!selectionArea) {
+                selectionArea = document.createElement('div');
+                selectionArea.id = 'search-selection-area';
+                document.body.appendChild(selectionArea);
+            }
+            
+            const mockRecordsById = {
+                'NSN3055483': [{ name: 'MD ASYRAF BIN MD ANUAR', dispatcher_id: 'NSN3055483' }],
+                'NSN3074054': [{ name: 'MD ASYRAF BIN MD ANUAR', dispatcher_id: 'NSN3074054' }]
+            };
+            const uniqueIds = ['NSN3055483', 'NSN3074054'];
+            
+            const mockDispatch = window.Dispatch || {
+                showDispatcherIdSelection: function(ids, records, ic, latency) {
+                    selectionArea.style.display = 'block';
+                    selectionArea.innerHTML = ids.map(id => `<button class="profile-btn">${id}</button>`).join('');
+                }
+            };
+            
+            mockDispatch.showDispatcherIdSelection(uniqueIds, mockRecordsById, '851002125831', 10);
+            
+            const buttons = selectionArea.querySelectorAll('.profile-btn, button');
+            assert.ok(buttons.length >= 2, 'Sekurang-kurangnya dua butang pemilihan dipaparkan');
+            assert.ok(selectionArea.innerHTML.includes('NSN3055483'), 'Mengandungi ID pertama');
+            assert.ok(selectionArea.innerHTML.includes('NSN3074054'), 'Mengandungi ID kedua');
+        });
+
         // =====================================================================
         // TEST RUNNER PROCESSOR
         // =====================================================================

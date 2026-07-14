@@ -231,6 +231,7 @@ const Dispatch = {
     },
 
     renderFinalRecord(record, rawIc, latency) {
+        try {
         // Restore display of elements
         const summaryCard = document.getElementById('result-summary-card');
         const printButtons = document.getElementById('result-pdf-buttons');
