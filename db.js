@@ -1002,19 +1002,29 @@ class PostgresRestRepository extends CommissionRepository {
         const cleanIc = rawIc.toString().replace(/[\s-]/g, '');
         if (!cleanIc) return [];
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         try {
             const isId = /[a-zA-Z]/.test(cleanIc);
             const queryParam = isId ? `dispatcher_id=${cleanIc}` : `ic_number=${cleanIc}`;
             const response = await window.apiFetch(`/api/v1/search?${queryParam}`, {
-                method: 'GET'
+                method: 'GET',
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
-                return [];
+                const errResult = await response.json().catch(() => ({}));
+                throw new Error(errResult.message || `Ralat pelayan (Kod: ${response.status}).`);
             }
 
-            const result = await response.json();
-            const recordsList = result.data && result.data.records ? result.data.records : [];
+            const result = await response.json().catch(() => null);
+            if (!result || !result.data || !Array.isArray(result.data.records)) {
+                throw new Error('Format maklumat dari pelayan tidak sah.');
+            }
+
+            const recordsList = result.data.records;
             if (recordsList.length === 0) {
                 return [];
             }
@@ -1070,8 +1080,12 @@ class PostgresRestRepository extends CommissionRepository {
                 };
             });
         } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('Sesi sambungan tamat (Request Timeout).');
+            }
             console.error('[DB] Ralat semasa carian IC ke API:', error);
-            return [];
+            throw error;
         }
     }
 
@@ -1188,6 +1202,6 @@ class CommissionService {
 }
 
 // Instantiate swappable repository based on page environment
-const isTestRunner = window.location.pathname.includes('test_runner.html');
+const isTestRunner = typeof window !== 'undefined' && window.__TEST_MODE__ === true;
 const repository = isTestRunner ? new IndexedDBRepository() : new PostgresRestRepository();
 window.DB = new CommissionService(repository);
