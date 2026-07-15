@@ -912,6 +912,7 @@ class UploadService {
       const commProcessedKeys = new Set();
       const resolvedDispatcherIcs = {};
       const resolvedDispatcherNames = {};
+      const icToNames = {};
 
       commRows.forEach(row => {
         const rawId = row[commHeadersMap.dispatcher_id];
@@ -928,6 +929,14 @@ class UploadService {
 
         resolvedDispatcherIcs[dispatcher_id] = ic_number;
         resolvedDispatcherNames[dispatcher_id] = name;
+
+        if (ic_number && name) {
+          const normName = name.replace(/\s+/g, ' ').trim().toUpperCase();
+          if (!icToNames[ic_number]) {
+            icToNames[ic_number] = new Set();
+          }
+          icToNames[ic_number].add(normName);
+        }
 
         const recordKey = `${commBatchId}_${dispatcher_id}_${ic_number}`;
         if (commProcessedKeys.has(recordKey)) return;
@@ -1014,6 +1023,14 @@ class UploadService {
 
         const name = (rawName ? rawName.toString().trim() : '') || resolvedDispatcherNames[dispatcher_id] || '';
 
+        if (ic_number && name) {
+          const normName = name.replace(/\s+/g, ' ').trim().toUpperCase();
+          if (!icToNames[ic_number]) {
+            icToNames[ic_number] = new Set();
+          }
+          icToNames[ic_number].add(normName);
+        }
+
         const recordKey = `${dedBatchId}_${dispatcher_id}_${ic_number}`;
         if (dedProcessedKeys.has(recordKey)) return;
         dedProcessedKeys.add(recordKey);
@@ -1040,7 +1057,17 @@ class UploadService {
         });
       });
 
-      // 3. Database Transaction Block
+      // 3. Calculate IC Conflict Warnings (1 NRIC with different names)
+      const icWarnings = [];
+      Object.entries(icToNames).forEach(([ic, namesSet]) => {
+        if (namesSet.size > 1) {
+          const names = Array.from(namesSet);
+          icWarnings.push(`No. IC ${ic} dikaitkan dengan ${namesSet.size} nama berbeza: ${names.join(', ')}`);
+        }
+      });
+      const warningsStr = icWarnings.length > 0 ? icWarnings.join('; ') : null;
+
+      // 4. Database Transaction Block
       this.uploadProgress.set(commBatchId, { status: 'IMPORTING', progress: 50, totalRecords: commissionRecords.length + deductionRecords.length, processedRecords: 0 });
 
       const latestCommVer = await uploadRepository.getMaxVersionForPeriod(month, year);
@@ -1071,7 +1098,8 @@ class UploadService {
           checksum: commChecksum,
           recordCount: commissionRecords.length,
           uploadedBy: uploaderId,
-          version
+          version,
+          warnings: warningsStr
         });
 
         const dedBatch = await uploadRepository.createBatch(client, {
@@ -1086,7 +1114,8 @@ class UploadService {
           checksum: dedChecksum,
           recordCount: deductionRecords.length,
           uploadedBy: uploaderId,
-          version
+          version,
+          warnings: warningsStr
         });
 
         await uploadRepository.bulkInsertCommissionRecords(client, commBatch.id, commissionRecords);
@@ -1110,7 +1139,8 @@ class UploadService {
             recordsSkipped: dedRows.length - deductionRecords.length,
             duplicates: 0,
             errors: 0
-          }
+          },
+          warnings: icWarnings
         };
 
       } catch (dbErr) {

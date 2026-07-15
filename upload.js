@@ -302,6 +302,19 @@ const Upload = {
                 }
 
                 listItems.innerHTML = `
+                    ${batchResult.warnings && batchResult.warnings.length > 0 ? `
+                    <div class="warning-alert" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--accent); border-radius: 4px;">
+                        <h5 style="margin: 0 0 0.4rem 0; color: var(--accent); display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; font-weight: 600;">
+                            <i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Amaran Konflik Nombor IC (IC Conflict Warning)
+                        </h5>
+                        <p style="margin: 0 0 0.5rem 0; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;">
+                            No. IC berikut dikaitkan dengan lebih daripada satu nama berbeza dalam data fail Excel. Sila semak dengan HQ untuk pembetulan punca data:
+                        </p>
+                        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.75rem; color: var(--text-secondary); list-style-type: disc; line-height: 1.4;">
+                            ${batchResult.warnings.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
                     <div style="margin-bottom: 1rem;">
                         <h5 style="margin: 0 0 0.25rem 0; color: var(--text-primary);">1. Laporan Komisen</h5>
                         <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; list-style-type: disc;">

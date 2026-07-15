@@ -68,13 +68,13 @@ class UploadRepository {
   /**
    * Inserts a new batch record inside a transaction
    */
-  async createBatch(client, { id, name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy, version = 1, previousBatchId = null }) {
+  async createBatch(client, { id, name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy, version = 1, previousBatchId = null, warnings = null }) {
     const text = `
-      INSERT INTO batches (id, name, month, year, status, active, filename, type, checksum, record_count, uploaded_by, version, previous_batch_id, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      INSERT INTO batches (id, name, month, year, status, active, filename, type, checksum, record_count, uploaded_by, version, previous_batch_id, is_active, warnings)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `;
-    const params = [id, name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy, version, previousBatchId, active];
+    const params = [id, name, month, year, status, active, filename, type, checksum, recordCount, uploadedBy, version, previousBatchId, active, warnings];
     const result = await client.query(text, params);
     return result.rows[0];
   }

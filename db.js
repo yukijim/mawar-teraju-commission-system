@@ -1113,7 +1113,8 @@ class PostgresRestRepository extends CommissionRepository {
                 filename: b.filename,
                 recordCount: b.record_count,
                 uploadTime: new Date(b.created_at || b.uploaded_at).getTime(),
-                status: 'Sukses'
+                status: 'Sukses',
+                warnings: b.warnings
             }));
         } catch (e) {
             return [];

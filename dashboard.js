@@ -144,10 +144,17 @@ const Dashboard = {
                         
                         const statusBadgeClass = item.status === 'Sukses' ? 'badge-success' : 'badge-danger';
 
+                        let warningHtml = '';
+                        if (item.warnings) {
+                            const warnList = item.warnings.split('; ').map(w => `• ${w}`).join('<br>');
+                            warningHtml = `<div class="warning-text" style="color: var(--accent); font-size: 0.7rem; margin-top: 0.25rem; font-weight: normal; white-space: normal; line-height: 1.2;"><i data-lucide="alert-triangle" style="width:11px;height:11px;display:inline-block;margin-right:2px;vertical-align:middle;"></i> ${warnList}</div>`;
+                        }
+
                         tr.innerHTML = `
                             <td>${dateStr}</td>
-                            <td style="font-weight: 500; color: var(--text-primary); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.filename}">
+                            <td style="font-weight: 500; color: var(--text-primary); max-width: 250px; white-space: normal; word-break: break-all;" title="${item.filename}">
                                 ${item.filename}
+                                ${warningHtml}
                             </td>
                             <td>
                                 <span class="badge ${statusBadgeClass}">${item.recordCount} rekod</span>
