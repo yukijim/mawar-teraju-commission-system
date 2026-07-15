@@ -85,7 +85,7 @@ function runRuntimePdfVerification() {
   assert.ok(dedPdfString.includes('%%EOF'), 'Deduction PDF is missing standard %%EOF trailer signature');
   assert.ok(dedPdfString.includes('July 2026 Payment Cycle'), 'Deduction PDF does not contain batch name');
   assert.ok(dedPdfString.includes('Muhammad Amirul bin Syed Mohd Noor'), 'Deduction PDF does not contain dispatcher name');
-  assert.ok(dedPdfString.includes('RM -20.00'), 'Deduction PDF does not format negative deduction details');
+  assert.ok(dedPdfString.includes('RM -100.00'), 'Deduction PDF does not format negative deduction details');
 
   console.log('[Runtime PDF Validation] All checks passed successfully! PDF layout integrity is 100% sound.');
 }

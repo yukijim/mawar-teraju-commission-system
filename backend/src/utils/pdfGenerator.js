@@ -149,15 +149,22 @@ class SimplePdfGenerator {
       addRow('Nett Commission', record.nett_commission);
       addRow('Final Net Amount to Pay', record.final_amount_to_pay);
     } else {
-      addRow('HQ Penalty Summary (from Commission Sheet)', record.deduction_hq_penalty);
-      addRow('Lost Pic Signed Details', record.lost_pic_signed);
-      addRow('Lost Rate Details', record.lost_rate);
-      addRow('Lost Shared Penalty Details', record.total_all_lost_shared);
-      addRow('Lost Individual Penalty Details', record.lost_parcel_pic_signed);
-      addRow('Arbitration Penalty Details', record.arbi_individual);
-      addRow('RCGEN Penalty Details', record.rcgen_penalty);
-      addRow('QC Penalty Details', record.qc_penalty);
-      addRow('Total HQ Penalty details (from Deduction Sheet)', record.total_hq_penalty_detail);
+      addRow('DEDUCTION: ADVANCE (Duit Muka)', record.deduction_advance);
+      addRow('DEDUCTION: PENDING COD (Tunggakan COD)', record.deduction_pending_cod);
+      addRow('DEDUCTION: HQ PENALTY (Denda HQ)', record.deduction_hq_penalty);
+      addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty);
+      addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty);
+      addRow('DEDUCTION: LOST INDIVIDUAL (Barang Hilang Individu)', record.deduction_lost_individual);
+      addRow('DEDUCTION: LOST PARCEL HUB (Barang Hilang Hub)', record.deduction_lost_parcel_hub);
+      
+      const totalDeds = parseFloat(record.deduction_advance || 0) +
+                        parseFloat(record.deduction_pending_cod || 0) +
+                        parseFloat(record.deduction_hq_penalty || 0) +
+                        parseFloat(record.deduction_duitnow_penalty || 0) +
+                        parseFloat(record.deduction_late_cod_penalty || 0) +
+                        parseFloat(record.deduction_lost_individual || 0) +
+                        parseFloat(record.deduction_lost_parcel_hub || 0);
+      addRow('TOTAL DEDUCTIONS (Jumlah Potongan)', totalDeds);
     }
 
     // Write footer on the final page
