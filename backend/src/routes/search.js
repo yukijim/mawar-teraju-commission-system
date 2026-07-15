@@ -1,14 +1,14 @@
 const express = require('express');
 const searchController = require('../controllers/searchController');
 const { authenticate, authorize } = require('../middleware/auth');
-const { searchLimiter, adminLimiter } = require('../middleware/rateLimiter');
+const { searchLimiter, adminLimiter, publicSearchLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
 // GET /api/v1/search (accessible publicly without token)
 router.get(
   '/',
-  searchLimiter,
+  publicSearchLimiter,
   searchController.searchCommissions
 );
 

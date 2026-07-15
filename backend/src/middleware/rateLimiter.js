@@ -61,9 +61,27 @@ const adminLimiter = createLimiter(
   'Too many administrative requests. Access throttled.'
 );
 
+// 5. Public Search Limiter: 30 requests per minute
+const publicSearchLimiter = createLimiter(
+  60 * 1000, // 1 minute
+  30,
+  'SEARCH_RATE_LIMIT_EXCEEDED',
+  'Too many search attempts. Please slow down.'
+);
+
+// 6. Report Download Limiter: 10 requests per minute
+const reportDownloadLimiter = createLimiter(
+  60 * 1000, // 1 minute
+  10,
+  'REPORT_RATE_LIMIT_EXCEEDED',
+  'Too many report download attempts. Access throttled.'
+);
+
 module.exports = {
   loginLimiter,
   searchLimiter,
   uploadLimiter,
   adminLimiter,
+  publicSearchLimiter,
+  reportDownloadLimiter,
 };
