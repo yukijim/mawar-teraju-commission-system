@@ -23,11 +23,21 @@ class ReportService {
    * Generates a Commission PDF Report
    */
   async generateCommissionReport(recordId, user, ipAddress, req) {
-    // 1. Fetch record from database joined with batch details (Must be PUBLISHED)
+    // 1. Fetch record from database joined with batch details and deduction records
     const queryText = `
-      SELECT c.*, b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
+      SELECT 
+        c.*, 
+        COALESCE(d.deduction_advance, 0) as deduction_advance,
+        COALESCE(d.deduction_pending_cod, 0) as deduction_pending_cod,
+        COALESCE(d.deduction_hq_penalty, 0) as deduction_hq_penalty,
+        COALESCE(d.deduction_duitnow_penalty, 0) as deduction_duitnow_penalty,
+        COALESCE(d.deduction_late_cod_penalty, 0) as deduction_late_cod_penalty,
+        COALESCE(d.deduction_lost_individual, 0) as deduction_lost_individual,
+        COALESCE(d.deduction_lost_parcel_hub, 0) as deduction_lost_parcel_hub,
+        b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
       JOIN batches b ON c.batch_id = b.id
+      LEFT JOIN deduction_records d ON c.batch_id = d.batch_id AND c.dispatcher_id = d.dispatcher_id
       WHERE c.id = $1 AND b.deleted_at IS NULL
     `;
     const result = await db.query(queryText, [recordId]);
@@ -97,7 +107,7 @@ class ReportService {
              b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM deduction_records d
       JOIN batches b ON d.batch_id = b.id
-      LEFT JOIN commission_records c ON d.batch_id = c.batch_id AND d.ic_number = c.ic_number
+      LEFT JOIN commission_records c ON d.batch_id = c.batch_id AND d.dispatcher_id = c.dispatcher_id
       WHERE d.id = $1 AND b.deleted_at IS NULL
     `;
     const result = await db.query(queryText, [recordId]);
