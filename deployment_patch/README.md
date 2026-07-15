@@ -6,8 +6,9 @@ Panduan ini menyediakan langkah demi langkah untuk memigrasikan struktur pangkal
 
 ## Senarai Kandungan Folder Patch:
 1. `007_align_deduction_records.sql` - Skrip migrasi SQL untuk menyelaraskan skema jadual `deduction_records` dan menggugurkan kekangan unik pada `ic_number` untuk jadual `dispatcher_mappings`.
-2. `upload_repository.patch` - Fail patch perbezaan kod (git diff) untuk `uploadRepository.js`.
-3. `ui_api_fetch.patch` - Fail patch perbezaan kod (git diff) untuk `ui.js`.
+2. `008_relax_batch_ic_constraints.sql` - Skrip migrasi SQL untuk menggugurkan kekangan unik yang menggunakan `ic_number` pada jadual `commission_records` dan `deduction_records`, digantikan dengan kekangan unik yang betul pada `(batch_id, dispatcher_id)`.
+3. `upload_repository.patch` - Fail patch perbezaan kod (git diff) untuk `uploadRepository.js`.
+4. `ui_api_fetch.patch` - Fail patch perbezaan kod (git diff) untuk `ui.js`.
 
 ---
 
@@ -16,13 +17,15 @@ Panduan ini menyediakan langkah demi langkah untuk memigrasikan struktur pangkal
 Sebelum kod baru dijalankan, pastikan skema jadual diselaraskan.
 
 1. Log masuk ke VPS pengeluaran anda.
-2. Akses CLI PostgreSQL dan semak struktur semasa jadual `deduction_records`:
+2. Akses CLI PostgreSQL dan semak struktur semasa jadual `deduction_records` dan `commission_records`:
    ```bash
+   psql -h localhost -U mawar_admin -d mawar_teraju_commission -c "\d commission_records"
    psql -h localhost -U mawar_admin -d mawar_teraju_commission -c "\d deduction_records"
    ```
-3. Jalankan skrip migrasi SQL `007_align_deduction_records.sql`:
+3. Jalankan skrip migrasi SQL `007_align_deduction_records.sql` dan `008_relax_batch_ic_constraints.sql`:
    ```bash
    psql -h localhost -U mawar_admin -d mawar_teraju_commission -f 007_align_deduction_records.sql
+   psql -h localhost -U mawar_admin -d mawar_teraju_commission -f 008_relax_batch_ic_constraints.sql
    ```
 
 ---
