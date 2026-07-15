@@ -43,7 +43,7 @@ class ReportService {
     }
 
     // 3. Security Role Check: Dispatcher can only download their own record
-    if (user.role === 'DISPATCH') {
+    if (user && user.role === 'DISPATCH') {
       const resolvedIc = await this.resolveDispatcherIc(user.username);
       if (!resolvedIc || record.ic_number !== resolvedIc) {
         throw new AppError('You are not authorized to download this report.', 403, 'SEARCH_FORBIDDEN');
@@ -51,21 +51,33 @@ class ReportService {
     }
 
     // 4. Generate PDF buffer
-    const pdfBuffer = SimplePdfGenerator.generateCommissionPdf(record, user.username, ipAddress);
+    const pdfBuffer = SimplePdfGenerator.generateCommissionPdf(record, user ? user.username : 'PUBLIC_VISITOR', ipAddress);
 
     // Calculate unique reference number
     const refNum = `REF-${record.batch_id.substring(0, 8).toUpperCase()}-${crypto.createHash('sha256').update(record.ic_number).digest('hex').substring(0, 8).toUpperCase()}`;
 
     // 5. Log audit trail with precise parameters
-    await auditLogService.logSuccessLogin(user.id, req, {
-      action: 'COMMISSION_PDF_DOWNLOADED',
-      recordId,
-      dispatcherId: record.dispatcher_id,
-      referenceNumber: refNum,
-      ipAddress,
-      time: new Date().toISOString(),
-      user: { id: user.id, username: user.username, role: user.role }
-    });
+    if (user) {
+      await auditLogService.logSuccessLogin(user.id, req, {
+        action: 'COMMISSION_PDF_DOWNLOADED',
+        recordId,
+        dispatcherId: record.dispatcher_id,
+        referenceNumber: refNum,
+        ipAddress,
+        time: new Date().toISOString(),
+        user: { id: user.id, username: user.username, role: user.role }
+      });
+    } else {
+      await auditLogService.logSuccessLogin(null, req, {
+        action: 'PUBLIC_COMMISSION_PDF_DOWNLOADED',
+        recordId,
+        dispatcherId: record.dispatcher_id,
+        referenceNumber: refNum,
+        ipAddress,
+        time: new Date().toISOString(),
+        user: { id: null, username: 'public_visitor', role: 'PUBLIC' }
+      });
+    }
 
     return {
       filename: `Commission_Report_${record.dispatcher_id}_${record.month}_${record.year}.pdf`,
@@ -101,7 +113,7 @@ class ReportService {
     }
 
     // 3. Security Role Check: Dispatcher can only download their own record
-    if (user.role === 'DISPATCH') {
+    if (user && user.role === 'DISPATCH') {
       const resolvedIc = await this.resolveDispatcherIc(user.username);
       if (!resolvedIc || record.ic_number !== resolvedIc) {
         throw new AppError('You are not authorized to download this report.', 403, 'SEARCH_FORBIDDEN');
@@ -109,21 +121,33 @@ class ReportService {
     }
 
     // 4. Generate PDF buffer
-    const pdfBuffer = SimplePdfGenerator.generateDeductionPdf(record, user.username, ipAddress);
+    const pdfBuffer = SimplePdfGenerator.generateDeductionPdf(record, user ? user.username : 'PUBLIC_VISITOR', ipAddress);
 
     // Calculate unique reference number
     const refNum = `REF-${record.batch_id.substring(0, 8).toUpperCase()}-${crypto.createHash('sha256').update(record.ic_number).digest('hex').substring(0, 8).toUpperCase()}`;
 
     // 5. Log audit trail with precise parameters
-    await auditLogService.logSuccessLogin(user.id, req, {
-      action: 'DEDUCTION_PDF_DOWNLOADED',
-      recordId,
-      dispatcherId: record.dispatcher_id,
-      referenceNumber: refNum,
-      ipAddress,
-      time: new Date().toISOString(),
-      user: { id: user.id, username: user.username, role: user.role }
-    });
+    if (user) {
+      await auditLogService.logSuccessLogin(user.id, req, {
+        action: 'DEDUCTION_PDF_DOWNLOADED',
+        recordId,
+        dispatcherId: record.dispatcher_id,
+        referenceNumber: refNum,
+        ipAddress,
+        time: new Date().toISOString(),
+        user: { id: user.id, username: user.username, role: user.role }
+      });
+    } else {
+      await auditLogService.logSuccessLogin(null, req, {
+        action: 'PUBLIC_DEDUCTION_PDF_DOWNLOADED',
+        recordId,
+        dispatcherId: record.dispatcher_id,
+        referenceNumber: refNum,
+        ipAddress,
+        time: new Date().toISOString(),
+        user: { id: null, username: 'public_visitor', role: 'PUBLIC' }
+      });
+    }
 
     return {
       filename: `Deduction_Report_${record.dispatcher_id}_${record.month}_${record.year}.pdf`,

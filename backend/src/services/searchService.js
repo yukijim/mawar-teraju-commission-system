@@ -45,7 +45,15 @@ class SearchService {
     let is_active = undefined;
 
     // 2. Role-Based Search Guards
-    if (user.role === 'DISPATCH') {
+    if (!user) {
+      // Public search (no login): enforce PUBLISHED and active batches only
+      status = 'PUBLISHED';
+      is_active = true;
+      // Must provide NRIC/IC
+      if (!icNumber) {
+        throw new AppError('Nombor IC diperlukan untuk carian awam.', 400, 'SEARCH_VALIDATION_ERROR');
+      }
+    } else if (user.role === 'DISPATCH') {
       // Dispatcher queries MUST only use ACTIVE and PUBLISHED batches
       status = 'PUBLISHED';
       is_active = true;
@@ -99,7 +107,7 @@ class SearchService {
 
     // 4. Log search to search_history
     await searchRepository.createSearchHistory({
-      userId: user.id,
+      userId: user ? user.id : null,
       icNumber: icNumber || queryParams.ic_number,
       dispatcherId: dispatcherId || queryParams.dispatcher_id,
       duration,
@@ -107,11 +115,19 @@ class SearchService {
     });
 
     // 5. Log audit action
-    await auditLogService.logSuccessLogin(user.id, req, {
-      action: 'COMMISSION_SEARCH',
-      query: { icNumber, dispatcherId, batchId },
-      duration
-    });
+    if (user) {
+      await auditLogService.logSuccessLogin(user.id, req, {
+        action: 'COMMISSION_SEARCH',
+        query: { icNumber, dispatcherId, batchId },
+        duration
+      });
+    } else {
+      await auditLogService.logSuccessLogin(null, req, {
+        action: 'PUBLIC_COMMISSION_SEARCH',
+        query: { icNumber, dispatcherId, batchId },
+        duration
+      });
+    }
 
     // 6. Format responses to partition Dispatcher Info, Commission, and Deductions
     const formattedRecords = records.map(r => ({

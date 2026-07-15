@@ -5,13 +5,9 @@ const { searchLimiter, adminLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-// Authenticate all search engine hooks
-router.use(authenticate());
-
-// GET /api/v1/search (accessible to both ADMIN and DISPATCH roles)
+// GET /api/v1/search (accessible publicly without token)
 router.get(
   '/',
-  authorize('ADMIN', 'DISPATCH'),
   searchLimiter,
   searchController.searchCommissions
 );
@@ -19,21 +15,24 @@ router.get(
 // GET /api/v1/search/history (accessible to ADMIN roles only)
 router.get(
   '/history',
+  authenticate(),
   authorize('ADMIN'),
   adminLimiter,
   searchController.getSearchHistory
 );
 
-// Export hooks endpoints (accessible to ADMIN and DISPATCH roles)
+// Export hooks endpoints (accessible to ADMIN roles only)
 router.get(
   '/export/pdf',
-  authorize('ADMIN', 'DISPATCH'),
+  authenticate(),
+  authorize('ADMIN'),
   searchController.exportPdf
 );
 
 router.get(
   '/export/excel',
-  authorize('ADMIN', 'DISPATCH'),
+  authenticate(),
+  authorize('ADMIN'),
   searchController.exportExcel
 );
 

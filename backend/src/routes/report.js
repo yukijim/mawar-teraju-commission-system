@@ -5,21 +5,16 @@ const { searchLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-// Guard route hooks: Authenticate all report requests
-router.use(authenticate());
-
-// GET /api/v1/reports/commission/:recordId (accessible to ADMIN and DISPATCH roles)
+// GET /api/v1/reports/commission/:recordId (accessible publicly without token)
 router.get(
   '/commission/:recordId',
-  authorize('ADMIN', 'DISPATCH'),
   searchLimiter,
   reportController.downloadCommissionReport
 );
 
-// GET /api/v1/reports/deduction/:recordId (accessible to ADMIN and DISPATCH roles)
+// GET /api/v1/reports/deduction/:recordId (accessible publicly without token)
 router.get(
   '/deduction/:recordId',
-  authorize('ADMIN', 'DISPATCH'),
   searchLimiter,
   reportController.downloadDeductionReport
 );
