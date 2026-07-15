@@ -25,6 +25,7 @@ class SearchRepository {
     let queryText = `
       SELECT 
         c.*, 
+        d.id as deduction_record_id,
         d.lost_pic_signed, d.lost_rate, d.total_all_lost_shared, d.lost_parcel_pic_signed,
         d.arbi_individual, d.rcgen_penalty, d.qc_penalty, d.total_hq_penalty_detail,
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at

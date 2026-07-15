@@ -137,6 +137,7 @@ class SearchService {
         name: r.name
       },
       commission: {
+        id: r.id,
         parcelQty: r.parcel_qty,
         netParcel: r.net_parcel,
         excludeExtraWeightYoyi: r.exclude_extra_weight_yoyi,
@@ -154,6 +155,7 @@ class SearchService {
         remark: r.remark
       },
       deduction: {
+        id: r.deduction_record_id,
         deductionAdvance: parseFloat(r.deduction_advance),
         deductionPendingCod: parseFloat(r.deduction_pending_cod),
         deductionHqPenalty: parseFloat(r.deduction_hq_penalty),

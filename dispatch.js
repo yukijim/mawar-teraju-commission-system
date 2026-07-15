@@ -367,115 +367,16 @@ const Dispatch = {
      */
     downloadCommissionReportPDF() {
         const record = this.currentSearchedRecord;
-        if (!record) {
+        if (!record || !record.commission_record_id) {
             App.showToast('Gagal', 'Tiada rekod komisen ditemui untuk dimuat turun.', 'warning');
             return;
         }
 
-        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-            App.showToast('Gagal', 'Pustaka jsPDF tidak ditemui. Sila tunggu seketika.', 'danger');
-            return;
-        }
-
         try {
-            const doc = new window.jspdf.jsPDF();
-            const raw = record.ic_number.toString();
-            const formattedIc = raw.length === 12 ? `${raw.substring(0, 6)}-${raw.substring(6, 8)}-${raw.substring(8, 12)}` : raw;
-
-            // Brand header
-            doc.setFillColor(142, 27, 50); // Maroon background bar
-            doc.rect(0, 0, 210, 8, 'F');
-
-            // Draw Logo from DOM if present
-            const logoImg = document.querySelector('.logo-container img') || document.querySelector('.role-selection-container img');
-            if (logoImg) {
-                try {
-                    doc.addImage(logoImg, 'PNG', 14, 12, 12, 12);
-                } catch (e) {
-                    console.warn('Failed to render logo image in PDF:', e);
-                }
-            }
-
-            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName : 'Mawar Teraju';
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(14);
-            doc.setTextColor(31, 41, 55);
-            doc.text(compName, 29, 21);
-
-            doc.setFontSize(9.5);
-            doc.setFont("Helvetica", "normal");
-            doc.setTextColor(100, 116, 139);
-            doc.text("Laporan Rasmi Komisen Penghantaran Dispatch", 29, 26);
-
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(13);
-            doc.setTextColor(142, 27, 50);
-            doc.text("LAPORAN KOMISEN (COMMISSION REPORT)", 14, 42);
-
-            doc.setDrawColor(226, 232, 240);
-            doc.line(14, 45, 196, 45);
-
-            // Details metadata table
-            doc.autoTable({
-                startY: 50,
-                head: [['Butiran Dispatcher', 'Maklumat']],
-                body: [
-                    ["Nama Dispatcher", record.name],
-                    ["ID Dispatcher", record.dispatcher_id || 'N/A'],
-                    ["No. KP (IC Number)", formattedIc],
-                    ["Tempoh Batch Komisen", record.batchName || 'Legacy / N/A'],
-                    ["Tarikh Dijana", new Date().toLocaleString('ms-MY')]
-                ],
-                theme: 'plain',
-                styles: { fontSize: 10, cellPadding: 3 },
-                columnStyles: { 0: { fontStyle: 'bold', width: 60 } }
-            });
-
-            // Commission details table
-            const finalY = doc.lastAutoTable.finalY;
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(31, 41, 55);
-            doc.text("Pecahan Pendapatan & Komisen Kasar:", 14, finalY + 12);
-
-            doc.autoTable({
-                startY: finalY + 16,
-                head: [['Parameter Laporan', 'Nilai / Amaun']],
-                body: [
-                    ["Parcel Quantity (Jumlah Parcel)", record.parcel_qty],
-                    ["Net Parcel (Parcel Bersih)", record.net_parcel],
-                    ["Exclude Extra Weight YOYI", record.exclude_extra_weight_yoyi],
-                    ["RM1.11/Parcel Commission", `RM ${Number(record.commission_rate || 0).toFixed(2)}`],
-                    ["DIFF RATE NEW JOINER", `RM ${Number(record.diff_rate_new_joiner || 0).toFixed(2)}`],
-                    ["Count of Pick Up Dispatcher Name", record.count_pickup],
-                    ["Extra Weight Commission", `RM ${Number(record.extra_weight_commission || 0).toFixed(2)}`],
-                    ["Total Commission (Jumlah Kasar)", `RM ${Number(record.total_commission || 0).toFixed(2)}`],
-                    ["ADD: PICKUP COMMISSION", `RM ${Number(record.addition_pickup_commission || 0).toFixed(2)}`],
-                    ["ADD: FUEL ALLOWANCE", `RM ${Number(record.addition_fuel_allowance || 0).toFixed(2)}`],
-                    ["ADD: SORTER", `RM ${Number(record.addition_sorter || 0).toFixed(2)}`],
-                    ["NETT COMMISSION", `RM ${Number(record.nett_commission || 0).toFixed(2)}`],
-                    ["FINAL AMOUNT TO PAY", `RM ${Number(record.final_amount_to_pay || 0).toFixed(2)}`]
-                ],
-                theme: 'striped',
-                styles: { fontSize: 9.5, cellPadding: 3 },
-                headStyles: { fillColor: [142, 27, 50], textColor: 255 },
-                columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } }
-            });
-
-            // Footer
-            const pageCount = doc.internal.getNumberOfPages();
-            for(let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text("Dokumen ini dijana secara digital dan dianggap sah tanpa tandatangan.", 14, 285);
-                doc.text(`Halaman ${i} daripada ${pageCount}`, 180, 285);
-            }
-
-            doc.save(`Laporan_Komisen_${record.name.replace(/\s+/g, '_')}_${(record.batchName || 'Legacy').replace(/\s+/g, '_')}.pdf`);
-            App.showToast('Download Berjaya', 'PDF Laporan Komisen berjaya dimuat turun.', 'success');
+            window.location.href = `/api/v1/reports/commission/${record.commission_record_id}`;
+            App.showToast('Download Berjaya', 'PDF Laporan Komisen sedang dimuat turun.', 'success');
         } catch (error) {
-            window.ErrorHandler.handle(error, 'PDF Commission');
+            window.ErrorHandler.handle(error, 'PDF Commission Download');
         }
     },
 
@@ -484,123 +385,16 @@ const Dispatch = {
      */
     downloadDeductionDetailsPDF() {
         const record = this.currentSearchedRecord;
-        if (!record) {
+        if (!record || !record.deduction_record_id) {
             App.showToast('Gagal', 'Tiada rekod potongan ditemui untuk dimuat turun.', 'warning');
             return;
         }
 
-        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-            App.showToast('Gagal', 'Pustaka jsPDF tidak ditemui. Sila tunggu seketika.', 'danger');
-            return;
-        }
-
         try {
-            const doc = new window.jspdf.jsPDF();
-            const raw = record.ic_number.toString();
-            const formattedIc = raw.length === 12 ? `${raw.substring(0, 6)}-${raw.substring(6, 8)}-${raw.substring(8, 12)}` : raw;
-
-            // Brand header
-            doc.setFillColor(184, 147, 36); // Dark Gold background bar
-            doc.rect(0, 0, 210, 8, 'F');
-
-            // Draw Logo from DOM if present
-            const logoImg = document.querySelector('.logo-container img') || document.querySelector('.role-selection-container img');
-            if (logoImg) {
-                try {
-                    doc.addImage(logoImg, 'PNG', 14, 12, 12, 12);
-                } catch (e) {
-                    console.warn('Failed to render logo image in PDF:', e);
-                }
-            }
-
-            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName : 'Mawar Teraju';
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(14);
-            doc.setTextColor(31, 41, 55);
-            doc.text(compName, 29, 21);
-
-            doc.setFontSize(9.5);
-            doc.setFont("Helvetica", "normal");
-            doc.setTextColor(100, 116, 139);
-            doc.text("Laporan Butiran Denda & Potongan Bulanan Dispatch", 29, 26);
-
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(13);
-            doc.setTextColor(184, 147, 36);
-            doc.text("BUTIRAN POTONGAN (DEDUCTION DETAILS REPORT)", 14, 42);
-
-            doc.setDrawColor(226, 232, 240);
-            doc.line(14, 45, 196, 45);
-
-            // Details metadata table
-            doc.autoTable({
-                startY: 50,
-                head: [['Butiran Dispatcher', 'Maklumat']],
-                body: [
-                    ["Nama Dispatcher", record.name],
-                    ["ID Dispatcher", record.dispatcher_id || 'N/A'],
-                    ["No. KP (IC Number)", formattedIc],
-                    ["Tempoh Batch Komisen", record.batchName || 'Legacy / N/A'],
-                    ["Tarikh Dijana", new Date().toLocaleString('ms-MY')]
-                ],
-                theme: 'plain',
-                styles: { fontSize: 10, cellPadding: 3 },
-                columnStyles: { 0: { fontStyle: 'bold', width: 60 } }
-            });
-
-            // Deduction list table
-            const finalY = doc.lastAutoTable.finalY;
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(11);
-            doc.setTextColor(31, 41, 55);
-            doc.text("Pecahan Denda & Penalti Potongan:", 14, finalY + 12);
-
-            const totalDeds = Number(record.deduction_advance || 0) +
-                              Number(record.deduction_pending_cod || 0) +
-                              Number(record.deduction_hq_penalty || 0) +
-                              Number(record.deduction_duitnow_penalty || 0) +
-                              Number(record.deduction_late_cod_penalty || 0) +
-                              Number(record.deduction_lost_individual || 0) +
-                              Number(record.deduction_lost_parcel_hub || 0);
-
-            doc.autoTable({
-                startY: finalY + 16,
-                head: [['Kod / Jenis Potongan', 'Amaun Potongan']],
-                body: [
-                    ["DEDUCTION: ADVANCE (Duit Muka)", `RM ${Number(record.deduction_advance || 0).toFixed(2)}`],
-                    ["DEDUCTION: PENDING COD (Tunggakan COD)", `RM ${Number(record.deduction_pending_cod || 0).toFixed(2)}`],
-                    ["DEDUCTION: DUITNOW PENALTY", `RM ${Number(record.deduction_duitnow_penalty || 0).toFixed(2)}`],
-                    ["DEDUCTION: LATE COD PENALTY", `RM ${Number(record.deduction_late_cod_penalty || 0).toFixed(2)}`],
-                    ["QC PENALTY (Butiran Denda)", `RM ${Number(record.qc_penalty || 0).toFixed(2)}`],
-                    ["RCGEN PENALTY (Butiran Denda)", `RM ${Number(record.rcgen_penalty || 0).toFixed(2)}`],
-                    ["ARBI INDIVIDUAL (Butiran Denda)", `RM ${Number(record.arbi_individual || 0).toFixed(2)}`],
-                    ["TOTAL HQ PENALTY (Denda HQ)", `RM ${Number(record.deduction_hq_penalty || 0).toFixed(2)}`],
-                    ["LOST PIC SIGNED (Denda Lost)", `RM ${Number(record.lost_pic_signed || 0).toFixed(2)}`],
-                    ["LOST RATE (Denda Lost)", `RM ${Number(record.lost_rate || 0).toFixed(2)}`],
-                    ["LOST PARCEL PIC SIGNED (Barang Hilang Individu)", `RM ${Number(record.lost_parcel_pic_signed || 0).toFixed(2)}`],
-                    ["TOTAL ALL LOST SHARED (Barang Hilang Hub)", `RM ${Number(record.total_all_lost_shared || 0).toFixed(2)}`],
-                    ["TOTAL DEDUCTIONS (Jumlah Potongan)", `RM ${totalDeds.toFixed(2)}`]
-                ],
-                theme: 'striped',
-                styles: { fontSize: 9.5, cellPadding: 3 },
-                headStyles: { fillColor: [184, 147, 36], textColor: 255 },
-                columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } }
-            });
-
-            // Footer
-            const pageCount = doc.internal.getNumberOfPages();
-            for(let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text("Laporan Potongan ini dihasilkan secara automatik untuk rujukan Dispatcher.", 14, 285);
-                doc.text(`Halaman ${i} daripada ${pageCount}`, 180, 285);
-            }
-
-            doc.save(`Butiran_Potongan_${record.name.replace(/\s+/g, '_')}_${(record.batchName || 'Legacy').replace(/\s+/g, '_')}.pdf`);
-            App.showToast('Download Berjaya', 'PDF Butiran Potongan berjaya dimuat turun.', 'success');
+            window.location.href = `/api/v1/reports/deduction/${record.deduction_record_id}`;
+            App.showToast('Download Berjaya', 'PDF Butiran Potongan sedang dimuat turun.', 'success');
         } catch (error) {
-            window.ErrorHandler.handle(error, 'PDF Deduction');
+            window.ErrorHandler.handle(error, 'PDF Deduction Download');
         }
     }
 };

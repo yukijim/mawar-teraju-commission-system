@@ -1044,6 +1044,8 @@ class PostgresRestRepository extends CommissionRepository {
                 const batch = item.batchInfo || {};
 
                 return {
+                    commission_record_id: comm.id || '',
+                    deduction_record_id: ded.id || '',
                     ic_number: info.icNumber || cleanIc,
                     dispatcher_id: info.dispatcherId || '',
                     name: info.name || '',
