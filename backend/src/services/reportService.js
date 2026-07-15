@@ -37,7 +37,8 @@ class ReportService {
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
       JOIN batches b ON c.batch_id = b.id
-      LEFT JOIN deduction_records d ON c.batch_id = d.batch_id AND c.dispatcher_id = d.dispatcher_id
+      LEFT JOIN batches b2 ON b.name = b2.name AND b2.type = 'DEDUCTION' AND b2.status = 'PUBLISHED' AND b2.version = b.version
+      LEFT JOIN deduction_records d ON b2.id = d.batch_id AND c.dispatcher_id = d.dispatcher_id
       WHERE c.id = $1 AND b.deleted_at IS NULL
     `;
     const result = await db.query(queryText, [recordId]);
@@ -107,7 +108,8 @@ class ReportService {
              b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM deduction_records d
       JOIN batches b ON d.batch_id = b.id
-      LEFT JOIN commission_records c ON d.batch_id = c.batch_id AND d.dispatcher_id = c.dispatcher_id
+      LEFT JOIN batches b2 ON b.name = b2.name AND b2.type = 'COMMISSION' AND b2.status = 'PUBLISHED' AND b2.version = b.version
+      LEFT JOIN commission_records c ON b2.id = c.batch_id AND d.dispatcher_id = c.dispatcher_id
       WHERE d.id = $1 AND b.deleted_at IS NULL
     `;
     const result = await db.query(queryText, [recordId]);

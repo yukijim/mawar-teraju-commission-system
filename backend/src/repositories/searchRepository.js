@@ -26,12 +26,15 @@ class SearchRepository {
       SELECT 
         c.*, 
         d.id as deduction_record_id,
+        d.deduction_advance, d.deduction_pending_cod, d.deduction_hq_penalty, d.deduction_duitnow_penalty,
+        d.deduction_late_cod_penalty, d.deduction_lost_individual, d.deduction_lost_parcel_hub,
         d.lost_pic_signed, d.lost_rate, d.total_all_lost_shared, d.lost_parcel_pic_signed,
         d.arbi_individual, d.rcgen_penalty, d.qc_penalty, d.total_hq_penalty_detail,
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
-      LEFT JOIN deduction_records d ON c.batch_id = d.batch_id AND c.ic_number = d.ic_number
       JOIN batches b ON c.batch_id = b.id
+      LEFT JOIN batches b2 ON b.name = b2.name AND b2.type = 'DEDUCTION' AND b2.status = b.status AND b2.version = b.version
+      LEFT JOIN deduction_records d ON b2.id = d.batch_id AND c.dispatcher_id = d.dispatcher_id
       WHERE b.deleted_at IS NULL
     `;
 
