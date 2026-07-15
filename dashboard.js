@@ -99,16 +99,16 @@ const Dashboard = {
                             </div>
                             <div class="batch-actions">
                                 ${(!b.active && b.status === 'published') ? `
-                                    <button class="btn btn-secondary btn-sm" onclick="Dashboard.activateBatch(${b.id})" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">
+                                    <button class="btn btn-secondary btn-sm" onclick="Dashboard.activateBatch('${b.id}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">
                                         Aktifkan
                                     </button>
                                 ` : ''}
                                 ${(b.status === 'draft') ? `
-                                    <button class="btn btn-secondary btn-sm" onclick="Upload.editDraft(${b.id})" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: var(--accent); border-color: rgba(245, 158, 11, 0.3);">
+                                    <button class="btn btn-secondary btn-sm" onclick="Upload.editDraft('${b.id}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: var(--accent); border-color: rgba(245, 158, 11, 0.3);">
                                         Edit
                                     </button>
                                 ` : ''}
-                                <button class="btn btn-secondary btn-sm" onclick="Dashboard.deleteBatch(${b.id})" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.2);">
+                                <button class="btn btn-secondary btn-sm" onclick="Dashboard.deleteBatch('${b.id}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.2);">
                                     Padam
                                 </button>
                             </div>
@@ -160,7 +160,7 @@ const Dashboard = {
                                 <span class="badge ${statusBadgeClass}">${item.recordCount} rekod</span>
                             </td>
                             <td>
-                                <button class="btn btn-link btn-danger" onclick="App.handleRollback(${item.id})" style="padding: 0; color: var(--danger); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                <button class="btn btn-link btn-danger" onclick="App.handleRollback('${item.id}')" style="padding: 0; color: var(--danger); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
                                     <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Rollback
                                 </button>
                             </td>
