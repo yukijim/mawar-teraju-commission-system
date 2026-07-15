@@ -72,4 +72,17 @@ describe('REEKOD Commission Excel Upload Engine & Batch Management Tests', () =>
       assert.equal(normalized, 'dispatcher comm', `Failed to normalize "${name}"`);
     });
   });
+
+  it('should correctly parse strings with thousand separator commas (e.g. "3,240.00" to 3240)', () => {
+    const rawValStr = '3,240.00';
+    const parsedInt = uploadService.parseIntegerValue(rawValStr);
+    assert.equal(parsedInt, 3240, `Failed to parse "${rawValStr}" as integer`);
+
+    const parsedNum = uploadService.parseNumericValue(rawValStr);
+    assert.equal(parsedNum, 3240.00, `Failed to parse "${rawValStr}" as numeric`);
+
+    assert.equal(uploadService.parseIntegerValue('1,250.75'), 1251);
+    assert.equal(uploadService.parseNumericValue('1,250.75'), 1250.75);
+  });
 });
+

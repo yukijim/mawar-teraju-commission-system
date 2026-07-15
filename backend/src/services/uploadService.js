@@ -24,9 +24,20 @@ const normalizeHeader = (str) => {
 const parseNumericValue = (val) => {
   if (val === undefined || val === null) return 0.00;
   if (typeof val === 'number') return val;
-  const cleaned = val.toString().replace(/[^0-9.-]/g, '');
+  const cleaned = val.toString().replace(/,/g, '').replace(/[^0-9.-]/g, '');
   const parsed = parseFloat(cleaned);
   return isNaN(parsed) ? 0.00 : parsed;
+};
+
+/**
+ * Helper to parse clean integer value from Excel cells
+ */
+const parseIntegerValue = (val) => {
+  if (val === undefined || val === null) return 0;
+  if (typeof val === 'number') return Math.round(val);
+  const cleaned = val.toString().replace(/,/g, '').replace(/[^0-9.-]/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : Math.round(parsed);
 };
 
 /**
@@ -317,7 +328,7 @@ class UploadService {
             dispatcher_id,
             ic_number,
             name,
-            parcel_qty: parseInt(row[commHeadersMap.parcel_qty], 10) || 0,
+            parcel_qty: parseIntegerValue(row[commHeadersMap.parcel_qty]),
             net_parcel: 0,
             exclude_extra_weight_yoyi: 0,
             commission_rate: parseNumericValue(row[commHeadersMap.parcel_commission]),
@@ -947,7 +958,7 @@ class UploadService {
           dispatcher_id,
           ic_number,
           name,
-          parcel_qty: parseInt(row[commHeadersMap.parcel_qty], 10) || 0,
+          parcel_qty: parseIntegerValue(row[commHeadersMap.parcel_qty]),
           net_parcel: 0,
           exclude_extra_weight_yoyi: 0,
           commission_rate: parseNumericValue(row[commHeadersMap.parcel_commission]),
@@ -1161,4 +1172,8 @@ class UploadService {
   }
 }
 
-module.exports = new UploadService();
+const uploadServiceInstance = new UploadService();
+uploadServiceInstance.parseNumericValue = parseNumericValue;
+uploadServiceInstance.parseIntegerValue = parseIntegerValue;
+
+module.exports = uploadServiceInstance;
