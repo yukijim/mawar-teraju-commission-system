@@ -1,4 +1,4 @@
--- 006_align_deduction_records.sql
+-- 007_align_deduction_records.sql
 -- Safely aligns the database tables on the production database.
 -- Run this on the production PostgreSQL database.
 
