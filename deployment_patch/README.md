@@ -19,13 +19,13 @@ Sebelum kod baru dijalankan, pastikan skema jadual diselaraskan.
 1. Log masuk ke VPS pengeluaran anda.
 2. Akses CLI PostgreSQL dan semak struktur semasa jadual `deduction_records` dan `commission_records`:
    ```bash
-   psql -h localhost -U mawar_admin -d mawar_teraju_commission -c "\d commission_records"
-   psql -h localhost -U mawar_admin -d mawar_teraju_commission -c "\d deduction_records"
+   psql -h localhost -U mtadmin -d mawar_teraju_commission -c "\d commission_records"
+   psql -h localhost -U mtadmin -d mawar_teraju_commission -c "\d deduction_records"
    ```
 3. Jalankan skrip migrasi SQL `007_align_deduction_records.sql` dan `008_relax_batch_ic_constraints.sql`:
    ```bash
-   psql -h localhost -U mawar_admin -d mawar_teraju_commission -f 007_align_deduction_records.sql
-   psql -h localhost -U mawar_admin -d mawar_teraju_commission -f 008_relax_batch_ic_constraints.sql
+   psql -h localhost -U mtadmin -d mawar_teraju_commission -f 007_align_deduction_records.sql
+   psql -h localhost -U mtadmin -d mawar_teraju_commission -f 008_relax_batch_ic_constraints.sql
    ```
 
 ---
