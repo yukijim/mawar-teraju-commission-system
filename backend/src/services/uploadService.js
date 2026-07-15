@@ -356,7 +356,7 @@ class UploadService {
       // Determine version & previous batch link
       const latestVer = await uploadRepository.getMaxVersionForPeriod(month, year);
       const version = latestVer + 1;
-      const previousBatchId = await uploadRepository.findLatestActiveBatch(month, year);
+      const previousBatchId = await uploadRepository.findLatestActiveBatch(month, year, 'COMMISSION');
 
       const client = await db.connect();
       try {
@@ -605,7 +605,7 @@ class UploadService {
 
       const latestVer = await uploadRepository.getMaxVersionForPeriod(month, year);
       const version = latestVer + 1;
-      const previousBatchId = await uploadRepository.findLatestActiveBatch(month, year);
+      const previousBatchId = await uploadRepository.findLatestActiveBatch(month, year, 'DEDUCTION');
 
       const client = await db.connect();
       try {
@@ -771,8 +771,8 @@ class UploadService {
     try {
       await client.query('BEGIN');
 
-      // Deactivate all other published batches for the same month/year
-      await uploadRepository.deactivateOtherBatches(client, batchId, batch.month, batch.year);
+      // Deactivate all other published batches for the same month/year and type
+      await uploadRepository.deactivateOtherBatches(client, batchId, batch.month, batch.year, batch.type);
 
       // Publish the current batch
       const updatedBatch = await uploadRepository.publishBatch(client, batchId, userId, batch.previous_batch_id);
@@ -1072,6 +1072,8 @@ class UploadService {
 
       const latestCommVer = await uploadRepository.getMaxVersionForPeriod(month, year);
       const version = latestCommVer + 1;
+      const previousCommBatchId = await uploadRepository.findLatestActiveBatch(month, year, 'COMMISSION');
+      const previousDedBatchId = await uploadRepository.findLatestActiveBatch(month, year, 'DEDUCTION');
 
       const client = await db.connect();
       try {
@@ -1099,6 +1101,7 @@ class UploadService {
           recordCount: commissionRecords.length,
           uploadedBy: uploaderId,
           version,
+          previousBatchId: previousCommBatchId,
           warnings: warningsStr
         });
 
@@ -1115,6 +1118,7 @@ class UploadService {
           recordCount: deductionRecords.length,
           uploadedBy: uploaderId,
           version,
+          previousBatchId: previousDedBatchId,
           warnings: warningsStr
         });
 

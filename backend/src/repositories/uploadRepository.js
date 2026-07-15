@@ -93,29 +93,26 @@ class UploadRepository {
     return result.rows[0];
   }
 
-  /**
-   * Deactivates all other published batches for the same month/year inside a transaction
-   */
-  async deactivateOtherBatches(client, batchId, month, year) {
+  async deactivateOtherBatches(client, batchId, month, year, type) {
     const text = `
       UPDATE batches
       SET is_active = FALSE, status = 'ARCHIVED'
-      WHERE id != $1 AND month = $2 AND year = $3 AND status = 'PUBLISHED' AND deleted_at IS NULL
+      WHERE id != $1 AND month = $2 AND year = $3 AND type = $4 AND status = 'PUBLISHED' AND deleted_at IS NULL
     `;
-    await client.query(text, [batchId, month, year]);
+    await client.query(text, [batchId, month, year, type]);
   }
 
   /**
    * Finds the latest active/published batch for a month/year to set as previous_batch_id
    */
-  async findLatestActiveBatch(month, year) {
+  async findLatestActiveBatch(month, year, type) {
     const text = `
       SELECT id FROM batches 
-      WHERE month = $1 AND year = $2 AND status = 'PUBLISHED' AND is_active = TRUE AND deleted_at IS NULL
+      WHERE month = $1 AND year = $2 AND type = $3 AND status = 'PUBLISHED' AND is_active = TRUE AND deleted_at IS NULL
       ORDER BY uploaded_at DESC 
       LIMIT 1
     `;
-    const result = await db.query(text, [month, year]);
+    const result = await db.query(text, [month, year, type]);
     return result.rows[0]?.id || null;
   }
 

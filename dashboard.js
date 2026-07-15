@@ -82,9 +82,12 @@ const Dashboard = {
                             ? `<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.25); margin-left: 0.5rem;"><i data-lucide="check" style="width:12px;height:12px;margin-right:2px;"></i> Aktif</span>` 
                             : '';
 
+                        const isComplete = b.commissionCount > 0 && b.deductionCount > 0;
                         const metaText = b.status === 'published'
-                            ? `Komisen: ${b.commissionCount} rekod | Potongan: ${b.deductionCount} rekod`
-                            : `Belum lengkap (Laporan Komisen: ${b.commissionCount ? 'Ada' : 'Tiada'} | Potongan: ${b.deductionCount ? 'Ada' : 'Tiada'})`;
+                             ? `Komisen: ${b.commissionCount} rekod | Potongan: ${b.deductionCount} rekod`
+                             : (isComplete 
+                                 ? `Draf Lengkap (Komisen: ${b.commissionCount} rekod | Potongan: ${b.deductionCount} rekod)` 
+                                 : `Belum lengkap (Laporan Komisen: ${b.commissionCount ? 'Ada' : 'Tiada'} | Potongan: ${b.deductionCount ? 'Ada' : 'Tiada'})`);
 
                         card.innerHTML = `
                             <div class="batch-info">
@@ -98,9 +101,9 @@ const Dashboard = {
                                 </div>
                             </div>
                             <div class="batch-actions">
-                                ${(!b.active && b.status === 'published') ? `
-                                    <button class="btn btn-secondary btn-sm" onclick="Dashboard.activateBatch('${b.id}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">
-                                        Aktifkan
+                                ${((!b.active && b.status === 'published') || (b.status === 'draft' && isComplete)) ? `
+                                    <button class="btn btn-secondary btn-sm" onclick="Dashboard.activateBatch('${b.id}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; color: var(--success); border-color: rgba(16, 185, 129, 0.35);">
+                                        Terbit & Aktifkan
                                     </button>
                                 ` : ''}
                                 ${(b.status === 'draft') ? `
