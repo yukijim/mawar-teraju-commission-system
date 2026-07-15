@@ -171,7 +171,8 @@ async function main() {
         const extraWeightCommission = parseNumericValue(row[commHeadersMap.extra_weight_commission]);
         const totalCommission = parseNumericValue(row[commHeadersMap.total_commission]);
         const additionPickupCommission = parseNumericValue(row[commHeadersMap.pickup_commission]);
-        const additionFuelAllowance = parseNumericValue(row[commHeadersMap.refund_penalty]);
+        const additionRefundPenalty = parseNumericValue(row[commHeadersMap.refund_penalty]);
+        const additionOthers = parseNumericValue(row[commHeadersMap.others]);
         const additionSorter = parseNumericValue(row[commHeadersMap.sorter]);
         const nettCommission = parseNumericValue(row[commHeadersMap.nett_commission]);
 
@@ -179,13 +180,13 @@ async function main() {
           `UPDATE commission_records 
            SET parcel_qty = $1, commission_rate = $2, extra_weight_commission = $3, 
                total_commission = $4, addition_pickup_commission = $5, 
-               addition_fuel_allowance = $6, addition_sorter = $7, 
-               nett_commission = $8, final_amount_to_pay = $8
-           WHERE batch_id = $9 AND dispatcher_id = $10`,
+               addition_refund_penalty = $6, addition_others = $7, addition_sorter = $8, 
+               nett_commission = $9, final_amount_to_pay = $9
+           WHERE batch_id = $10 AND dispatcher_id = $11`,
           [
             parcelQty, commissionRate, extraWeightCommission, 
             totalCommission, additionPickupCommission, 
-            additionFuelAllowance, additionSorter, 
+            additionRefundPenalty, additionOthers, additionSorter, 
             nettCommission, commBatch.id, dispatcherId
           ]
         );

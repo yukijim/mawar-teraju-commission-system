@@ -147,9 +147,9 @@ class SearchService {
         extraWeightCommission: parseFloat(r.extra_weight_commission),
         totalCommission: parseFloat(r.total_commission),
         additionPickupCommission: parseFloat(r.addition_pickup_commission),
-        additionFuelAllowance: parseFloat(r.addition_fuel_allowance),
+        additionRefundPenalty: parseFloat(r.addition_refund_penalty),
         additionSorter: parseFloat(r.addition_sorter),
-        systemReg: r.system_reg,
+        additionOthers: parseFloat(r.addition_others),
         statusPayment: r.status_payment,
         datePayment: r.date_payment,
         remark: r.remark

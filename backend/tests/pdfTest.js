@@ -30,7 +30,8 @@ function runRuntimePdfVerification() {
     extra_weight_commission: 12.80,
     total_commission: 463.50,
     addition_pickup_commission: 35.00,
-    addition_fuel_allowance: 50.00,
+    addition_refund_penalty: 50.00,
+    addition_others: 10.00,
     addition_sorter: 20.00,
     
     // Deductions inputs (negative floats testing)

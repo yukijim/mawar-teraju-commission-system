@@ -137,7 +137,8 @@ class SimplePdfGenerator {
       addRow('Extra Weight Commission', record.extra_weight_commission);
       addRow('Total Gross Commission', record.total_commission);
       addRow('Pickup Allowance Additions', record.addition_pickup_commission);
-      addRow('Fuel Allowance Additions', record.addition_fuel_allowance);
+      addRow('Refund Penalty Additions', record.addition_refund_penalty);
+      addRow('Others Additions', record.addition_others);
       addRow('Sorter Allowance Additions', record.addition_sorter);
       addRow('Deduction: Advance', record.deduction_advance);
       addRow('Deduction: Pending COD', record.deduction_pending_cod);
