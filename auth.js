@@ -75,6 +75,9 @@ async function verifyAdminPassword(password) {
         }
 
         if (response.ok && result.success) {
+            if (result.data && result.data.accessToken) {
+                sessionStorage.setItem('token', result.data.accessToken);
+            }
             const sessionToken = {
                 loggedIn: true,
                 createdAt: Date.now(),
@@ -124,6 +127,7 @@ function isAdminLoggedIn() {
  */
 function logoutAdmin() {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('token');
 }
 
 /**
