@@ -8,7 +8,7 @@
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   return {
-    companyName: processEnv('COMPANY_NAME', 'REEKOD'),
+    companyName: processEnv('COMPANY_NAME', 'Mawar Teraju'),
     companyLogo: processEnv('COMPANY_LOGO', 'assets/images/branding/logo.png'),
     companyColor: processEnv('COMPANY_COLOR', '0.5 0 0'), // Maroon as default RGB decimal
     supportEmail: processEnv('SUPPORT_EMAIL', 'support@reekod.com'),

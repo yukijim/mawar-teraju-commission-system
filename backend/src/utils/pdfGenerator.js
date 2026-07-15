@@ -54,11 +54,16 @@ class SimplePdfGenerator {
     const writeHeader = (pageNumber) => {
       let header = '';
       
-      // REEKOD logo element (represented as a filled colored rectangle path)
+      // Mawar Teraju stylized vector rose and green leaf
       header += `q\n`;
-      header += `${themeColor} rg\n`;
-      header += `10 0 0 10 50 780 cm\n`; // logo bounds
-      header += `0 0 m 0 2 l 2 2 l 2 0 l f\n`; // flower geometric shape
+      header += `0.15 0.55 0.15 rg\n`; // green leaf
+      header += `12 0 0 12 48 775 cm\n`;
+      header += `0.5 0 m 0.8 0.5 l 0.5 1 l 0.2 0.5 l f\n`;
+      header += `Q\n`;
+      header += `q\n`;
+      header += `${themeColor} rg\n`; // rose petals (maroon or gold depending on type)
+      header += `10 0 0 10 52 780 cm\n`;
+      header += `0.5 0 m 0.9 0.2 l 1 0.6 l 0.7 0.9 l 0.3 0.9 l 0 0.6 l 0.1 0.2 l f\n`;
       header += `Q\n`;
 
       // Title & Reference

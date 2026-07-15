@@ -386,13 +386,26 @@ const Dispatch = {
             doc.setFillColor(142, 27, 50); // Maroon background bar
             doc.rect(0, 0, 210, 8, 'F');
 
-            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName.toUpperCase() + ' ENTERPRISE' : 'MAWAR TERAJU ENTERPRISE';
-            doc.text(compName, 14, 25);
+            // Draw Logo from DOM if present
+            const logoImg = document.querySelector('.logo-container img') || document.querySelector('.role-selection-container img');
+            if (logoImg) {
+                try {
+                    doc.addImage(logoImg, 'PNG', 14, 12, 12, 12);
+                } catch (e) {
+                    console.warn('Failed to render logo image in PDF:', e);
+                }
+            }
 
-            doc.setFontSize(10);
+            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName : 'Mawar Teraju';
+            doc.setFont("Helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(31, 41, 55);
+            doc.text(compName, 29, 21);
+
+            doc.setFontSize(9.5);
             doc.setFont("Helvetica", "normal");
             doc.setTextColor(100, 116, 139);
-            doc.text("Laporan Rasmi Komisen Penghantaran Dispatch", 14, 30);
+            doc.text("Laporan Rasmi Komisen Penghantaran Dispatch", 29, 26);
 
             doc.setFont("Helvetica", "bold");
             doc.setFontSize(13);
@@ -419,13 +432,14 @@ const Dispatch = {
             });
 
             // Commission details table
+            const finalY = doc.lastAutoTable.finalY;
             doc.setFont("Helvetica", "bold");
             doc.setFontSize(11);
             doc.setTextColor(31, 41, 55);
-            doc.text("Pecahan Pendapatan & Komisen Kasar:", 14, 98);
+            doc.text("Pecahan Pendapatan & Komisen Kasar:", 14, finalY + 12);
 
             doc.autoTable({
-                startY: 102,
+                startY: finalY + 16,
                 head: [['Parameter Laporan', 'Nilai / Amaun']],
                 body: [
                     ["Parcel Quantity (Jumlah Parcel)", record.parcel_qty],
@@ -489,13 +503,26 @@ const Dispatch = {
             doc.setFillColor(184, 147, 36); // Dark Gold background bar
             doc.rect(0, 0, 210, 8, 'F');
 
-            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName.toUpperCase() + ' ENTERPRISE' : 'MAWAR TERAJU ENTERPRISE';
-            doc.text(compName, 14, 25);
+            // Draw Logo from DOM if present
+            const logoImg = document.querySelector('.logo-container img') || document.querySelector('.role-selection-container img');
+            if (logoImg) {
+                try {
+                    doc.addImage(logoImg, 'PNG', 14, 12, 12, 12);
+                } catch (e) {
+                    console.warn('Failed to render logo image in PDF:', e);
+                }
+            }
 
-            doc.setFontSize(10);
+            const compName = (window.companyConfig && window.companyConfig.companyName) ? window.companyConfig.companyName : 'Mawar Teraju';
+            doc.setFont("Helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(31, 41, 55);
+            doc.text(compName, 29, 21);
+
+            doc.setFontSize(9.5);
             doc.setFont("Helvetica", "normal");
             doc.setTextColor(100, 116, 139);
-            doc.text("Laporan Butiran Denda & Potongan Bulanan Dispatch", 14, 30);
+            doc.text("Laporan Butiran Denda & Potongan Bulanan Dispatch", 29, 26);
 
             doc.setFont("Helvetica", "bold");
             doc.setFontSize(13);
@@ -522,10 +549,11 @@ const Dispatch = {
             });
 
             // Deduction list table
+            const finalY = doc.lastAutoTable.finalY;
             doc.setFont("Helvetica", "bold");
             doc.setFontSize(11);
             doc.setTextColor(31, 41, 55);
-            doc.text("Pecahan Denda & Penalti Potongan:", 14, 98);
+            doc.text("Pecahan Denda & Penalti Potongan:", 14, finalY + 12);
 
             const totalDeds = Number(record.deduction_advance || 0) +
                               Number(record.deduction_pending_cod || 0) +
@@ -536,7 +564,7 @@ const Dispatch = {
                               Number(record.deduction_lost_parcel_hub || 0);
 
             doc.autoTable({
-                startY: 102,
+                startY: finalY + 16,
                 head: [['Kod / Jenis Potongan', 'Amaun Potongan']],
                 body: [
                     ["DEDUCTION: ADVANCE (Duit Muka)", `RM ${Number(record.deduction_advance || 0).toFixed(2)}`],
