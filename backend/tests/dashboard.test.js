@@ -1,5 +1,5 @@
 const assert = require('assert');
-const dashboardService = require('../services/dashboardService');
+const dashboardService = require('../src/services/dashboardService');
 
 describe('REEKOD Dashboard Analytics, Backup & Health Monitoring Tests', () => {
 
