@@ -133,38 +133,39 @@ const Upload = {
             return;
         }
 
-        if (type === 'commission') {
-            this.tempCommissionFile = file;
-            document.getElementById('comm-file-name').textContent = file.name;
-            document.getElementById('comm-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
-            document.getElementById('comm-upload-zone').style.display = 'none';
-            document.getElementById('comm-file-details').style.display = 'flex';
-        } else {
-            this.tempDeductionFile = file;
-            document.getElementById('ded-file-name').textContent = file.name;
-            document.getElementById('ded-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
-            document.getElementById('ded-upload-zone').style.display = 'none';
-            document.getElementById('ded-file-details').style.display = 'flex';
-        }
+        // Set BOTH files to the selected file
+        this.tempCommissionFile = file;
+        this.tempDeductionFile = file;
+
+        // Update BOTH UI elements to display this file
+        document.getElementById('comm-file-name').textContent = file.name;
+        document.getElementById('comm-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+        document.getElementById('comm-upload-zone').style.display = 'none';
+        document.getElementById('comm-file-details').style.display = 'flex';
+
+        document.getElementById('ded-file-name').textContent = file.name;
+        document.getElementById('ded-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+        document.getElementById('ded-upload-zone').style.display = 'none';
+        document.getElementById('ded-file-details').style.display = 'flex';
 
         this.updatePublishButtonState();
-        App.showToast('Fail Dipilih', `Fail ${type === 'commission' ? 'Komisen' : 'Potongan'} sedia untuk diimport.`, 'success');
+        App.showToast('Fail Dipilih', `Fail Excel sedia untuk diimport bagi kedua-dua laporan.`, 'success');
     },
 
     clearFile(type) {
-        if (type === 'commission') {
-            this.tempCommissionFile = null;
-            const input = document.getElementById('comm-file-input');
-            if (input) input.value = '';
-            document.getElementById('comm-upload-zone').style.display = 'flex';
-            document.getElementById('comm-file-details').style.display = 'none';
-        } else {
-            this.tempDeductionFile = null;
-            const input = document.getElementById('ded-file-input');
-            if (input) input.value = '';
-            document.getElementById('ded-upload-zone').style.display = 'flex';
-            document.getElementById('ded-file-details').style.display = 'none';
-        }
+        this.tempCommissionFile = null;
+        this.tempDeductionFile = null;
+        
+        const commInput = document.getElementById('comm-file-input');
+        if (commInput) commInput.value = '';
+        document.getElementById('comm-upload-zone').style.display = 'flex';
+        document.getElementById('comm-file-details').style.display = 'none';
+
+        const dedInput = document.getElementById('ded-file-input');
+        if (dedInput) dedInput.value = '';
+        document.getElementById('ded-upload-zone').style.display = 'flex';
+        document.getElementById('ded-file-details').style.display = 'none';
+
         this.updatePublishButtonState();
     },
 
@@ -229,61 +230,38 @@ const Upload = {
         try {
             const { month, year } = parsePeriodFromName(batchName);
 
-            // 1. Upload Commission file
-            if (progressBar) progressBar.style.width = '25%';
-            if (progressPercent) progressPercent.textContent = '25%';
-            App.showToast('Memuat Naik', 'Menghantar Laporan Komisen ke pelayan...', 'info');
+            // 1. Upload Combined Excel file
+            if (progressBar) progressBar.style.width = '40%';
+            if (progressPercent) progressPercent.textContent = '40%';
+            App.showToast('Memuat Naik', 'Menghantar fail Excel ke pelayan...', 'info');
 
-            const commFormData = new FormData();
-            commFormData.append('file', this.tempCommissionFile);
-            commFormData.append('month', month);
-            commFormData.append('year', year);
-            commFormData.append('name', batchName);
-            commFormData.append('overwrite', 'true');
+            const batchFormData = new FormData();
+            batchFormData.append('file', this.tempCommissionFile);
+            batchFormData.append('month', month);
+            batchFormData.append('year', year);
+            batchFormData.append('name', batchName);
+            batchFormData.append('overwrite', 'true');
 
-            const commRes = await window.apiFetch('/api/v1/upload/commission', {
+            const batchRes = await window.apiFetch('/api/v1/upload/batch', {
                 method: 'POST',
-                body: commFormData
+                body: batchFormData
             });
 
-            if (!commRes.ok) {
-                const errResult = await commRes.json().catch(() => ({}));
-                throw new Error(errResult.message || 'Gagal memuat naik Laporan Komisen.');
+            if (!batchRes.ok) {
+                const errResult = await batchRes.json().catch(() => ({}));
+                const errMsg = errResult.message || 'Gagal memuat naik fail Excel: Sila pastikan format, nama sheet, dan susunan lajur fail adalah betul.';
+                throw new Error(errMsg);
             }
 
-            const commData = await commRes.json();
-            const commBatchId = commData.data.batchId;
-            const commSummary = commData.data.summary;
+            const batchResult = await batchRes.json();
+            const commBatchId = batchResult.data.commBatchId;
+            const dedBatchId = batchResult.data.dedBatchId;
+            const commSummary = batchResult.data.commSummary;
+            const dedSummary = batchResult.data.dedSummary;
 
             // Fetch commission records from backend to display
             const commDetails = await window.apiFetch(`/api/v1/upload/${commBatchId}`).then(r => r.json());
             const commRecords = commDetails.data?.records || [];
-
-            // 2. Upload Deduction file
-            if (progressBar) progressBar.style.width = '55%';
-            if (progressPercent) progressPercent.textContent = '55%';
-            App.showToast('Memuat Naik', 'Menghantar Butiran Potongan ke pelayan...', 'info');
-
-            const dedFormData = new FormData();
-            dedFormData.append('file', this.tempDeductionFile);
-            dedFormData.append('month', month);
-            dedFormData.append('year', year);
-            dedFormData.append('name', batchName);
-            dedFormData.append('overwrite', 'true');
-
-            const dedRes = await window.apiFetch('/api/v1/upload/deduction', {
-                method: 'POST',
-                body: dedFormData
-            });
-
-            if (!dedRes.ok) {
-                const errResult = await dedRes.json().catch(() => ({}));
-                throw new Error(errResult.message || 'Gagal memuat naik Butiran Potongan.');
-            }
-
-            const dedData = await dedRes.json();
-            const dedBatchId = dedData.data.batchId;
-            const dedSummary = dedData.data.summary;
 
             // Fetch deduction records from backend to display
             const dedDetails = await window.apiFetch(`/api/v1/upload/${dedBatchId}`).then(r => r.json());
@@ -292,7 +270,7 @@ const Upload = {
             if (progressBar) progressBar.style.width = '80%';
             if (progressPercent) progressPercent.textContent = '80%';
 
-            // 3. Publishing if status is 'published'
+            // 2. Publishing if status is 'published'
             if (status === 'published') {
                 App.showToast('Menerbitkan', 'Mengaktifkan batch komisen...', 'info');
                 await window.apiFetch(`/api/v1/upload/publish/${commBatchId}`, { method: 'POST' });

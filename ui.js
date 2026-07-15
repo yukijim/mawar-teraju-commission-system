@@ -202,5 +202,7 @@ window.DomCache = DomCache;
 
 window.apiFetch = async function(url, options = {}) {
     options.credentials = 'include';
-    return fetch(url, options);
+    const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '9999';
+    const baseUrl = isLocalTesting ? 'http://localhost:5000' : '';
+    return fetch(baseUrl + url, options);
 };

@@ -210,8 +210,9 @@
         normalizeHeader(str) {
             if (!str) return '';
             return str.toString()
-                .toLowerCase()
                 .replace(/[\r\n]+/g, ' ')
+                .replace(/[\xa0\u2007\u202F\u205F\u3000]/g, ' ')
+                .toLowerCase()
                 .replace(/\s+/g, ' ')
                 .trim();
         },
@@ -265,18 +266,30 @@
 
         validateAndMapWorkbook(workbook) {
             const sheetNames = workbook.SheetNames;
-            const commSheetName = sheetNames.find(n => n.toLowerCase().includes('dispatcher comm') || n.toLowerCase().includes('comm'));
-            const dedSheetName = sheetNames.find(n => n.toLowerCase().includes('penalty') || n.toLowerCase().includes('deduction'));
+            const commSheetName = sheetNames.find(n => {
+                if (!n) return false;
+                const normalized = n.trim().toLowerCase();
+                return normalized === 'commission' || normalized === 'komisen';
+            });
+            const dedSheetName = sheetNames.find(n => {
+                if (!n) return false;
+                const normalized = n.trim().toLowerCase();
+                return normalized === 'deduction' || normalized === 'potongan';
+            });
 
             if (!commSheetName) {
-                return { isValid: false, error: 'Lembaran "Dispatcher Comm" tidak dijumpai dalam fail Excel.' };
+                console.error('Validation failed: "Commission" sheet not found. Actual sheet names in uploaded file:', sheetNames);
+                return { 
+                    isValid: false, 
+                    error: `Lembaran "Commission" atau "Komisen" tidak dijumpai dalam fail Excel. Senarai sheet sebenar: [${sheetNames.join(', ')}]` 
+                };
             }
 
             const commSheet = workbook.Sheets[commSheetName];
             const commRows = this.getSheetRows(commSheet);
 
             if (commRows.length === 0) {
-                return { isValid: false, error: 'Sheet "Dispatcher Comm" kosong atau tidak mengandungi data.' };
+                return { isValid: false, error: 'Sheet "Commission" kosong atau tidak mengandungi data.' };
             }
 
             const firstCommRow = commRows[0];
@@ -700,7 +713,7 @@
                 ["DSP001", "Rider UAT", 150, 140, 10, 166.50, 10.00, 2, 50.00, 206.50, 20.00, 5.00, 20.00, 0.00, 0.00, 10.00, 20.00, 15.00, 10.00, 5.00, 161.50, 161.50, "MT001", "900101-14-1234", "DRAFT", "", ""]
             ];
             const wsComm = XLSX.utils.aoa_to_sheet(commData);
-            XLSX.utils.book_append_sheet(wb, wsComm, "Dispatcher Comm");
+            XLSX.utils.book_append_sheet(wb, wsComm, "Commission");
 
             // Create Penalty sheet data
             const penaltyData = [
@@ -709,7 +722,7 @@
                 ["DSP001", "Rider UAT", 2, 5, 20.00, 10.00, 0.00, 15.00, 5.00, 20.00]
             ];
             const wsPenalty = XLSX.utils.aoa_to_sheet(penaltyData);
-            XLSX.utils.book_append_sheet(wb, wsPenalty, "Details Penalty");
+            XLSX.utils.book_append_sheet(wb, wsPenalty, "Deduction");
 
             const analysis = window.ExcelParser.validateAndMapWorkbook(wb);
             assert.equal(analysis.isValid, true, 'Workbook UAT disahkan sah');

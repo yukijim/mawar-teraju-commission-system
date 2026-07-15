@@ -245,8 +245,7 @@ class UploadRepository {
         $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7},
         $${paramIndex + 8}, $${paramIndex + 9}, $${paramIndex + 10}, $${paramIndex + 11},
         $${paramIndex + 12}, $${paramIndex + 13}, $${paramIndex + 14}, $${paramIndex + 15},
-        $${paramIndex + 16}, $${paramIndex + 17}, $${paramIndex + 18}, $${paramIndex + 19},
-        $${paramIndex + 20}
+        $${paramIndex + 16}, $${paramIndex + 17}, $${paramIndex + 18}
       )`);
 
       values.push(
@@ -257,7 +256,7 @@ class UploadRepository {
         r.arbi_individual || 0, r.rcgen_penalty || 0, r.qc_penalty || 0, r.total_hq_penalty_detail || 0
       );
 
-      paramIndex += 20;
+      paramIndex += 19;
     });
 
     const text = `

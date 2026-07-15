@@ -11,24 +11,26 @@ const { AppError } = require('../middleware/error');
 const normalizeHeader = (str) => {
   if (!str) return '';
   return str.toString()
-    .toLowerCase()
     .replace(/[\r\n]+/g, ' ')
+    .replace(/[\xa0\u2007\u202F\u205F\u3000]/g, ' ')
+    .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();
 };
 
 /**
- * Parses numeric values safely from cell data.
+ * Helper to parse clean numeric value from Excel cells
  */
 const parseNumericValue = (val) => {
-  if (val === undefined || val === null || val === '') return 0;
-  const cleanVal = val.toString().replace(/[^0-9.-]/g, '');
-  const parsed = parseFloat(cleanVal);
-  return isNaN(parsed) ? 0 : parsed;
+  if (val === undefined || val === null) return 0.00;
+  if (typeof val === 'number') return val;
+  const cleaned = val.toString().replace(/[^0-9.-]/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0.00 : parsed;
 };
 
 /**
- * Dynamically scans cells to find the header row by searching for "delivery dispatcher id".
+ * Helper to convert sheet to array of rows, ignoring empty rows
  */
 const getSheetRows = (sheet) => {
   if (!sheet || !sheet['!ref']) return [];
@@ -102,7 +104,8 @@ class UploadService {
         return normalized === 'commission' || normalized === 'komisen';
       });
       if (!targetSheetName) {
-        throw new AppError('Fail Excel tidak sah: Lembaran "Commission" atau "Komisen" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        console.error('Validation failed: Commission sheet not found. Actual sheet names in workbook:', sheetNames);
+        throw new AppError(`Fail Excel tidak sah: Lembaran "Commission" atau "Komisen" tidak ditemui. Senarai sheet sebenar: [${sheetNames.join(', ')}]`, 400, 'UPLOAD_INVALID_TEMPLATE');
       }
       requiredKeys = [
         'ic_number', 'dispatcher_id', 'name', 'parcel_qty', 'parcel_commission', 
@@ -117,7 +120,8 @@ class UploadService {
         return normalized === 'deduction' || normalized === 'potongan';
       });
       if (!targetSheetName) {
-        throw new AppError('Fail Excel tidak sah: Lembaran "Deduction" atau "Potongan" tidak ditemui.', 400, 'UPLOAD_INVALID_TEMPLATE');
+        console.error('Validation failed: Deduction sheet not found. Actual sheet names in workbook:', sheetNames);
+        throw new AppError(`Fail Excel tidak sah: Lembaran "Deduction" atau "Potongan" tidak ditemui. Senarai sheet sebenar: [${sheetNames.join(', ')}]`, 400, 'UPLOAD_INVALID_TEMPLATE');
       }
       requiredKeys = [
         'ic_number', 'dispatcher_id', 'name', 'advance', 'pending_cod', 
@@ -155,7 +159,21 @@ class UploadService {
 
     const missingKeys = requiredKeys.filter(key => !matchedKeys.has(key));
     if (missingKeys.length > 0) {
-      throw new AppError(`Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: ${missingKeys.join(', ')}`, 400, 'UPLOAD_INVALID_TEMPLATE');
+      console.error('=== UPLOAD VALIDATION FAILED ===');
+      console.error(`Sheet type: ${type}`);
+      console.error(`Missing columns: ${missingKeys.join(', ')}`);
+      
+      console.error('\nExpected Columns (with aliases) | Actual Columns Found');
+      console.error('--------------------------------|----------------------');
+      const maxLen = Math.max(requiredKeys.length, originalHeaders.length);
+      for (let i = 0; i < maxLen; i++) {
+        const expected = requiredKeys[i] ? `${requiredKeys[i]} (${mappingRules[requiredKeys[i]].join(' / ')})` : '';
+        const actual = originalHeaders[i] ? `${originalHeaders[i]} (normalized: "${normalizeHeader(originalHeaders[i])}")` : '';
+        console.error(`${expected.padEnd(31)} | ${actual}`);
+      }
+      console.error('================================');
+
+      throw new AppError(`Fail Excel tidak sah: Lajur wajib berikut tidak ditemui: ${missingKeys.join(', ')} dalam sheet ${targetSheetName}. Sila semak log pelayan untuk perbandingan penuh.`, 400, 'UPLOAD_INVALID_TEMPLATE');
     }
 
     return {
@@ -821,6 +839,290 @@ class UploadService {
       throw new AppError(`Rollback database failure: ${err.message}`, 500, 'DATABASE_TRANSACTION_FAILURE');
     } finally {
       client.release();
+    }
+  }
+
+  async importBatch(fileBuffer, filename, uploaderId, reqBody, req) {
+    let workbook;
+    try {
+      workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    } catch (err) {
+      throw new AppError('Failed to read Excel workbook. File might be corrupted.', 400, 'UPLOAD_INVALID_TEMPLATE');
+    }
+
+    const validationComm = this.validateExcelFormat(workbook, 'COMMISSION');
+    const validationDed = this.validateExcelFormat(workbook, 'DEDUCTION');
+
+    const commSheetName = validationComm.sheetName;
+    const commSheet = workbook.Sheets[commSheetName];
+    const commRows = getSheetRows(commSheet);
+
+    const dedSheetName = validationDed.sheetName;
+    const dedSheet = workbook.Sheets[dedSheetName];
+    const dedRows = getSheetRows(dedSheet);
+
+    const checksum = this.calculateChecksum(fileBuffer);
+    const commBatchId = crypto.randomUUID();
+    const dedBatchId = crypto.randomUUID();
+
+    const month = parseInt(reqBody.month, 10);
+    const year = parseInt(reqBody.year, 10);
+    const batchName = reqBody.name || `Batch ${month}/${year}`;
+    const overwrite = reqBody.overwrite === 'true' || reqBody.overwrite === true;
+
+    if (!month || !year) {
+      throw new AppError('Month and Year are required fields.', 400, 'UPLOAD_VALIDATION_ERROR');
+    }
+
+    const commChecksum = checksum.slice(0, 59) + '_COMM';
+    const dedChecksum = checksum.slice(0, 60) + '_DED';
+
+    if (this.activeLocks.has(commChecksum)) {
+      throw new AppError('This file is currently being processed. Please wait.', 409, 'UPLOAD_BATCH_LOCKED');
+    }
+    this.activeLocks.add(commChecksum);
+
+    try {
+      const existingCommBatch = await uploadRepository.findBatchByChecksum(commChecksum);
+      const existingDedBatch = await uploadRepository.findBatchByChecksum(dedChecksum);
+
+      if ((existingCommBatch || existingDedBatch) && !overwrite) {
+        throw new AppError('This file has already been uploaded.', 409, 'UPLOAD_DUPLICATE_FILE');
+      }
+
+      this.uploadProgress.set(commBatchId, { status: 'VALIDATING', progress: 20, totalRecords: 0, processedRecords: 0 });
+
+      // 1. Process Commission headers and rows
+      const commHeadersMap = {};
+      Object.keys(this.COMMISSION_MAPPING_RULES).forEach(key => {
+        commHeadersMap[key] = null;
+      });
+      Object.keys(commRows[0]).forEach(header => {
+        const cleanHeader = normalizeHeader(header);
+        for (const [key, aliases] of Object.entries(this.COMMISSION_MAPPING_RULES)) {
+          if (aliases.includes(cleanHeader)) {
+            commHeadersMap[key] = header;
+            break;
+          }
+        }
+      });
+
+      const dispatcherMappings = [];
+      const commissionRecords = [];
+      const commProcessedKeys = new Set();
+      const resolvedDispatcherIcs = {};
+      const resolvedDispatcherNames = {};
+
+      commRows.forEach(row => {
+        const rawId = row[commHeadersMap.dispatcher_id];
+        const rawIc = row[commHeadersMap.ic_number];
+        const rawName = row[commHeadersMap.name];
+
+        if (!rawId || rawId.toString().trim() === '') return;
+
+        const dispatcher_id = rawId.toString().trim();
+        const ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+        const name = rawName ? rawName.toString().trim() : '';
+
+        if (!ic_number || ic_number.length < 9) return;
+
+        resolvedDispatcherIcs[dispatcher_id] = ic_number;
+        resolvedDispatcherNames[dispatcher_id] = name;
+
+        const recordKey = `${commBatchId}_${dispatcher_id}_${ic_number}`;
+        if (commProcessedKeys.has(recordKey)) return;
+        commProcessedKeys.add(recordKey);
+
+        dispatcherMappings.push({ dispatcher_id, ic_number, name });
+        commissionRecords.push({
+          dispatcher_id,
+          ic_number,
+          name,
+          parcel_qty: parseInt(row[commHeadersMap.parcel_qty], 10) || 0,
+          net_parcel: 0,
+          exclude_extra_weight_yoyi: 0,
+          commission_rate: parseNumericValue(row[commHeadersMap.parcel_commission]),
+          diff_rate_new_joiner: 0,
+          count_pickup: 0,
+          extra_weight_commission: parseNumericValue(row[commHeadersMap.extra_weight_commission]),
+          total_commission: parseNumericValue(row[commHeadersMap.total_commission]),
+          addition_pickup_commission: parseNumericValue(row[commHeadersMap.pickup_commission]),
+          addition_fuel_allowance: parseNumericValue(row[commHeadersMap.refund_penalty]),
+          addition_sorter: parseNumericValue(row[commHeadersMap.sorter]),
+          deduction_advance: 0,
+          deduction_pending_cod: 0,
+          deduction_hq_penalty: 0,
+          deduction_duitnow_penalty: 0,
+          deduction_late_cod_penalty: 0,
+          deduction_lost_individual: 0,
+          deduction_lost_parcel_hub: 0,
+          nett_commission: parseNumericValue(row[commHeadersMap.nett_commission]),
+          final_amount_to_pay: parseNumericValue(row[commHeadersMap.nett_commission]),
+          system_reg: row[commHeadersMap.others] ? row[commHeadersMap.others].toString().trim() : '',
+          parcel_qty_jms: 0,
+          status_payment: 'SUCCESS',
+          date_payment: '',
+          remark: ''
+        });
+      });
+
+      // 2. Process Deduction headers and rows
+      const dedHeadersMap = {};
+      Object.keys(this.DEDUCTION_MAPPING_RULES).forEach(key => {
+        dedHeadersMap[key] = null;
+      });
+      Object.keys(dedRows[0]).forEach(header => {
+        const cleanHeader = normalizeHeader(header);
+        for (const [key, aliases] of Object.entries(this.DEDUCTION_MAPPING_RULES)) {
+          if (aliases.includes(cleanHeader)) {
+            dedHeadersMap[key] = header;
+            break;
+          }
+        }
+      });
+
+      const mappingsRes = await db.query('SELECT dispatcher_id, ic_number FROM dispatcher_mappings');
+      const dbMappings = {};
+      mappingsRes.rows.forEach(m => {
+        dbMappings[m.dispatcher_id] = m.ic_number;
+      });
+
+      const deductionRecords = [];
+      const dedProcessedKeys = new Set();
+
+      dedRows.forEach(row => {
+        const rawId = row[dedHeadersMap.dispatcher_id];
+        const rawIc = row[dedHeadersMap.ic_number];
+        const rawName = row[dedHeadersMap.name];
+
+        if (!rawId || rawId.toString().trim() === '') return;
+
+        const dispatcher_id = rawId.toString().trim();
+        
+        let ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+        if (!ic_number || ic_number.length < 9) {
+          ic_number = resolvedDispatcherIcs[dispatcher_id] || dbMappings[dispatcher_id] || '';
+        }
+        if (!ic_number) {
+          const cleanId = dispatcher_id.replace(/[\s-]/g, '');
+          if (/^\d{12}$/.test(cleanId)) {
+            ic_number = cleanId;
+          } else {
+            return;
+          }
+        }
+
+        const name = (rawName ? rawName.toString().trim() : '') || resolvedDispatcherNames[dispatcher_id] || '';
+
+        const recordKey = `${dedBatchId}_${dispatcher_id}_${ic_number}`;
+        if (dedProcessedKeys.has(recordKey)) return;
+        dedProcessedKeys.add(recordKey);
+
+        deductionRecords.push({
+          dispatcher_id,
+          ic_number,
+          name,
+          deduction_advance: parseNumericValue(row[dedHeadersMap.advance]),
+          deduction_pending_cod: parseNumericValue(row[dedHeadersMap.pending_cod]),
+          deduction_hq_penalty: parseNumericValue(row[dedHeadersMap.hq_penalty]),
+          deduction_duitnow_penalty: parseNumericValue(row[dedHeadersMap.duitnow_penalty]),
+          deduction_late_cod_penalty: parseNumericValue(row[dedHeadersMap.late_cod_penalty]),
+          deduction_lost_individual: parseNumericValue(row[dedHeadersMap.lost_individual]),
+          deduction_lost_parcel_hub: parseNumericValue(row[dedHeadersMap.lost_parcel_hub]),
+          lost_pic_signed: 0,
+          lost_rate: 0,
+          total_all_lost_shared: 0,
+          lost_parcel_pic_signed: 0,
+          arbi_individual: 0,
+          rcgen_penalty: 0,
+          qc_penalty: 0,
+          total_hq_penalty_detail: 0
+        });
+      });
+
+      // 3. Database Transaction Block
+      this.uploadProgress.set(commBatchId, { status: 'IMPORTING', progress: 50, totalRecords: commissionRecords.length + deductionRecords.length, processedRecords: 0 });
+
+      const latestCommVer = await uploadRepository.getMaxVersionForPeriod(month, year);
+      const version = latestCommVer + 1;
+
+      const client = await db.connect();
+      try {
+        await client.query('BEGIN');
+
+        if (existingCommBatch && overwrite) {
+          await uploadRepository.deleteBatchWithClient(client, existingCommBatch.id);
+        }
+        if (existingDedBatch && overwrite) {
+          await uploadRepository.deleteBatchWithClient(client, existingDedBatch.id);
+        }
+
+        await uploadRepository.upsertDispatcherMappings(client, dispatcherMappings);
+
+        const commBatch = await uploadRepository.createBatch(client, {
+          id: commBatchId,
+          name: batchName,
+          month,
+          year,
+          status: 'DRAFT',
+          active: false,
+          filename,
+          type: 'COMMISSION',
+          checksum: commChecksum,
+          recordCount: commissionRecords.length,
+          uploadedBy: uploaderId,
+          version
+        });
+
+        const dedBatch = await uploadRepository.createBatch(client, {
+          id: dedBatchId,
+          name: batchName,
+          month,
+          year,
+          status: 'DRAFT',
+          active: false,
+          filename,
+          type: 'DEDUCTION',
+          checksum: dedChecksum,
+          recordCount: deductionRecords.length,
+          uploadedBy: uploaderId,
+          version
+        });
+
+        await uploadRepository.bulkInsertCommissionRecords(client, commBatch.id, commissionRecords);
+        await uploadRepository.bulkInsertDeductionRecords(client, dedBatch.id, deductionRecords);
+
+        await client.query('COMMIT');
+
+        await auditLogService.logSuccessLogin(uploaderId, req, { action: 'UPLOAD_BATCH_SUCCESS', filename, commBatchId, dedBatchId });
+
+        return {
+          commBatchId,
+          dedBatchId,
+          commSummary: {
+            recordsImported: commissionRecords.length,
+            recordsSkipped: commRows.length - commissionRecords.length,
+            duplicates: 0,
+            errors: 0
+          },
+          dedSummary: {
+            recordsImported: deductionRecords.length,
+            recordsSkipped: dedRows.length - deductionRecords.length,
+            duplicates: 0,
+            errors: 0
+          }
+        };
+
+      } catch (dbErr) {
+        await client.query('ROLLBACK');
+        throw new AppError(`Database transaction failure: ${dbErr.message}`, 500, 'DATABASE_TRANSACTION_FAILURE');
+      } finally {
+        client.release();
+      }
+
+    } finally {
+      this.activeLocks.delete(commChecksum);
+      this.uploadProgress.delete(commBatchId);
     }
   }
 }

@@ -55,6 +55,30 @@ class UploadController {
   };
 
   /**
+   * POST /api/v1/upload/batch
+   * Parses both Commission and Deduction sheets from a single file and bulk inserts records in a single transaction.
+   */
+  uploadBatch = async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return sendResponse(res, 400, false, 'No file uploaded. Sila pilih fail Excel.', null, [], 'UPLOAD_MISSING_FILE');
+      }
+
+      const result = await uploadService.importBatch(
+        req.file.buffer,
+        req.file.originalname,
+        req.user.id,
+        req.body,
+        req
+      );
+
+      return sendResponse(res, 201, true, 'Excel batch imported as DRAFT successfully.', result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  /**
    * GET /api/v1/upload/history
    * Retrieves all imported batches list.
    */

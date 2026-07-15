@@ -24,6 +24,9 @@ router.post('/commission', uploadLimiter, upload.single('file'), uploadControlle
 // POST /api/v1/upload/deduction (with upload rate limiter)
 router.post('/deduction', uploadLimiter, upload.single('file'), uploadController.uploadDeduction);
 
+// POST /api/v1/upload/batch (with upload rate limiter)
+router.post('/batch', uploadLimiter, upload.single('file'), uploadController.uploadBatch);
+
 // GET /api/v1/upload/history
 router.get('/history', uploadController.getUploadHistory);
 
