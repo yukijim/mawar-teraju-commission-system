@@ -888,8 +888,6 @@ function groupAndMergeBatches(rawHistory) {
                 name: b.name,
                 month: b.month,
                 year: b.year,
-                status: b.status === 'PUBLISHED' ? 'published' : 'draft',
-                active: b.active || b.is_active ? 1 : 0,
                 createdTime: new Date(b.created_at || b.uploaded_at).getTime(),
                 publishedTime: b.published_at ? new Date(b.published_at).getTime() : null,
                 commissionFilename: '',
@@ -902,22 +900,31 @@ function groupAndMergeBatches(rawHistory) {
         }
         
         const g = grouped[key];
+        const isPublished = b.status === 'PUBLISHED';
+        const isActive = !!(b.active || b.is_active);
+
         if (b.type === 'COMMISSION') {
             g.commissionFilename = b.filename;
             g.commissionCount = b.record_count;
             g.commissionBatchId = b.id;
-            g.status = b.status === 'PUBLISHED' ? 'published' : 'draft';
-            g.active = b.active || b.is_active ? 1 : 0;
             g.id = b.id;
         } else if (b.type === 'DEDUCTION') {
             g.deductionFilename = b.filename;
             g.deductionCount = b.record_count;
             g.deductionBatchId = b.id;
-            if (!g.commissionBatchId) {
-                g.status = b.status === 'PUBLISHED' ? 'published' : 'draft';
-                g.active = b.active || b.is_active ? 1 : 0;
-                g.id = b.id;
-            }
+            if (!g.id) g.id = b.id;
+        }
+
+        if (isPublished) {
+            g.status = 'published';
+        } else if (!g.status) {
+            g.status = 'draft';
+        }
+
+        if (isActive) {
+            g.active = 1;
+        } else if (g.active === undefined) {
+            g.active = 0;
         }
     });
     return Object.values(grouped);
