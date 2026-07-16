@@ -195,19 +195,9 @@ class SimplePdfGenerator {
       addRow('DEDUCTION: LOST INDIVIDUAL', record.deduction_lost_individual, 'currency');
       addRow('DEDUCTION: LOST PARCEL HUB', record.deduction_lost_parcel_hub, 'currency');
 
-      // Calculate final net payout dynamically
-      const nettComm = parseFloat(record.nett_commission || 0);
-      const totalDeds = parseFloat(record.deduction_advance || 0) +
-                        parseFloat(record.deduction_pending_cod || 0) +
-                        parseFloat(record.deduction_hq_penalty || 0) +
-                        parseFloat(record.deduction_duitnow_penalty || 0) +
-                        parseFloat(record.deduction_late_cod_penalty || 0) +
-                        parseFloat(record.deduction_lost_individual || 0) +
-                        parseFloat(record.deduction_lost_parcel_hub || 0);
-      const finalNet = nettComm - totalDeds;
-
       // Final net payout summary
       y -= 10;
+      const finalNet = parseFloat(record.nett_commission || record.final_amount_to_pay || 0);
       addRow('FINAL NET AMOUNT TO PAY', finalNet, 'currency');
     }
 

@@ -246,7 +246,7 @@ const Dispatch = {
         this.currentSearchedRecord = record;
 
         // Math calculations for split views
-        const grossComm = Number(record.nett_commission || record.total_commission || 0);
+        const grossComm = Number(record.total_commission || record.nett_commission || 0);
         const totalDeds = Number(record.deduction_advance || 0) +
                           Number(record.deduction_pending_cod || 0) +
                           Number(record.deduction_hq_penalty || 0) +
@@ -254,7 +254,7 @@ const Dispatch = {
                           Number(record.deduction_late_cod_penalty || 0) +
                           Number(record.deduction_lost_individual || 0) +
                           Number(record.deduction_lost_parcel_hub || 0);
-        const netComm = grossComm - totalDeds;
+        const netComm = Number(record.final_amount_to_pay || record.nett_commission || 0);
 
         // Populate elements
         const nameEl = window.DomCache.get('result-rider-name');
