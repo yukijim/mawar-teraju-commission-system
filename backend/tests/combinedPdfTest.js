@@ -52,7 +52,9 @@ function runCombinedPdfVerification() {
   // Verify both sections exist
   assert.ok(pdfString.includes('EXTRA REWARD'), 'Combined PDF is missing commission fields');
   assert.ok(pdfString.includes('DEDUCTION: ADVANCE'), 'Combined PDF is missing deduction fields');
-  assert.ok(pdfString.includes('FINAL NET AMOUNT TO PAY'), 'Combined PDF is missing final net payout summary');
+  assert.ok(pdfString.includes('Total Net Pay'), 'Combined PDF is missing Total Net Pay summary');
+  assert.ok(pdfString.includes('Total Addition'), 'Combined PDF is missing Total Addition summary');
+  assert.ok(pdfString.includes('Total Deduction'), 'Combined PDF is missing Total Deduction summary');
 
   // Verify calculated net payout formatting
   // Expecting raw nett_commission value from database directly (716.30)
