@@ -95,7 +95,9 @@ const Admin = {
      * @returns {Promise<void>}
      */
     async confirmClearDatabase() {
-        const autoConfirm = typeof window !== 'undefined' && (window.location.search.includes('bypass_confirm=true') || window.__TEST_MODE__ === true);
+        const autoConfirm = typeof window !== 'undefined' && 
+            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+            window.__TEST_MODE__ === true;
         if (autoConfirm || confirm('Amaran: Adakah anda pasti ingin mengosongkan keseluruhan pangkalan data? Semua sejarah muat naik dan rekod komisen akan dipadamkan.')) {
             try {
                 if (!window.DB) return;

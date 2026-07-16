@@ -212,7 +212,9 @@ const Dashboard = {
             const batch = await window.DB.getBatch(batchId);
             const name = batch ? batch.name : `ID ${batchId}`;
             
-            const autoConfirm = typeof window !== 'undefined' && (window.location.search.includes('bypass_confirm=true') || window.__TEST_MODE__ === true);
+            const autoConfirm = typeof window !== 'undefined' && 
+                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+                window.__TEST_MODE__ === true;
             if (autoConfirm || confirm(`Adakah anda pasti ingin memadamkan batch "${name}"? Semua data komisen dan potongan berkaitan akan dipadamkan sepenuhnya!`)) {
                 await window.DB.deleteBatch(batchId);
                 await window.DB.log('Padam Batch', `Memadamkan batch komisen "${name}" beserta semua rekod berkaitan.`, 'Admin');
@@ -230,7 +232,9 @@ const Dashboard = {
      * @returns {Promise<void>}
      */
     async handleRollback(historyId) {
-        const autoConfirm = typeof window !== 'undefined' && (window.location.search.includes('bypass_confirm=true') || window.__TEST_MODE__ === true);
+        const autoConfirm = typeof window !== 'undefined' && 
+            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+            window.__TEST_MODE__ === true;
         if (autoConfirm || confirm('Adakah anda pasti ingin memadamkan fail muat naik ini? Semua data berkaitan fail ini akan dibuang daripada pangkalan data.')) {
             try {
                 if (window.UI) {
