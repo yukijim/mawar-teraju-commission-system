@@ -128,7 +128,7 @@ const Upload = {
 
         const ext = file.name.split('.').pop().toLowerCase();
         if (ext !== 'xlsx' && ext !== 'xls') {
-            App.showToast('Format Fail Salah', 'Sila muat naik fail Excel (.xlsx atau .xls) sahaja.', 'danger');
+            window.UI.showToast('Format Fail Salah', 'Sila muat naik fail Excel (.xlsx atau .xls) sahaja.', 'danger');
             this.clearFile(type);
             return;
         }
@@ -149,7 +149,7 @@ const Upload = {
         document.getElementById('ded-file-details').style.display = 'flex';
 
         this.updatePublishButtonState();
-        App.showToast('Fail Dipilih', `Fail Excel sedia untuk diimport bagi kedua-dua laporan.`, 'success');
+        window.UI.showToast('Fail Dipilih', `Fail Excel sedia untuk diimport bagi kedua-dua laporan.`, 'success');
     },
 
     clearFile(type) {
@@ -207,13 +207,13 @@ const Upload = {
 
         if (!batchName) {
             console.warn('[Upload.saveBatch Validation Failed] Batch name is empty');
-            App.showToast('Nama Batch Kosong', 'Sila masukkan nama bagi tempoh komisen batch.', 'warning');
+            window.UI.showToast('Nama Batch Kosong', 'Sila masukkan nama bagi tempoh komisen batch.', 'warning');
             return;
         }
 
         if (!this.tempCommissionFile || !this.tempDeductionFile) {
             console.warn('[Upload.saveBatch Validation Failed] Missing required files. Commission:', this.tempCommissionFile, 'Deduction:', this.tempDeductionFile);
-            App.showToast('Fail Tidak Lengkap', 'Kedua-dua fail (Laporan Komisen & Butiran Potongan) wajib dipilih sebelum diimport.', 'danger');
+            window.UI.showToast('Fail Tidak Lengkap', 'Kedua-dua fail (Laporan Komisen & Butiran Potongan) wajib dipilih sebelum diimport.', 'danger');
             return;
         }
 
@@ -233,7 +233,7 @@ const Upload = {
             // 1. Upload Combined Excel file
             if (progressBar) progressBar.style.width = '40%';
             if (progressPercent) progressPercent.textContent = '40%';
-            App.showToast('Memuat Naik', 'Menghantar fail Excel ke pelayan...', 'info');
+            window.UI.showToast('Memuat Naik', 'Menghantar fail Excel ke pelayan...', 'info');
 
             const batchFormData = new FormData();
             batchFormData.append('file', this.tempCommissionFile);
@@ -272,7 +272,7 @@ const Upload = {
 
             // 2. Publishing if status is 'published'
             if (status === 'published') {
-                App.showToast('Menerbitkan', 'Mengaktifkan batch komisen...', 'info');
+                window.UI.showToast('Menerbitkan', 'Mengaktifkan batch komisen...', 'info');
                 await window.apiFetch(`/api/v1/upload/publish/${commBatchId}`, { method: 'POST' });
                 await window.apiFetch(`/api/v1/upload/publish/${dedBatchId}`, { method: 'POST' });
             }
@@ -280,7 +280,7 @@ const Upload = {
             if (progressBar) progressBar.style.width = '100%';
             if (progressPercent) progressPercent.textContent = '100%';
 
-            App.showToast(
+            window.UI.showToast(
                 'Import Selesai',
                 `Batch "${batchName}" berjaya disimpan sebagai ${status === 'published' ? 'Terbit & Aktif' : 'Draf'}.`,
                 'success'
@@ -418,7 +418,7 @@ const Upload = {
             document.getElementById('batch-name-input').value = batch.name;
             document.getElementById('create-batch-title').innerHTML = `<i data-lucide="edit-3" style="color: var(--primary);"></i> Kemas Kini Batch "${batch.name}"`;
 
-            App.showToast('Batch Dipilih', `Batch "${batch.name}" sedia untuk dikemas kini. Sila muat naik fail baharu.`, 'info');
+            window.UI.showToast('Batch Dipilih', `Batch "${batch.name}" sedia untuk dikemas kini. Sila muat naik fail baharu.`, 'info');
         } catch (error) {
             window.ErrorHandler.handle(error, 'Load Draft Batch');
         }
@@ -429,7 +429,7 @@ const Upload = {
      */
     downloadSplitTemplate(type) {
         if (typeof XLSX === 'undefined') {
-            App.showToast('Gagal', 'Pustaka SheetJS belum dimuatkan sepenuhnya.', 'danger');
+            window.UI.showToast('Gagal', 'Pustaka SheetJS belum dimuatkan sepenuhnya.', 'danger');
             return;
         }
         try {
@@ -464,7 +464,7 @@ const Upload = {
             XLSX.utils.book_append_sheet(wb, ws, type === 'commission' ? "Komisen" : "Potongan");
             XLSX.writeFile(wb, `templat_${type}_mawar_teraju.xlsx`);
             
-            App.showToast('Muat Turun Berjaya', `Templat ${type} berjaya diunduh.`, 'success');
+            window.UI.showToast('Muat Turun Berjaya', `Templat ${type} berjaya diunduh.`, 'success');
             if (window.DB) {
                 window.DB.log('Muat Turun Templat', `Admin memuat turun templat ${type}.`, 'Admin');
             }
@@ -477,14 +477,47 @@ const Upload = {
      * Populates simulation mock files for batch creator testing.
      */
     runSimulationBatch() {
+        if (typeof XLSX === 'undefined') {
+            window.UI.showToast('Gagal', 'Pustaka SheetJS belum dimuatkan sepenuhnya.', 'danger');
+            return;
+        }
         try {
             document.getElementById('batch-name-input').value = "Julai 2026";
             
-            const commBlob = new Blob(["mock commission data"], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-            const dedBlob = new Blob(["mock deduction data"], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            // Generate valid combined workbook
+            const commWb = XLSX.utils.book_new();
+            const commHeaders = [
+                "Delivery Dispatcher IC No.", "Delivery Dispatcher ID", "Delivery Dispatcher Name", 
+                "Parcel Quantity", "Parcel Commission", "Extra Weight Commission", "Total Commission", 
+                "ADD: REFUND PENALTY", "ADD: PICKUP COMMISSION", "ADD: OTHERS", "ADD: SORTER", 
+                "ADD: EXTRA REWARD", "NETT COMMISSION"
+            ];
+            const commRows = [
+                commHeaders,
+                ["070614-10-1708", "NSN3052004", "Mohamad Azlan Bin Jaapar", 150, 1.15, 8.50, 181.00, 5.00, 15.30, 0.00, 0.00, 0.00, 201.30]
+            ];
+            const commWs = XLSX.utils.aoa_to_sheet(commRows);
+            XLSX.utils.book_append_sheet(commWb, commWs, "Commission");
+
+            // Generate valid Deduction sheet
+            const dedHeaders = [
+                "Delivery Dispatcher IC No.", "Delivery Dispatcher ID", "Delivery Dispatcher Name", 
+                "DEDUCTION: ADVANCE", "DEDUCTION: PENDING COD", "DEDUCTION: HQ PENALTY", 
+                "DEDUCTION: DUITNOW PENALTY", "DEDUCTION: LATE COD PENALTY", 
+                "DEDUCTION: LOST INDIVIDUAL", "DEDUCTION: LOST PARCEL HUB"
+            ];
+            const dedRows = [
+                dedHeaders,
+                ["070614-10-1708", "NSN3052004", "Mohamad Azlan Bin Jaapar", 50.00, 0.00, 10.00, 0.00, 0.00, 0.00, 0.00]
+            ];
+            const dedWs = XLSX.utils.aoa_to_sheet(dedRows);
+            XLSX.utils.book_append_sheet(commWb, dedWs, "Deduction");
+            
+            const commOut = XLSX.write(commWb, { bookType: 'xlsx', type: 'array' });
+            const commBlob = new Blob([commOut], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
             
             this.tempCommissionFile = new File([commBlob], 'komisen_julai_2026_simulasi.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            this.tempDeductionFile = new File([dedBlob], 'potongan_julai_2026_simulasi.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            this.tempDeductionFile = new File([commBlob], 'potongan_julai_2026_simulasi.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             
             document.getElementById('comm-file-name').textContent = this.tempCommissionFile.name;
             document.getElementById('comm-file-size').textContent = '10.0 KB';
@@ -497,7 +530,7 @@ const Upload = {
             document.getElementById('ded-file-details').style.display = 'flex';
 
             this.updatePublishButtonState();
-            App.showToast('Simulasi Berjaya', 'Data contoh Julai 2026 sedia diterbitkan.', 'success');
+            window.UI.showToast('Simulasi Berjaya', 'Data contoh Julai 2026 sedia diterbitkan.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'Simulation Batch');
         }

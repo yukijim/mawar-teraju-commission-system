@@ -170,7 +170,13 @@ const App = {
 
     async confirmClearDatabase() {
         if (window.Admin) {
-            await window.Admin.clearDatabase();
+            await window.Admin.confirmClearDatabase();
+        }
+    },
+
+    async handleRollback(historyId) {
+        if (window.Dashboard) {
+            await window.Dashboard.handleRollback(historyId);
         }
     },
 

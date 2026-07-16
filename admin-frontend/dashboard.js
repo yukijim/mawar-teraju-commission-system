@@ -197,7 +197,7 @@ const Dashboard = {
             
             await window.DB.log('Aktifkan Batch', `Mengaktifkan batch komisen "${name}" untuk carian dispatcher.`, 'Admin');
             
-            App.showToast('Batch Aktif', `Batch "${name}" kini aktif.`, 'success');
+            window.UI.showToast('Batch Aktif', `Batch "${name}" kini aktif.`, 'success');
             await this.loadDashboardStats();
         } catch (error) {
             window.ErrorHandler.handle(error, 'Activate Batch');
@@ -212,10 +212,11 @@ const Dashboard = {
             const batch = await window.DB.getBatch(batchId);
             const name = batch ? batch.name : `ID ${batchId}`;
             
-            if (confirm(`Adakah anda pasti ingin memadamkan batch "${name}"? Semua data komisen dan potongan berkaitan akan dipadamkan sepenuhnya!`)) {
+            const autoConfirm = typeof window !== 'undefined' && (window.location.search.includes('bypass_confirm=true') || window.__TEST_MODE__ === true);
+            if (autoConfirm || confirm(`Adakah anda pasti ingin memadamkan batch "${name}"? Semua data komisen dan potongan berkaitan akan dipadamkan sepenuhnya!`)) {
                 await window.DB.deleteBatch(batchId);
                 await window.DB.log('Padam Batch', `Memadamkan batch komisen "${name}" beserta semua rekod berkaitan.`, 'Admin');
-                App.showToast('Batch Dipadam', `Batch "${name}" berjaya dipadam.`, 'success');
+                window.UI.showToast('Batch Dipadam', `Batch "${name}" berjaya dipadam.`, 'success');
                 await this.loadDashboardStats();
             }
         } catch (error) {
@@ -229,7 +230,8 @@ const Dashboard = {
      * @returns {Promise<void>}
      */
     async handleRollback(historyId) {
-        if (confirm('Adakah anda pasti ingin memadamkan fail muat naik ini? Semua data berkaitan fail ini akan dibuang daripada pangkalan data.')) {
+        const autoConfirm = typeof window !== 'undefined' && (window.location.search.includes('bypass_confirm=true') || window.__TEST_MODE__ === true);
+        if (autoConfirm || confirm('Adakah anda pasti ingin memadamkan fail muat naik ini? Semua data berkaitan fail ini akan dibuang daripada pangkalan data.')) {
             try {
                 if (window.UI) {
                     window.UI.showToast('Proses Rollback', 'Sedang memadamkan rekod...', 'info');

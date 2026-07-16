@@ -73,7 +73,7 @@ const Dispatch = {
         const cleanIc = rawIc.replace(/[^0-9]/g, '');
 
         if (cleanIc.length < 5) {
-            App.showToast('Format IC Salah', 'Sila masukkan nombor IC yang sah.', 'warning');
+            window.UI.showToast('Format IC Salah', 'Sila masukkan nombor IC yang sah.', 'warning');
             return;
         }
 
@@ -370,13 +370,13 @@ const Dispatch = {
     downloadCommissionReportPDF() {
         const record = this.currentSearchedRecord;
         if (!record || !record.commission_record_id) {
-            App.showToast('Gagal', 'Tiada rekod komisen ditemui untuk dimuat turun.', 'warning');
+            window.UI.showToast('Gagal', 'Tiada rekod komisen ditemui untuk dimuat turun.', 'warning');
             return;
         }
 
         try {
             window.location.href = `/api/v1/reports/commission/${record.commission_record_id}`;
-            App.showToast('Download Berjaya', 'PDF Laporan Komisen sedang dimuat turun.', 'success');
+            window.UI.showToast('Download Berjaya', 'PDF Laporan Komisen sedang dimuat turun.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'PDF Commission Download');
         }
@@ -388,13 +388,13 @@ const Dispatch = {
     downloadDeductionDetailsPDF() {
         const record = this.currentSearchedRecord;
         if (!record || !record.deduction_record_id) {
-            App.showToast('Gagal', 'Tiada rekod potongan ditemui untuk dimuat turun.', 'warning');
+            window.UI.showToast('Gagal', 'Tiada rekod potongan ditemui untuk dimuat turun.', 'warning');
             return;
         }
 
         try {
             window.location.href = `/api/v1/reports/deduction/${record.deduction_record_id}`;
-            App.showToast('Download Berjaya', 'PDF Butiran Potongan sedang dimuat turun.', 'success');
+            window.UI.showToast('Download Berjaya', 'PDF Butiran Potongan sedang dimuat turun.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'PDF Deduction Download');
         }
