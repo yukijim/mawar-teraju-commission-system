@@ -51,7 +51,7 @@ const Admin = {
             window.UI.showToast('Log Keluar Berjaya', 'Sesi admin anda telah ditamatkan.', 'info');
         }
         if (window.Router) {
-            window.Router.navigateTo('role-selection');
+            window.Router.navigateTo('login');
         }
     },
 

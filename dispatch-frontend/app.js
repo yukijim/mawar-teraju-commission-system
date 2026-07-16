@@ -103,7 +103,7 @@ const App = {
     async handleSearch(event) {
         if (event) event.preventDefault();
         if (window.Dispatch) {
-            await window.Dispatch.executeSearch();
+            await window.Dispatch.handleSearch(event);
         }
     },
 
@@ -116,13 +116,13 @@ const App = {
     // PDF triggers
     async downloadCommissionReportPDF() {
         if (window.Dispatch) {
-            await window.Dispatch.downloadCommissionPDF();
+            await window.Dispatch.downloadCommissionReportPDF();
         }
     },
 
     async downloadDeductionDetailsPDF() {
         if (window.Dispatch) {
-            await window.Dispatch.downloadDeductionPDF();
+            await window.Dispatch.downloadDeductionDetailsPDF();
         }
     }
 };

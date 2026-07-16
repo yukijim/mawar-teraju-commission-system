@@ -113,14 +113,14 @@ const App = {
     // Auth handlers
     async handleLogin(event) {
         if (event) event.preventDefault();
-        if (window.Auth) {
-            await window.Auth.login();
+        if (window.Admin) {
+            await window.Admin.handleLogin(event);
         }
     },
 
     handleLogout() {
-        if (window.Auth) {
-            window.Auth.logout();
+        if (window.Admin) {
+            window.Admin.handleLogout();
         }
     },
 
@@ -135,8 +135,8 @@ const App = {
 
     async handleChangePassword(event) {
         if (event) event.preventDefault();
-        if (window.Auth) {
-            await window.Auth.changePassword();
+        if (window.Admin) {
+            await window.Admin.handleChangePassword(event);
         }
     },
 
@@ -151,7 +151,7 @@ const App = {
 
     async clearSystemAuditLogs() {
         if (window.Admin) {
-            await window.Admin.clearAuditLogs();
+            await window.Admin.clearSystemAuditLogs();
         }
     },
 
