@@ -47,6 +47,29 @@ class ReportController {
       next(err);
     }
   };
+
+  /**
+   * GET /api/v1/reports/combined/:commissionId/:deductionId
+   * Resolves both commission and deduction records and streams a consolidated PDF document.
+   */
+  downloadCombinedReport = async (req, res, next) => {
+    try {
+      const { commissionId, deductionId } = req.params;
+      const { filename, buffer } = await reportService.generateCombinedReport(
+        commissionId,
+        deductionId,
+        req.user,
+        req.ip,
+        req
+      );
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      return res.end(buffer);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new ReportController();

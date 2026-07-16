@@ -22,7 +22,7 @@ class SimplePdfGenerator {
   }
 
   /**
-   * Generates a Gold-themed PDF Deduction Details Report
+   * Generates a Maroon-themed PDF Deduction Details Report
    */
   static generateDeductionPdf(record, searcherUsername, ipAddress) {
     const companyConfig = require('../config/company');
@@ -33,6 +33,21 @@ class SimplePdfGenerator {
       searcherUsername,
       ipAddress,
       type: 'deduction'
+    });
+  }
+
+  /**
+   * Generates a Maroon-themed Combined PDF Commission & Deduction Report
+   */
+  static generateCombinedPdf(record, searcherUsername, ipAddress) {
+    const companyConfig = require('../config/company');
+    return this.buildPdf({
+      title: `${companyConfig.companyName.toUpperCase()} COMMISSION REPORT`,
+      themeColor: companyConfig.companyColor || '0.5 0 0',
+      record,
+      searcherUsername,
+      ipAddress,
+      type: 'combined'
     });
   }
 
@@ -108,7 +123,7 @@ class SimplePdfGenerator {
 
     const addRow = (label, val, formatType = 'currency') => {
       // If content height overflows, push current and initialize a new page
-      if (y < 300) {
+      if (y < 120) {
         currentStream += `0.5 w\n50 ${y + 5} m\n545 ${y + 5} l\nS\n`;
         currentStream += `BT\n/F1 8 Tf\n50 ${y - 12} Td\n(Penjana: ${searcherUsername} | IP: ${ipAddress} | Tarikh Cetak: ${genTime}) Tj\nET\n`;
         currentStream += `BT\n/F1 8 Tf\n420 ${y - 12} Td\n(Dokumen cetakan komputer - Halaman ${currentPage}) Tj\nET\n`;
@@ -147,7 +162,7 @@ class SimplePdfGenerator {
       addRow('ADD: SORTER', record.addition_sorter, 'currency');
       addRow('EXTRA REWARD', record.addition_extra_reward, 'currency');
       addRow('NETT COMMISSION', record.nett_commission, 'currency');
-    } else {
+    } else if (type === 'deduction') {
       addRow('DEDUCTION: ADVANCE', record.deduction_advance, 'currency');
       addRow('DEDUCTION: PENDING COD', record.deduction_pending_cod, 'currency');
       addRow('DEDUCTION: HQ PENALTY', record.deduction_hq_penalty, 'currency');
@@ -155,6 +170,45 @@ class SimplePdfGenerator {
       addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty, 'currency');
       addRow('DEDUCTION: LOST INDIVIDUAL', record.deduction_lost_individual, 'currency');
       addRow('DEDUCTION: LOST PARCEL HUB', record.deduction_lost_parcel_hub, 'currency');
+    } else if (type === 'combined') {
+      // Section 1: Commission Details
+      addRow('Parcel Quantity', record.parcel_qty, 'integer');
+      addRow('Parcel Commission', record.commission_rate, 'currency');
+      addRow('Extra Weight Commission', record.extra_weight_commission, 'currency');
+      addRow('Total Commission', record.total_commission, 'currency');
+      addRow('ADD: REFUND PENALTY', record.addition_refund_penalty, 'currency');
+      addRow('ADD: PICKUP COMMISSION', record.addition_pickup_commission, 'currency');
+      addRow('ADD: OTHERS', record.addition_others, 'currency');
+      addRow('ADD: SORTER', record.addition_sorter, 'currency');
+      addRow('EXTRA REWARD', record.addition_extra_reward, 'currency');
+      addRow('NETT COMMISSION', record.nett_commission, 'currency');
+
+      // Visual spacing between sections
+      y -= 10;
+
+      // Section 2: Deduction Details
+      addRow('DEDUCTION: ADVANCE', record.deduction_advance, 'currency');
+      addRow('DEDUCTION: PENDING COD', record.deduction_pending_cod, 'currency');
+      addRow('DEDUCTION: HQ PENALTY', record.deduction_hq_penalty, 'currency');
+      addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty, 'currency');
+      addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty, 'currency');
+      addRow('DEDUCTION: LOST INDIVIDUAL', record.deduction_lost_individual, 'currency');
+      addRow('DEDUCTION: LOST PARCEL HUB', record.deduction_lost_parcel_hub, 'currency');
+
+      // Calculate final net payout dynamically
+      const nettComm = parseFloat(record.nett_commission || 0);
+      const totalDeds = parseFloat(record.deduction_advance || 0) +
+                        parseFloat(record.deduction_pending_cod || 0) +
+                        parseFloat(record.deduction_hq_penalty || 0) +
+                        parseFloat(record.deduction_duitnow_penalty || 0) +
+                        parseFloat(record.deduction_late_cod_penalty || 0) +
+                        parseFloat(record.deduction_lost_individual || 0) +
+                        parseFloat(record.deduction_lost_parcel_hub || 0);
+      const finalNet = nettComm - totalDeds;
+
+      // Final net payout summary
+      y -= 10;
+      addRow('FINAL NET AMOUNT TO PAY', finalNet, 'currency');
     }
 
     // Write footer on the final page

@@ -124,6 +124,12 @@ const App = {
         if (window.Dispatch) {
             await window.Dispatch.downloadDeductionDetailsPDF();
         }
+    },
+
+    async downloadCombinedReportPDF() {
+        if (window.Dispatch) {
+            await window.Dispatch.downloadCombinedReportPDF();
+        }
     }
 };
 

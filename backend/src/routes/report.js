@@ -18,4 +18,11 @@ router.get(
   reportController.downloadDeductionReport
 );
 
+// GET /api/v1/reports/combined/:commissionId/:deductionId (accessible publicly without token)
+router.get(
+  '/combined/:commissionId/:deductionId',
+  reportDownloadLimiter,
+  reportController.downloadCombinedReport
+);
+
 module.exports = router;

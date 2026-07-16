@@ -254,7 +254,7 @@ const Dispatch = {
                           Number(record.deduction_late_cod_penalty || 0) +
                           Number(record.deduction_lost_individual || 0) +
                           Number(record.deduction_lost_parcel_hub || 0);
-        const netComm = Number(record.final_amount_to_pay || (grossComm - totalDeds));
+        const netComm = grossComm - totalDeds;
 
         // Populate elements
         const nameEl = window.DomCache.get('result-rider-name');
@@ -390,6 +390,34 @@ const Dispatch = {
             window.UI.showToast('Download Berjaya', 'PDF Butiran Potongan sedang dimuat turun.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'PDF Deduction Download');
+        }
+    },
+
+    /**
+     * Downloads Combined Commission and Deduction Report as a single PDF.
+     */
+    downloadCombinedReportPDF() {
+        const record = this.currentSearchedRecord;
+        if (!record) {
+            window.UI.showToast('Gagal', 'Tiada rekod ditemui untuk dimuat turun.', 'warning');
+            return;
+        }
+
+        const commId = record.commission_record_id || 'none';
+        const dedId = record.deduction_record_id || 'none';
+
+        if (commId === 'none' && dedId === 'none') {
+            window.UI.showToast('Gagal', 'Tiada rekod komisen atau potongan untuk dimuat turun.', 'warning');
+            return;
+        }
+
+        try {
+            const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
+            const baseUrl = isLocalTesting ? 'http://localhost:5000' : '';
+            window.location.href = `${baseUrl}/api/v1/reports/combined/${commId}/${dedId}`;
+            window.UI.showToast('Download Berjaya', 'PDF Laporan Gabungan sedang dimuat turun.', 'success');
+        } catch (error) {
+            window.ErrorHandler.handle(error, 'PDF Combined Download');
         }
     }
 };
