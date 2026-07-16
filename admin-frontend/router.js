@@ -1,20 +1,13 @@
 /**
- * router.js - Routing & View Navigation Module
- * Coordinates client-side hash routing, protects authentication boundaries,
- * and handles view transition state.
+ * router.js - Routing & View Navigation Module (Admin frontend)
  */
 
 const Router = {
-    // Flag to ensure event listeners are registered only once
     isRoutingInitialized: false,
 
-    /**
-     * Initializes the client router and binds hash events.
-     */
     init() {
         if (this.isRoutingInitialized) return;
 
-        // Setup routing based on initial URL hash or default
         this.routeByHash();
         window.addEventListener('hashchange', () => this.routeByHash());
 
@@ -22,23 +15,19 @@ const Router = {
         const logoBtn = window.DomCache.get('logo-btn');
         if (logoBtn) {
             logoBtn.addEventListener('click', () => {
-                this.navigateTo('role-selection');
+                if (window.Auth && window.Auth.isAdminLoggedIn()) {
+                    this.navigateTo('admin-dashboard');
+                } else {
+                    this.navigateTo('login');
+                }
             });
         }
 
         this.isRoutingInitialized = true;
     },
 
-    /**
-     * Resolves the view based on the current window hash state.
-     */
     routeByHash() {
-        let hash = window.location.hash.substring(1) || 'role-selection';
-        
-        // Handle route aliases/fallbacks
-        if (hash === 'dispatch') {
-            hash = 'dispatch-search';
-        }
+        let hash = window.location.hash.substring(1) || 'login';
         
         // Protect admin views
         if (hash === 'admin-dashboard') {
@@ -49,46 +38,39 @@ const Router = {
                 window.location.hash = '#login';
                 return;
             }
+        } else if (hash !== 'login') {
+            // Re-route any unrecognized hashes
+            window.location.hash = window.Auth && window.Auth.isAdminLoggedIn() ? '#admin-dashboard' : '#login';
+            return;
         }
 
         this.activateView(hash);
     },
 
-    /**
-     * Programmatically navigates to a view using URL hashes.
-     * @param {string} viewId - Target view name
-     */
     navigateTo(viewId) {
         window.location.hash = `#${viewId}`;
     },
 
-    /**
-     * Changes active view in the DOM and coordinates view-specific routines.
-     * @param {string} viewId - ID part of the target view
-     */
     activateView(viewId) {
         if (window.App) {
             window.App.currentView = viewId;
         }
 
-        // Hide all views
         const views = document.querySelectorAll('.view');
         views.forEach(view => {
             view.classList.remove('active');
         });
 
-        // Show target view
         const targetView = window.DomCache.get(`${viewId}-view`);
         if (targetView) {
             targetView.classList.add('active');
         } else {
-            const fallbackView = window.DomCache.get('role-selection-view');
+            const fallbackView = window.DomCache.get('login-view');
             if (fallbackView) {
                 fallbackView.classList.add('active');
             }
         }
 
-        // Initialize view-specific setups
         if (viewId === 'admin-dashboard') {
             if (window.Dashboard) {
                 window.Dashboard.loadDashboardStats();
@@ -96,14 +78,8 @@ const Router = {
             if (window.Upload) {
                 window.Upload.bindUploadEvents();
             }
-        } else if (viewId === 'dispatch-search') {
-            if (window.Dispatch) {
-                window.Dispatch.bindIcFormatter();
-                window.Dispatch.resetSearch();
-            }
         }
 
-        // Refresh UI components
         if (window.UI) {
             window.UI.updateHeaderActions(viewId);
             window.UI.renderIcons();

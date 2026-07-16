@@ -1,15 +1,9 @@
 /**
- * ui.js - User Interface Module
- * Handles visual updates, toasts, modals, icon rendering, and caches DOM selectors.
+ * ui.js - User Interface Module (Admin frontend)
  */
 
 const DomCache = {
     elements: {},
-    /**
-     * Retrieves an element from the cache or DOM.
-     * @param {string} id - The ID of the DOM element
-     * @returns {HTMLElement|null} The cached or newly queried DOM element
-     */
     get(id) {
         if (!this.elements[id]) {
             this.elements[id] = document.getElementById(id);
@@ -19,21 +13,12 @@ const DomCache = {
 };
 
 const UI = {
-    /**
-     * Renders/Refreshes Lucide icons across the DOM.
-     */
     renderIcons() {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
     },
 
-    /**
-     * Displays a temporary notification (toast) on the screen.
-     * @param {string} title - Main header of toast
-     * @param {string} desc - Main body text
-     * @param {'success'|'danger'|'warning'|'info'} type - Visual category
-     */
     showToast(title, desc, type = 'info') {
         const container = DomCache.get('toast-container');
         if (!container) return;
@@ -59,12 +44,10 @@ const UI = {
         container.appendChild(toast);
         this.renderIcons();
 
-        // Animate in
         setTimeout(() => {
             toast.classList.add('show');
         }, 10);
 
-        // Remove after delay
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => {
@@ -73,10 +56,6 @@ const UI = {
         }, 4000);
     },
 
-    /**
-     * Updates header items depending on roles/states.
-     * @param {string} currentView - The current active view name
-     */
     updateHeaderActions(currentView) {
         const headerActions = DomCache.get('header-actions-area');
         if (!headerActions) return;
@@ -85,32 +64,17 @@ const UI = {
 
         if (currentView === 'admin-dashboard') {
             headerActions.innerHTML = `
-                <span class="user-badge" style="margin-right: 0.5rem;">
+                <span class="user-badge" style="margin-right: 0.5rem; cursor: pointer;" onclick="App.openPasswordModal()">
                     <i data-lucide="shield"></i> Admin
                 </span>
                 <button class="btn btn-secondary" onclick="App.handleLogout()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
                     Log Keluar
                 </button>
             `;
-        } else if (currentView === 'dispatch-search') {
-            headerActions.innerHTML = `
-                <button class="btn btn-secondary" onclick="App.navigateTo('role-selection')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                    Utama
-                </button>
-            `;
-        } else if (currentView === 'login') {
-            headerActions.innerHTML = `
-                <button class="btn btn-secondary" onclick="App.navigateTo('role-selection')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                    Kembali
-                </button>
-            `;
         }
         this.renderIcons();
     },
 
-    /**
-     * Opens Password Modal.
-     */
     openPasswordModal() {
         const modal = DomCache.get('password-modal');
         if (modal) {
@@ -118,9 +82,6 @@ const UI = {
         }
     },
 
-    /**
-     * Closes Password Modal.
-     */
     closePasswordModal() {
         const modal = DomCache.get('password-modal');
         if (modal) {
@@ -128,10 +89,6 @@ const UI = {
         }
     },
 
-    /**
-     * Opens Audit Log modal, fetches and renders records.
-     * @returns {Promise<void>}
-     */
     async openAuditModal() {
         const modal = DomCache.get('audit-modal');
         if (!modal || !window.DB) return;
@@ -186,9 +143,6 @@ const UI = {
         }
     },
 
-    /**
-     * Closes Audit Log modal.
-     */
     closeAuditModal() {
         const modal = DomCache.get('audit-modal');
         if (modal) {
@@ -202,7 +156,7 @@ window.DomCache = DomCache;
 
 window.apiFetch = async function(url, options = {}) {
     options.credentials = 'include';
-    const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '9999';
+    const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
     const baseUrl = isLocalTesting ? 'http://localhost:5000' : '';
     return fetch(baseUrl + url, options);
 };
