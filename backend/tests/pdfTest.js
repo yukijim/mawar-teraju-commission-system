@@ -33,6 +33,7 @@ function runRuntimePdfVerification() {
     addition_refund_penalty: 50.00,
     addition_others: 10.00,
     addition_sorter: 20.00,
+    addition_extra_reward: 125.00,
     
     // Deductions inputs (negative floats testing)
     deduction_advance: -100.00,
@@ -74,6 +75,8 @@ function runRuntimePdfVerification() {
   assert.ok(commPdfString.includes('Muhammad Amirul bin Syed Mohd Noor'), 'Commission PDF does not contain dispatcher name');
   assert.ok(commPdfString.includes('RM -100.00'), 'Commission PDF does not format negative values correctly');
   assert.ok(commPdfString.includes('Halaman 2 / 2'), 'Commission PDF did not trigger expected page 2 overflow');
+  assert.ok(commPdfString.includes('Extra Reward Additions'), 'Commission PDF does not contain Extra Reward label');
+  assert.ok(commPdfString.includes('RM 125.00'), 'Commission PDF does not format Extra Reward additions correctly');
 
   // 2. Verify Deduction PDF
   console.log('Generating Deduction PDF Report...');

@@ -147,6 +147,7 @@ class SimplePdfGenerator {
       addRow('Refund Penalty Additions', record.addition_refund_penalty);
       addRow('Others Additions', record.addition_others);
       addRow('Sorter Allowance Additions', record.addition_sorter);
+      addRow('Extra Reward Additions', record.addition_extra_reward);
       addRow('Deduction: Advance', record.deduction_advance);
       addRow('Deduction: Pending COD', record.deduction_pending_cod);
       addRow('Deduction: HQ Penalty', record.deduction_hq_penalty);

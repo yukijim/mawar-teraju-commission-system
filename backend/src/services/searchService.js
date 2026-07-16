@@ -150,6 +150,7 @@ class SearchService {
         additionRefundPenalty: parseFloat(r.addition_refund_penalty),
         additionSorter: parseFloat(r.addition_sorter),
         additionOthers: parseFloat(r.addition_others),
+        additionExtraReward: parseFloat(r.addition_extra_reward || 0),
         statusPayment: r.status_payment,
         datePayment: r.date_payment,
         remark: r.remark

@@ -193,7 +193,7 @@ class UploadRepository {
         $${paramIndex + 16}, $${paramIndex + 17}, $${paramIndex + 18}, $${paramIndex + 19},
         $${paramIndex + 20}, $${paramIndex + 21}, $${paramIndex + 22}, $${paramIndex + 23},
         $${paramIndex + 24}, $${paramIndex + 25}, $${paramIndex + 26}, $${paramIndex + 27},
-        $${paramIndex + 28}
+        $${paramIndex + 28}, $${paramIndex + 29}
       )`);
 
       values.push(
@@ -204,10 +204,11 @@ class UploadRepository {
         r.deduction_advance || 0, r.deduction_pending_cod || 0, r.deduction_hq_penalty || 0, r.deduction_duitnow_penalty || 0,
         r.deduction_late_cod_penalty || 0, r.deduction_lost_individual || 0, r.deduction_lost_parcel_hub || 0,
         r.nett_commission || 0, r.final_amount_to_pay || 0,
-        r.addition_others || 0, r.parcel_qty_jms || 0, r.status_payment || 'SUCCESS', r.date_payment || '', r.remark || ''
+        r.addition_others || 0, r.parcel_qty_jms || 0, r.status_payment || 'SUCCESS', r.date_payment || '', r.remark || '',
+        r.addition_extra_reward || 0
       );
 
-      paramIndex += 29;
+      paramIndex += 30;
     });
 
     const text = `
@@ -219,7 +220,8 @@ class UploadRepository {
         deduction_advance, deduction_pending_cod, deduction_hq_penalty, deduction_duitnow_penalty,
         deduction_late_cod_penalty, deduction_lost_individual, deduction_lost_parcel_hub,
         nett_commission, final_amount_to_pay,
-        addition_others, parcel_qty_jms, status_payment, date_payment, remark
+        addition_others, parcel_qty_jms, status_payment, date_payment, remark,
+        addition_extra_reward
       )
       VALUES ${valuePlaceholders.join(', ')}
     `;

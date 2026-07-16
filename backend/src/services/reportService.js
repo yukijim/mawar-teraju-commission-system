@@ -104,7 +104,7 @@ class ReportService {
     const queryText = `
       SELECT d.*, c.parcel_qty, c.net_parcel, c.exclude_extra_weight_yoyi, c.commission_rate, c.diff_rate_new_joiner,
              c.count_pickup, c.extra_weight_commission, c.total_commission, c.addition_pickup_commission,
-             c.addition_refund_penalty, c.addition_others, c.addition_sorter, c.final_amount_to_pay, c.nett_commission,
+             c.addition_refund_penalty, c.addition_others, c.addition_sorter, c.addition_extra_reward, c.final_amount_to_pay, c.nett_commission,
              b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM deduction_records d
       JOIN batches b ON d.batch_id = b.id

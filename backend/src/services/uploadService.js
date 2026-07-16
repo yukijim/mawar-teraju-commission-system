@@ -86,6 +86,7 @@ class UploadService {
     pickup_commission: ['add pickup commission', 'add: pickup commission'],
     others: ['add others', 'add: others'],
     sorter: ['add sorter', 'add: sorter'],
+    extra_reward: ['extra reward', 'add extra reward', 'add: extra reward'],
     nett_commission: ['nett commission']
   };
 
@@ -121,7 +122,7 @@ class UploadService {
       requiredKeys = [
         'ic_number', 'dispatcher_id', 'name', 'parcel_qty', 'parcel_commission', 
         'extra_weight_commission', 'total_commission', 'refund_penalty', 
-        'pickup_commission', 'others', 'sorter', 'nett_commission'
+        'pickup_commission', 'others', 'sorter', 'extra_reward', 'nett_commission'
       ];
       mappingRules = this.COMMISSION_MAPPING_RULES;
     } else if (type === 'DEDUCTION') {
@@ -349,6 +350,7 @@ class UploadService {
             nett_commission: parseNumericValue(row[commHeadersMap.nett_commission]),
             final_amount_to_pay: parseNumericValue(row[commHeadersMap.nett_commission]),
             addition_others: parseNumericValue(row[commHeadersMap.others]),
+            addition_extra_reward: parseNumericValue(row[commHeadersMap.extra_reward]),
             parcel_qty_jms: 0,
             status_payment: 'SUCCESS',
             date_payment: '',

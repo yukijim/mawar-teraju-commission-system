@@ -47,6 +47,7 @@ const COMMISSION_MAPPING_RULES = {
   pickup_commission: ['add pickup commission', 'add: pickup commission'],
   others: ['add others', 'add: others'],
   sorter: ['add sorter', 'add: sorter'],
+  extra_reward: ['extra reward', 'add extra reward', 'add: extra reward'],
   nett_commission: ['nett commission']
 };
 
@@ -174,6 +175,7 @@ async function main() {
         const additionRefundPenalty = parseNumericValue(row[commHeadersMap.refund_penalty]);
         const additionOthers = parseNumericValue(row[commHeadersMap.others]);
         const additionSorter = parseNumericValue(row[commHeadersMap.sorter]);
+        const additionExtraReward = parseNumericValue(row[commHeadersMap.extra_reward]);
         const nettCommission = parseNumericValue(row[commHeadersMap.nett_commission]);
 
         const updateRes = await client.query(
@@ -181,13 +183,13 @@ async function main() {
            SET parcel_qty = $1, commission_rate = $2, extra_weight_commission = $3, 
                total_commission = $4, addition_pickup_commission = $5, 
                addition_refund_penalty = $6, addition_others = $7, addition_sorter = $8, 
-               nett_commission = $9, final_amount_to_pay = $9
-           WHERE batch_id = $10 AND dispatcher_id = $11`,
+               nett_commission = $9, final_amount_to_pay = $9, addition_extra_reward = $10
+           WHERE batch_id = $11 AND dispatcher_id = $12`,
           [
             parcelQty, commissionRate, extraWeightCommission, 
             totalCommission, additionPickupCommission, 
             additionRefundPenalty, additionOthers, additionSorter, 
-            nettCommission, commBatch.id, dispatcherId
+            nettCommission, additionExtraReward, commBatch.id, dispatcherId
           ]
         );
         if (updateRes.rowCount > 0) {

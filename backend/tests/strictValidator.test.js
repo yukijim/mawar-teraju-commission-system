@@ -43,6 +43,7 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     'ADD: PICKUP COMMISSION',
     'ADD: OTHERS',
     'ADD: SORTER',
+    'ADD: EXTRA REWARD',
     'NETT COMMISSION'
   ];
 
@@ -58,6 +59,7 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     'ADD: PICKUP COMMISSION': 'pickup_commission',
     'ADD: OTHERS': 'others',
     'ADD: SORTER': 'sorter',
+    'ADD: EXTRA REWARD': 'extra_reward',
     'NETT COMMISSION': 'nett_commission'
   };
 
@@ -139,6 +141,7 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
       'ADD: PICKUP\tCOMMISSION',
       'ADD:\r\nOTHERS',
       'add: sorter',
+      'add:\nEXTRA REWARD',
       'NETT\nCOMMISSION'
     ];
     const wb = createMockWorkbook('komisen', headers, [new Array(headers.length).fill(0)]);
