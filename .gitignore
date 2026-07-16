@@ -1,0 +1,8 @@
+# Logs
+*.log
+ps_err.txt
+excel_xml_analysis.txt
+
+# OS
+.DS_Store
+Thumbs.db

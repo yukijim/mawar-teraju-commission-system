@@ -202,7 +202,6 @@ class DashboardService {
       await client.query('TRUNCATE TABLE deduction_records CASCADE;');
       await client.query('TRUNCATE TABLE batches CASCADE;');
       await client.query('TRUNCATE TABLE dispatcher_mappings CASCADE;');
-      await client.query('TRUNCATE TABLE audit_logs CASCADE;');
 
       await client.query('COMMIT');
 
