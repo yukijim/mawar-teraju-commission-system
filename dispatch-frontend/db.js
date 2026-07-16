@@ -1216,6 +1216,6 @@ class CommissionService {
 }
 
 // Instantiate swappable repository based on page environment
-const isTestRunner = typeof window !== 'undefined' && window.__TEST_MODE__ === true;
+const isTestRunner = typeof window !== 'undefined' && window.location.pathname.includes('test_runner.html');
 const repository = isTestRunner ? new IndexedDBRepository() : new PostgresRestRepository();
 window.DB = new CommissionService(repository);

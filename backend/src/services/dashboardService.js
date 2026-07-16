@@ -183,6 +183,42 @@ class DashboardService {
       }
     };
   }
+
+  /**
+   * Truncates administrative and transactional tables in PostgreSQL
+   */
+  async clearAllDatabaseRecords(user, req) {
+    if (user.role !== 'ADMIN') {
+      throw new AppError('Only administrators can clear database records.', 403, 'CLEAR_DATABASE_FORBIDDEN');
+    }
+
+    const client = await db.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Truncate tables in cascade to drop all dependent rows cleanly
+      await client.query('TRUNCATE TABLE search_history CASCADE;');
+      await client.query('TRUNCATE TABLE commission_records CASCADE;');
+      await client.query('TRUNCATE TABLE deduction_records CASCADE;');
+      await client.query('TRUNCATE TABLE batches CASCADE;');
+      await client.query('TRUNCATE TABLE dispatcher_mappings CASCADE;');
+      await client.query('TRUNCATE TABLE audit_logs CASCADE;');
+
+      await client.query('COMMIT');
+
+      // Create a fresh audit log entry confirming the database truncation
+      await auditLogService.logSuccessLogin(user.id, req, { action: 'CLEAR_DATABASE' });
+
+      return {
+        message: 'All database records successfully cleared.'
+      };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw new AppError(`Clear database failure: ${err.message}`, 500, 'DATABASE_TRANSACTION_FAILURE');
+    } finally {
+      client.release();
+    }
+  }
 }
 
 module.exports = new DashboardService();

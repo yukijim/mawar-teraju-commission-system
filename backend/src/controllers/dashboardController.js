@@ -45,6 +45,18 @@ class DashboardController {
       next(err);
     }
   };
+
+  /**
+   * POST /api/v1/admin/clear-database
+   */
+  clearDatabase = async (req, res, next) => {
+    try {
+      const result = await dashboardService.clearAllDatabaseRecords(req.user, req);
+      return sendResponse(res, 200, true, 'Database successfully cleared.', result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new DashboardController();

@@ -19,7 +19,7 @@ class ReportController {
       );
 
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
       return res.end(buffer);
     } catch (err) {
       next(err);
@@ -41,7 +41,7 @@ class ReportController {
       );
 
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
       return res.end(buffer);
     } catch (err) {
       next(err);

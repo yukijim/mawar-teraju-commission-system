@@ -997,10 +997,14 @@ class PostgresRestRepository extends CommissionRepository {
     }
 
     async deleteBatch(batchId) {
-        const res = await window.apiFetch(`/api/v1/upload/rollback/${batchId}`, {
-            method: 'POST'
+        const res = await window.apiFetch(`/api/v1/upload/batch/${batchId}`, {
+            method: 'DELETE'
         });
-        return res.ok;
+        if (!res.ok) {
+            const errResult = await res.json().catch(() => ({}));
+            throw new Error(errResult.message || 'Gagal memadamkan batch.');
+        }
+        return true;
     }
 
     async getCommissionRecord(batchId, ic) { return null; }
@@ -1144,6 +1148,21 @@ class PostgresRestRepository extends CommissionRepository {
         }
         return true;
     }
+
+    async deleteHistory(historyId) {
+        return this.deleteBatch(historyId);
+    }
+
+    async clearAllRecords() {
+        const res = await window.apiFetch('/api/v1/admin/clear-database', {
+            method: 'POST'
+        });
+        if (!res.ok) {
+            const errResult = await res.json().catch(() => ({}));
+            throw new Error(errResult.message || 'Gagal mengosongkan pangkalan data.');
+        }
+        return true;
+    }
 }
 
 /**
@@ -1216,6 +1235,6 @@ class CommissionService {
 }
 
 // Instantiate swappable repository based on page environment
-const isTestRunner = typeof window !== 'undefined' && window.__TEST_MODE__ === true;
+const isTestRunner = typeof window !== 'undefined' && window.location.pathname.includes('test_runner.html');
 const repository = isTestRunner ? new IndexedDBRepository() : new PostgresRestRepository();
 window.DB = new CommissionService(repository);

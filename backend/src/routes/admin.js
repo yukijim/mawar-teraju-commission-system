@@ -10,6 +10,9 @@ router.get('/summary', adminLimiter, dashboardController.getMonitorMetrics);
 // POST /api/admin/backup (POST /api/v1/admin/backup)
 router.post('/backup', adminLimiter, dashboardController.downloadBackup);
 
+// POST /api/admin/clear-database
+router.post('/clear-database', adminLimiter, dashboardController.clearDatabase);
+
 // GET /api/admin/monitor (GET /api/v1/admin/monitor)
 router.get('/monitor', adminLimiter, dashboardController.getMonitorMetrics);
 

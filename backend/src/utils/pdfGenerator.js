@@ -106,7 +106,7 @@ class SimplePdfGenerator {
     currentStream += writeHeader(currentPage);
     let y = 620;
 
-    const addRow = (label, val, isCurrency = true) => {
+    const addRow = (label, val, formatType = 'currency') => {
       // If content height overflows, push current and initialize a new page
       if (y < 300) {
         currentStream += `0.5 w\n50 ${y + 5} m\n545 ${y + 5} l\nS\n`;
@@ -122,11 +122,13 @@ class SimplePdfGenerator {
 
       // Format value appropriately
       let formattedVal;
-      if (isCurrency) {
+      if (formatType === 'currency') {
         const cleanVal = parseFloat(val || 0).toFixed(2);
         formattedVal = `RM ${cleanVal}`;
-      } else {
+      } else if (formatType === 'integer') {
         formattedVal = Math.round(parseFloat(val || 0)).toString();
+      } else {
+        formattedVal = (val || '').toString();
       }
 
       currentStream += `BT\n/F1 9 Tf\n60 ${y} Td\n(${label}) Tj\nET\nBT\n/F1 9 Tf\n480 ${y} Td\n(${formattedVal}) Tj\nET\n`;
@@ -135,45 +137,24 @@ class SimplePdfGenerator {
 
     // 1. Process rows dynamically depending on report type
     if (type === 'commission') {
-      addRow('Parcel Quantity', record.parcel_qty, false);
-      addRow('Net Parcel Deliveries', record.net_parcel, false);
-      addRow('Exclude Extra Weight Yoyi', record.exclude_extra_weight_yoyi, false);
-      addRow('RM1.11 Commission Rate', record.commission_rate);
-      addRow('New Joiner Diff Rate', record.diff_rate_new_joiner);
-      addRow('Count of Pickup', record.count_pickup, false);
-      addRow('Extra Weight Commission', record.extra_weight_commission);
-      addRow('Total Gross Commission', record.total_commission);
-      addRow('Pickup Allowance Additions', record.addition_pickup_commission);
-      addRow('Refund Penalty Additions', record.addition_refund_penalty);
-      addRow('Others Additions', record.addition_others);
-      addRow('Sorter Allowance Additions', record.addition_sorter);
-      addRow('Extra Reward Additions', record.addition_extra_reward);
-      addRow('Deduction: Advance', record.deduction_advance);
-      addRow('Deduction: Pending COD', record.deduction_pending_cod);
-      addRow('Deduction: HQ Penalty', record.deduction_hq_penalty);
-      addRow('Deduction: DuitNow Penalty', record.deduction_duitnow_penalty);
-      addRow('Deduction: Late COD Penalty', record.deduction_late_cod_penalty);
-      addRow('Deduction: Lost Individual', record.deduction_lost_individual);
-      addRow('Deduction: Lost Parcel Hub', record.deduction_lost_parcel_hub);
-      addRow('Nett Commission', record.nett_commission);
-      addRow('Final Net Amount to Pay', record.final_amount_to_pay);
+      addRow('Parcel Quantity', record.parcel_qty, 'integer');
+      addRow('Parcel Commission', record.commission_rate, 'currency');
+      addRow('Extra Weight Commission', record.extra_weight_commission, 'currency');
+      addRow('Total Commission', record.total_commission, 'currency');
+      addRow('ADD: REFUND PENALTY', record.addition_refund_penalty, 'currency');
+      addRow('ADD: PICKUP COMMISSION', record.addition_pickup_commission, 'currency');
+      addRow('ADD: OTHERS', record.addition_others, 'currency');
+      addRow('ADD: SORTER', record.addition_sorter, 'currency');
+      addRow('EXTRA REWARD', record.addition_extra_reward, 'currency');
+      addRow('NETT COMMISSION', record.nett_commission, 'currency');
     } else {
-      addRow('DEDUCTION: ADVANCE (Duit Muka)', record.deduction_advance);
-      addRow('DEDUCTION: PENDING COD (Tunggakan COD)', record.deduction_pending_cod);
-      addRow('DEDUCTION: HQ PENALTY (Denda HQ)', record.deduction_hq_penalty);
-      addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty);
-      addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty);
-      addRow('DEDUCTION: LOST INDIVIDUAL (Barang Hilang Individu)', record.deduction_lost_individual);
-      addRow('DEDUCTION: LOST PARCEL HUB (Barang Hilang Hub)', record.deduction_lost_parcel_hub);
-      
-      const totalDeds = parseFloat(record.deduction_advance || 0) +
-                        parseFloat(record.deduction_pending_cod || 0) +
-                        parseFloat(record.deduction_hq_penalty || 0) +
-                        parseFloat(record.deduction_duitnow_penalty || 0) +
-                        parseFloat(record.deduction_late_cod_penalty || 0) +
-                        parseFloat(record.deduction_lost_individual || 0) +
-                        parseFloat(record.deduction_lost_parcel_hub || 0);
-      addRow('TOTAL DEDUCTIONS (Jumlah Potongan)', totalDeds);
+      addRow('DEDUCTION: ADVANCE', record.deduction_advance, 'currency');
+      addRow('DEDUCTION: PENDING COD', record.deduction_pending_cod, 'currency');
+      addRow('DEDUCTION: HQ PENALTY', record.deduction_hq_penalty, 'currency');
+      addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty, 'currency');
+      addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty, 'currency');
+      addRow('DEDUCTION: LOST INDIVIDUAL', record.deduction_lost_individual, 'currency');
+      addRow('DEDUCTION: LOST PARCEL HUB', record.deduction_lost_parcel_hub, 'currency');
     }
 
     // Write footer on the final page

@@ -39,6 +39,9 @@ router.post('/publish/:batchId', uploadController.publishBatch);
 // POST /api/v1/upload/rollback/:batchId
 router.post('/rollback/:batchId', uploadController.rollbackBatch);
 
+// DELETE /api/v1/upload/batch/:batchId
+router.delete('/batch/:batchId', uploadController.deleteBatch);
+
 // GET /api/v1/upload/:batchId
 router.get('/:batchId', uploadController.getBatchDetails);
 

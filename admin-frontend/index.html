@@ -19,6 +19,11 @@
     <!-- jsPDF and jsPDF-AutoTable for client-side PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        if (window.location.search.includes('test_mode=true')) {
+            window.__TEST_MODE__ = true;
+        }
+    </script>
 </head>
 <body>
 

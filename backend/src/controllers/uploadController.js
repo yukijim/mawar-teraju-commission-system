@@ -146,6 +146,19 @@ class UploadController {
       next(err);
     }
   };
+
+  /**
+   * DELETE /api/v1/upload/batch/:batchId
+   */
+  deleteBatch = async (req, res, next) => {
+    try {
+      const { batchId } = req.params;
+      const result = await uploadService.deleteBatch(batchId, req.user.id, req);
+      return sendResponse(res, 200, true, 'Batch deleted successfully.', result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new UploadController();

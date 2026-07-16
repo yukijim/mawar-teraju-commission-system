@@ -855,6 +855,48 @@ class UploadService {
     }
   }
 
+  /**
+   * Hard-deletes a batch and all of its associated records
+   */
+  async deleteBatch(batchId, userId, req) {
+    if (this.isBatchLocked(batchId)) {
+      throw new AppError('This batch is locked due to active import. Delete rejected.', 409, 'UPLOAD_BATCH_LOCKED');
+    }
+
+    const batch = await uploadRepository.findBatchById(batchId);
+    if (!batch) {
+      throw new AppError('Batch record not found.', 404, 'UPLOAD_BATCH_NOT_FOUND');
+    }
+
+    const client = await db.connect();
+    try {
+      await client.query('BEGIN');
+
+      // 1. Delete commission records
+      await client.query('DELETE FROM commission_records WHERE batch_id = $1', [batchId]);
+
+      // 2. Delete deduction records
+      await client.query('DELETE FROM deduction_records WHERE batch_id = $1', [batchId]);
+
+      // 3. Delete the batch itself
+      await client.query('DELETE FROM batches WHERE id = $1', [batchId]);
+
+      await client.query('COMMIT');
+
+      await auditLogService.logSuccessLogin(userId, req, { action: 'DELETE_BATCH', batchId, name: batch.name });
+
+      return {
+        message: 'Batch deleted successfully from database.',
+        deletedBatchId: batchId
+      };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw new AppError(`Delete batch failure: ${err.message}`, 500, 'DATABASE_TRANSACTION_FAILURE');
+    } finally {
+      client.release();
+    }
+  }
+
   async importBatch(fileBuffer, filename, uploaderId, reqBody, req) {
     let workbook;
     try {
