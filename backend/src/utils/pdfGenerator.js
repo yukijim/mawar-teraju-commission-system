@@ -106,7 +106,7 @@ class SimplePdfGenerator {
     currentStream += writeHeader(currentPage);
     let y = 620;
 
-    const addRow = (label, val) => {
+    const addRow = (label, val, isCurrency = true) => {
       // If content height overflows, push current and initialize a new page
       if (y < 300) {
         currentStream += `0.5 w\n50 ${y + 5} m\n545 ${y + 5} l\nS\n`;
@@ -120,20 +120,27 @@ class SimplePdfGenerator {
         y = 620;
       }
 
-      // Safe formatting for negative financial values
-      const cleanVal = parseFloat(val || 0).toFixed(2);
-      currentStream += `BT\n/F1 9 Tf\n60 ${y} Td\n(${label}) Tj\nET\nBT\n/F1 9 Tf\n480 ${y} Td\n(RM ${cleanVal}) Tj\nET\n`;
+      // Format value appropriately
+      let formattedVal;
+      if (isCurrency) {
+        const cleanVal = parseFloat(val || 0).toFixed(2);
+        formattedVal = `RM ${cleanVal}`;
+      } else {
+        formattedVal = Math.round(parseFloat(val || 0)).toString();
+      }
+
+      currentStream += `BT\n/F1 9 Tf\n60 ${y} Td\n(${label}) Tj\nET\nBT\n/F1 9 Tf\n480 ${y} Td\n(${formattedVal}) Tj\nET\n`;
       y -= 18;
     };
 
     // 1. Process rows dynamically depending on report type
     if (type === 'commission') {
-      addRow('Parcel Quantity', record.parcel_qty);
-      addRow('Net Parcel Deliveries', record.net_parcel);
-      addRow('Exclude Extra Weight Yoyi', record.exclude_extra_weight_yoyi);
+      addRow('Parcel Quantity', record.parcel_qty, false);
+      addRow('Net Parcel Deliveries', record.net_parcel, false);
+      addRow('Exclude Extra Weight Yoyi', record.exclude_extra_weight_yoyi, false);
       addRow('RM1.11 Commission Rate', record.commission_rate);
       addRow('New Joiner Diff Rate', record.diff_rate_new_joiner);
-      addRow('Count of Pickup', record.count_pickup);
+      addRow('Count of Pickup', record.count_pickup, false);
       addRow('Extra Weight Commission', record.extra_weight_commission);
       addRow('Total Gross Commission', record.total_commission);
       addRow('Pickup Allowance Additions', record.addition_pickup_commission);
