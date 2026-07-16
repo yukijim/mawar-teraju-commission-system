@@ -276,34 +276,23 @@ const Dispatch = {
             detailsContainer.innerHTML = '';
 
             const displayFields = [
-                { key: 'dispatcher_id', label: 'Delivery Dispatcher ID', type: 'string' },
-                { key: 'ic_number', label: 'No. IC', type: 'string' },
-                { key: 'name', label: 'Delivery Dispatcher Name', type: 'string' },
                 { key: 'parcel_qty', label: 'Parcel Quantity', type: 'number' },
-                { key: 'net_parcel', label: 'Net Parcel', type: 'number' },
-                { key: 'exclude_extra_weight_yoyi', label: 'Exclude Extra Weight YOYI', type: 'number' },
-                { key: 'commission_rate', label: 'RM1.11/Parcel Commission', type: 'currency' },
-                { key: 'diff_rate_new_joiner', label: 'DIFF RATE NEW JOINER ', type: 'currency' },
-                { key: 'count_pickup', label: 'Count of Pick Up Dispatcher Name', type: 'number' },
-                { key: 'extra_weight_commission', label: 'Extra Weight Commission (=>5.01kg, Add RM0.10/kg)', type: 'currency' },
+                { key: 'commission_rate', label: 'Parcel Commission', type: 'currency' },
+                { key: 'extra_weight_commission', label: 'Extra Weight Commission', type: 'currency' },
                 { key: 'total_commission', label: 'Total Commission', type: 'currency' },
+                { key: 'addition_refund_penalty', label: 'ADD: REFUND PENALTY', type: 'currency' },
+                { key: 'addition_pickup_commission', label: 'ADD: PICKUP COMMISSION', type: 'currency' },
+                { key: 'addition_others', label: 'ADD: OTHERS', type: 'currency' },
+                { key: 'addition_sorter', label: 'ADD: SORTER', type: 'currency' },
+                { key: 'addition_extra_reward', label: 'EXTRA REWARD', type: 'currency' },
+                { key: 'nett_commission', label: 'NETT COMMISSION', type: 'currency' },
                 { key: 'deduction_advance', label: 'DEDUCTION: ADVANCE', type: 'currency' },
                 { key: 'deduction_pending_cod', label: 'DEDUCTION: PENDING COD', type: 'currency' },
                 { key: 'deduction_hq_penalty', label: 'DEDUCTION: HQ PENALTY', type: 'currency' },
                 { key: 'deduction_duitnow_penalty', label: 'DEDUCTION: DUITNOW PENALTY', type: 'currency' },
                 { key: 'deduction_late_cod_penalty', label: 'DEDUCTION: LATE COD PENALTY', type: 'currency' },
                 { key: 'deduction_lost_individual', label: 'DEDUCTION: LOST INDIVIDUAL', type: 'currency' },
-                { key: 'deduction_lost_parcel_hub', label: 'DEDUCTION: LOST PARCEL HUB', type: 'currency' },
-                { key: 'addition_pickup_commission', label: 'ADD: PICKUP COMMISSION', type: 'currency' },
-                { key: 'addition_refund_penalty', label: 'ADD: REFUND PENALTY', type: 'currency' },
-                { key: 'addition_others', label: 'ADD: OTHERS', type: 'currency' },
-                { key: 'addition_sorter', label: 'ADD: SORTER', type: 'currency' },
-                { key: 'addition_extra_reward', label: 'ADD: EXTRA REWARD', type: 'currency' },
-                { key: 'nett_commission', label: 'NETT COMMISSION', type: 'currency' },
-                { key: 'final_amount_to_pay', label: 'FINAL AMOUNT TO PAY', type: 'currency' },
-                { key: 'status_payment', label: 'STATUS', type: 'string' },
-                { key: 'date_payment', label: 'DATE PAYMENT', type: 'string' },
-                { key: 'remark', label: 'REMARK FARISHA', type: 'string' }
+                { key: 'deduction_lost_parcel_hub', label: 'DEDUCTION: LOST PARCEL HUB', type: 'currency' }
             ];
 
             const block = document.createElement('div');
@@ -375,7 +364,9 @@ const Dispatch = {
         }
 
         try {
-            window.location.href = `/api/v1/reports/commission/${record.commission_record_id}`;
+            const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
+            const baseUrl = isLocalTesting ? 'http://localhost:5000' : '';
+            window.location.href = `${baseUrl}/api/v1/reports/commission/${record.commission_record_id}`;
             window.UI.showToast('Download Berjaya', 'PDF Laporan Komisen sedang dimuat turun.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'PDF Commission Download');
@@ -393,7 +384,9 @@ const Dispatch = {
         }
 
         try {
-            window.location.href = `/api/v1/reports/deduction/${record.deduction_record_id}`;
+            const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
+            const baseUrl = isLocalTesting ? 'http://localhost:5000' : '';
+            window.location.href = `${baseUrl}/api/v1/reports/deduction/${record.deduction_record_id}`;
             window.UI.showToast('Download Berjaya', 'PDF Butiran Potongan sedang dimuat turun.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'PDF Deduction Download');
