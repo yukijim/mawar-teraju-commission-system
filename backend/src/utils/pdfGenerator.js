@@ -115,7 +115,7 @@ class SimplePdfGenerator {
         header += `0.5 0 m 0.9 0.2 l 1 0.6 l 0.7 0.9 l 0.3 0.9 l 0 0.6 l 0.1 0.2 l f\n`;
         header += `Q\n`;
         header += `BT\n/F2 14 Tf\n50 755 Td\n(${title}) Tj\nET\n`;
-        header += `BT\n/F1 8 Tf\n50 740 Td\n(Rujukan: ${refNum} | Halaman: 1) Tj\nET\n`;
+        header += `BT\n/F1 8 Tf\n50 740 Td\n(Reference: ${refNum} | Halaman: 1) Tj\nET\n`;
       }
 
       // Horizontal Divider under header
@@ -135,7 +135,7 @@ class SimplePdfGenerator {
       header += `BT\n/F2 8.5 Tf\n330 702 Td\n(Batch/Period:) Tj\nET\n`;
       header += `BT\n/F1 8.5 Tf\n430 702 Td\n(${record.batch_name}) Tj\nET\n`;
 
-      header += `BT\n/F2 8.5 Tf\n50 686 Td\n(Rujukan:) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n50 686 Td\n(Reference:) Tj\nET\n`;
       header += `BT\n/F1 8.5 Tf\n110 686 Td\n(${refNum}) Tj\nET\n`;
       header += `BT\n/F2 8.5 Tf\n330 686 Td\n(Published Date:) Tj\nET\n`;
       header += `BT\n/F1 8.5 Tf\n430 686 Td\n(${publishDate}) Tj\nET\n`;
@@ -238,7 +238,7 @@ class SimplePdfGenerator {
           header += `0.5 0 m 0.9 0.2 l 1 0.6 l 0.7 0.9 l 0.3 0.9 l 0 0.6 l 0.1 0.2 l f\n`;
           header += `Q\n`;
           header += `BT\n/F2 14 Tf\n50 755 Td\n(${title}) Tj\nET\n`;
-          header += `BT\n/F1 8 Tf\n50 740 Td\n(Rujukan: ${refNum} | Halaman: ${pageNumber}) Tj\nET\n`;
+          header += `BT\n/F1 8 Tf\n50 740 Td\n(Reference: ${refNum} | Halaman: ${pageNumber}) Tj\nET\n`;
         }
 
         // Horizontal Divider
