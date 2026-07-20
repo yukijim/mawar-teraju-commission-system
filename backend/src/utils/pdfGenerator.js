@@ -102,7 +102,7 @@ class SimplePdfGenerator {
         header += `Q\n`;
 
         header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN BHD) Tj\nET\n`;
-        header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Income Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n115 773 Td\n(MONTHLY INCOME REPORT: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
       } else {
         header += `q\n`;
         header += `0.15 0.55 0.15 rg\n`;
@@ -114,8 +114,8 @@ class SimplePdfGenerator {
         header += `10 0 0 10 52 780 cm\n`;
         header += `0.5 0 m 0.9 0.2 l 1 0.6 l 0.7 0.9 l 0.3 0.9 l 0 0.6 l 0.1 0.2 l f\n`;
         header += `Q\n`;
-        header += `BT\n/F2 14 Tf\n50 755 Td\n(${title}) Tj\nET\n`;
-        header += `BT\n/F1 8 Tf\n50 740 Td\n(Reference: ${refNum} | Halaman: 1) Tj\nET\n`;
+        header += `BT\n/F2 8.5 Tf\n50 755 Td\n(${title.toUpperCase()}) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n50 740 Td\n(REFERENCE: ${refNum.toUpperCase()} | HALAMAN: 1) Tj\nET\n`;
       }
 
       // Horizontal Divider under header
@@ -125,27 +125,27 @@ class SimplePdfGenerator {
       header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 680 515 55 re\nb\nQ\n`;
       
       const escapedName = record.name.replace(/\(/g, '\\(').replace(/\)/g, '\\)');
-      header += `BT\n/F2 8.5 Tf\n50 718 Td\n(Name:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n110 718 Td\n(${escapedName}) Tj\nET\n`;
-      header += `BT\n/F2 8.5 Tf\n330 718 Td\n(Code/Dispatcher ID:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n430 718 Td\n(${record.dispatcher_id}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n50 718 Td\n(NAME:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n110 718 Td\n(${escapedName.toUpperCase()}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n330 718 Td\n(CODE/DISPATCHER ID:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n430 718 Td\n(${record.dispatcher_id.toUpperCase()}) Tj\nET\n`;
 
-      header += `BT\n/F2 8.5 Tf\n50 702 Td\n(IC/Passport:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n110 702 Td\n(${record.ic_number}) Tj\nET\n`;
-      header += `BT\n/F2 8.5 Tf\n330 702 Td\n(Batch/Period:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n430 702 Td\n(${record.batch_name}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n50 702 Td\n(IC/PASSPORT:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n110 702 Td\n(${record.ic_number.toUpperCase()}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n330 702 Td\n(BATCH/PERIOD:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n430 702 Td\n(${record.batch_name.toUpperCase()}) Tj\nET\n`;
 
-      header += `BT\n/F2 8.5 Tf\n50 686 Td\n(Reference:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n110 686 Td\n(${refNum}) Tj\nET\n`;
-      header += `BT\n/F2 8.5 Tf\n330 686 Td\n(Published Date:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n430 686 Td\n(${publishDate}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n50 686 Td\n(REFERENCE:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n110 686 Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n330 686 Td\n(PUBLISHED DATE:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n430 686 Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
 
       currentStream += header;
 
       // Table Header Block
       currentStream += `q\n0.93 0.93 0.93 rg\n40 645 515 20 re\nf\nQ\n`;
-      currentStream += `BT\n/F2 9.5 Tf\n50 651 Td\n(Addition) Tj\nET\n`;
-      currentStream += `BT\n/F2 9.5 Tf\n307 651 Td\n(Deduction) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n50 651 Td\n(ADDITION) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n307 651 Td\n(DEDUCTION) Tj\nET\n`;
 
       // Columns box and divider lines
       currentStream += `0.5 w\n40 300 515 345 re\nS\n`;
@@ -176,12 +176,12 @@ class SimplePdfGenerator {
         const yRow = 615 - i * 22;
         
         // Addition
-        currentStream += `BT\n/F1 8.5 Tf\n50 ${yRow} Td\n(${additions[i].label}) Tj\nET\n`;
-        currentStream += `BT\n/F1 8.5 Tf\n210 ${yRow} Td\n(${formatCurrency(additions[i].val)}) Tj\nET\n`;
+        currentStream += `BT\n/F1 8.5 Tf\n50 ${yRow} Td\n(${additions[i].label.toUpperCase()}) Tj\nET\n`;
+        currentStream += `BT\n/F1 8.5 Tf\n210 ${yRow} Td\n(${formatCurrency(additions[i].val).toUpperCase()}) Tj\nET\n`;
 
         // Deduction
-        currentStream += `BT\n/F1 8.5 Tf\n307 ${yRow} Td\n(${deductions[i].label}) Tj\nET\n`;
-        currentStream += `BT\n/F1 8.5 Tf\n465 ${yRow} Td\n(${formatCurrency(deductions[i].val)}) Tj\nET\n`;
+        currentStream += `BT\n/F1 8.5 Tf\n307 ${yRow} Td\n(${deductions[i].label.toUpperCase()}) Tj\nET\n`;
+        currentStream += `BT\n/F1 8.5 Tf\n465 ${yRow} Td\n(${formatCurrency(deductions[i].val).toUpperCase()}) Tj\nET\n`;
       }
 
       // Calculations for Bottom Summary
@@ -193,22 +193,22 @@ class SimplePdfGenerator {
       currentStream += `q\n0.97 0.97 0.97 rg\n0.5 w\n40 255 515 30 re\nb\nQ\n`;
       currentStream += `0.5 w\n297 255 m\n297 285 l\nS\n`;
       
-      currentStream += `BT\n/F2 9 Tf\n50 266 Td\n(Total Addition:) Tj\nET\n`;
-      currentStream += `BT\n/F2 9 Tf\n210 266 Td\n(${formatCurrency(totalAddition)}) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n50 266 Td\n(TOTAL ADDITION:) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n210 266 Td\n(${formatCurrency(totalAddition).toUpperCase()}) Tj\nET\n`;
 
-      currentStream += `BT\n/F2 9 Tf\n307 266 Td\n(Total Deduction:) Tj\nET\n`;
-      currentStream += `BT\n/F2 9 Tf\n465 266 Td\n(${formatCurrency(totalDeduction)}) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n307 266 Td\n(TOTAL DEDUCTION:) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n465 266 Td\n(${formatCurrency(totalDeduction).toUpperCase()}) Tj\nET\n`;
 
       // Total Net Pay box
       currentStream += `q\n0.92 0.96 0.92 rg\n0.5 w\n40 215 515 30 re\nb\nQ\n`;
-      currentStream += `BT\n/F2 10.5 Tf\n307 225 Td\n(Total Net Income :) Tj\nET\n`;
-      currentStream += `BT\n/F2 10.5 Tf\n465 225 Td\n(${formatCurrency(totalNetPay)}) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n307 225 Td\n(TOTAL NET INCOME :) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n465 225 Td\n(${formatCurrency(totalNetPay).toUpperCase()}) Tj\nET\n`;
 
       // Final signature/meta footer
       const companyConfig = require('../config/company');
       currentStream += `0.5 w\n40 100 m\n555 100 l\nS\n`;
-      currentStream += `BT\n/F1 8 Tf\n40 85 Td\n(Penjana: ${searcherUsername} | IP Address: ${ipAddress} | Tarikh Cetak: ${genTime}) Tj\nET\n`;
-      currentStream += `BT\n/F1 8 Tf\n420 85 Td\n(${companyConfig.portalName} - Halaman 1 / 1) Tj\nET\n`;
+      currentStream += `BT\n/F1 8.5 Tf\n40 85 Td\n(PENJANA: ${searcherUsername.toUpperCase()} | IP ADDRESS: ${ipAddress} | TARIKH CETAK: ${genTime}) Tj\nET\n`;
+      currentStream += `BT\n/F1 8.5 Tf\n420 85 Td\n(${companyConfig.portalName.toUpperCase()} - HALAMAN 1 / 1) Tj\nET\n`;
 
       pageStreams.push(currentStream);
 

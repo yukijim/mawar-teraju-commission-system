@@ -46,15 +46,15 @@ function runCombinedPdfVerification() {
   const pdfString = combinedPdfBuffer.toString('utf-8');
   assert.ok(pdfString.startsWith('%PDF-1.4'), 'Combined PDF does not start with %PDF-1.4 header');
   assert.ok(pdfString.includes('%%EOF'), 'Combined PDF is missing standard %%EOF trailer signature');
-  assert.ok(pdfString.includes('July 2026 Payment Cycle'), 'Combined PDF does not contain batch name');
-  assert.ok(pdfString.includes('Muhammad Amirul bin Syed Mohd Noor'), 'Combined PDF does not contain dispatcher name');
+  assert.ok(pdfString.includes('JULY 2026 PAYMENT CYCLE'), 'Combined PDF does not contain batch name');
+  assert.ok(pdfString.includes('MUHAMMAD AMIRUL BIN SYED MOHD NOOR'), 'Combined PDF does not contain dispatcher name');
   
   // Verify both sections exist
   assert.ok(pdfString.includes('EXTRA REWARD'), 'Combined PDF is missing commission fields');
   assert.ok(pdfString.includes('DEDUCTION: ADVANCE'), 'Combined PDF is missing deduction fields');
-  assert.ok(pdfString.includes('Total Net Income'), 'Combined PDF is missing Total Net Income summary');
-  assert.ok(pdfString.includes('Total Addition'), 'Combined PDF is missing Total Addition summary');
-  assert.ok(pdfString.includes('Total Deduction'), 'Combined PDF is missing Total Deduction summary');
+  assert.ok(pdfString.includes('TOTAL NET INCOME'), 'Combined PDF is missing Total Net Income summary');
+  assert.ok(pdfString.includes('TOTAL ADDITION'), 'Combined PDF is missing Total Addition summary');
+  assert.ok(pdfString.includes('TOTAL DEDUCTION'), 'Combined PDF is missing Total Deduction summary');
 
   // Verify calculated net payout formatting
   // Expecting raw nett_commission value from database directly (716.30)
