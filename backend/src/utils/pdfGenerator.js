@@ -102,7 +102,7 @@ class SimplePdfGenerator {
         header += `Q\n`;
 
         header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN BHD) Tj\nET\n`;
-        header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Commission Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
+        header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Income Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
       } else {
         header += `q\n`;
         header += `0.15 0.55 0.15 rg\n`;
@@ -201,7 +201,7 @@ class SimplePdfGenerator {
 
       // Total Net Pay box
       currentStream += `q\n0.92 0.96 0.92 rg\n0.5 w\n40 215 515 30 re\nb\nQ\n`;
-      currentStream += `BT\n/F2 10.5 Tf\n307 225 Td\n(Total Net Pay :) Tj\nET\n`;
+      currentStream += `BT\n/F2 10.5 Tf\n307 225 Td\n(Total Net Income :) Tj\nET\n`;
       currentStream += `BT\n/F2 10.5 Tf\n465 225 Td\n(${formatCurrency(totalNetPay)}) Tj\nET\n`;
 
       // Final signature/meta footer
@@ -225,7 +225,7 @@ class SimplePdfGenerator {
           header += `Q\n`;
 
           header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN BHD) Tj\nET\n`;
-          header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Commission Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
+          header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Income Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
         } else {
           header += `q\n`;
           header += `0.15 0.55 0.15 rg\n`;
