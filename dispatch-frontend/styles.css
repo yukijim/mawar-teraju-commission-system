@@ -1106,3 +1106,17 @@ footer {
     }
 }
 
+/* Public Dispatch Search View Alignment */
+#dispatch-search-view .view-header {
+    justify-content: center;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 1.5rem auto;
+}
+
+#dispatch-search-view .view-title {
+    text-align: center;
+    width: 100%;
+}
+
+
