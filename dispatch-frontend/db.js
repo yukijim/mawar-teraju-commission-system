@@ -507,11 +507,11 @@ class IndexedDBRepository extends CommissionRepository {
 
         const activeBatch = await this.getActiveBatch();
         if (activeBatch) {
-            const isId = /[a-zA-Z]/.test(cleanIc);
+            const isDispatcherId = /^[A-Z]{3}\d{3,7}$/i.test(cleanIc);
             let commission = null;
             let deduction = null;
 
-            if (isId) {
+            if (isDispatcherId) {
                 commission = await this.getCommissionRecordByDispatcherId(activeBatch.id, cleanIc);
                 deduction = await this.getDeductionRecordByDispatcherId(activeBatch.id, cleanIc);
             } else {
@@ -1015,8 +1015,8 @@ class PostgresRestRepository extends CommissionRepository {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
-            const isId = /[a-zA-Z]/.test(cleanIc);
-            const queryParam = isId ? `dispatcher_id=${cleanIc}` : `ic_number=${cleanIc}`;
+            const isDispatcherId = /^[A-Z]{3}\d{3,7}$/i.test(cleanIc);
+            const queryParam = isDispatcherId ? `dispatcher_id=${cleanIc}` : `ic_number=${cleanIc}`;
             const response = await window.apiFetch(`/api/v1/search?${queryParam}`, {
                 method: 'GET',
                 signal: controller.signal

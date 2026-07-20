@@ -49,9 +49,9 @@ class SearchService {
       // Public search (no login): enforce PUBLISHED and active batches only
       status = 'PUBLISHED';
       is_active = true;
-      // Must provide NRIC/IC
-      if (!icNumber) {
-        throw new AppError('Nombor IC diperlukan untuk carian awam.', 400, 'SEARCH_VALIDATION_ERROR');
+      // Must provide NRIC/IC or Dispatcher ID
+      if (!icNumber && !dispatcherId) {
+        throw new AppError('Nombor IC, Passport, atau ID Dispatcher diperlukan untuk carian awam.', 400, 'SEARCH_VALIDATION_ERROR');
       }
     } else if (user.role === 'DISPATCH') {
       // Dispatcher queries MUST only use ACTIVE and PUBLISHED batches

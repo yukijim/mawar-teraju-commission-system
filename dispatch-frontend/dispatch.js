@@ -70,17 +70,25 @@ const Dispatch = {
         if (!input || !window.DB) return;
 
         const rawIc = input.value;
-        const cleanIc = rawIc.replace(/[^0-9]/g, '');
+        const cleanQuery = rawIc.trim().toUpperCase().replace(/[\s-]/g, '');
 
-        if (cleanIc.length < 5) {
-            window.UI.showToast('Format IC Salah', 'Sila masukkan nombor IC yang sah.', 'warning');
+        const isIc = /^\d{12}$/.test(cleanQuery);
+        const isPassport = /^[A-Z]\d{7}$/.test(cleanQuery);
+        const isDispatcherId = /^[A-Z]{3}\d{3,7}$/.test(cleanQuery);
+
+        if (!isIc && !isPassport && !isDispatcherId) {
+            window.UI.showToast(
+                'Format Input Salah', 
+                'Format input tidak sah. Sila masukkan No. IC (12 digit), No. Passport (1 huruf + 7 digit), atau Dispatcher ID (cth: PJS3524399).', 
+                'warning'
+            );
             return;
         }
 
         const startTime = performance.now();
         
         try {
-            const records = await window.DB.searchByIc(cleanIc);
+            const records = await window.DB.searchByIc(cleanQuery);
             const endTime = performance.now();
             const latency = (endTime - startTime).toFixed(2);
 
@@ -98,7 +106,7 @@ const Dispatch = {
                 if (emptyArea) emptyArea.style.display = 'block';
                 this.currentSearchedRecord = null;
 
-                await window.DB.log('Carian IC (Gagal)', `Carian dilakukan bagi IC ${rawIc}. Tiada rekod dijumpai. (Tempoh: ${latency}ms)`, 'Dispatch');
+                await window.DB.log('Carian Dispatcher (Gagal)', `Carian dilakukan bagi input ${rawIc}. Tiada rekod dijumpai. (Tempoh: ${latency}ms)`, 'Dispatch');
             } else {
                 if (emptyArea) emptyArea.style.display = 'none';
                 if (resultsArea) resultsArea.style.display = 'block';
@@ -344,7 +352,7 @@ const Dispatch = {
             printTimestampEl.textContent = new Date().toLocaleString('ms-MY');
         }
 
-        window.DB.log('Carian IC (Sukses)', `Carian bagi IC ${rawIc} menjumpai rekod komisen. (Tempoh: ${latency}ms)`, 'Dispatch').catch(() => {});
+        window.DB.log('Carian Dispatcher (Sukses)', `Carian bagi input ${rawIc} menjumpai rekod komisen. (Tempoh: ${latency}ms)`, 'Dispatch').catch(() => {});
         if (window.UI) {
             window.UI.renderIcons();
         }
