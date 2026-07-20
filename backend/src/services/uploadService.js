@@ -136,7 +136,7 @@ class UploadService {
         throw new AppError(`Fail Excel tidak sah: Lembaran "Deduction" atau "Potongan" tidak ditemui. Senarai sheet sebenar: [${sheetNames.join(', ')}]`, 400, 'UPLOAD_INVALID_TEMPLATE');
       }
       requiredKeys = [
-        'ic_number', 'dispatcher_id', 'name', 'advance', 'pending_cod', 
+        'ic_number', 'dispatcher_id', 'name', 'others', 'pending_cod', 
         'hq_penalty', 'duitnow_penalty', 'late_cod_penalty', 
         'lost_individual', 'lost_parcel_hub'
       ];
@@ -179,7 +179,7 @@ class UploadService {
       console.error('--------------------------------|----------------------');
       const maxLen = Math.max(requiredKeys.length, originalHeaders.length);
       for (let i = 0; i < maxLen; i++) {
-        const expected = requiredKeys[i] ? `${requiredKeys[i]} (${mappingRules[requiredKeys[i]].join(' / ')})` : '';
+        const expected = requiredKeys[i] ? `${requiredKeys[i]} (${(mappingRules[requiredKeys[i]] || []).join(' / ')})` : '';
         const actual = originalHeaders[i] ? `${originalHeaders[i]} (normalized: "${normalizeHeader(originalHeaders[i])}")` : '';
         console.error(`${expected.padEnd(31)} | ${actual}`);
       }

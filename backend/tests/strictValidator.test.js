@@ -94,7 +94,7 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     'Delivery Dispatcher IC No.': 'ic_number',
     'Delivery Dispatcher ID': 'dispatcher_id',
     'Delivery Dispatcher Name': 'name',
-    'DEDUCTION: ADVANCE': 'advance',
+    'DEDUCTION: ADVANCE': 'others',
     'DEDUCTION: PENDING COD': 'pending_cod',
     'DEDUCTION: HQ PENALTY': 'hq_penalty',
     'DEDUCTION: DUITNOW PENALTY': 'duitnow_penalty',
