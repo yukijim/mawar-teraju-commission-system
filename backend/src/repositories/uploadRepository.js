@@ -201,7 +201,7 @@ class UploadRepository {
         r.parcel_qty || 0, r.net_parcel || 0, r.exclude_extra_weight_yoyi || 0, r.commission_rate || 0,
         r.diff_rate_new_joiner || 0, r.count_pickup || 0, r.extra_weight_commission || 0, r.total_commission || 0,
         r.addition_pickup_commission || 0, r.addition_refund_penalty || 0, r.addition_sorter || 0,
-        r.deduction_advance || 0, r.deduction_pending_cod || 0, r.deduction_hq_penalty || 0, r.deduction_duitnow_penalty || 0,
+        r.deduction_others || 0, r.deduction_pending_cod || 0, r.deduction_hq_penalty || 0, r.deduction_duitnow_penalty || 0,
         r.deduction_late_cod_penalty || 0, r.deduction_lost_individual || 0, r.deduction_lost_parcel_hub || 0,
         r.nett_commission || 0, r.final_amount_to_pay || 0,
         r.addition_others || 0, r.parcel_qty_jms || 0, r.status_payment || 'SUCCESS', r.date_payment || '', r.remark || '',
@@ -217,7 +217,7 @@ class UploadRepository {
         parcel_qty, net_parcel, exclude_extra_weight_yoyi, commission_rate,
         diff_rate_new_joiner, count_pickup, extra_weight_commission, total_commission,
         addition_pickup_commission, addition_refund_penalty, addition_sorter,
-        deduction_advance, deduction_pending_cod, deduction_hq_penalty, deduction_duitnow_penalty,
+        deduction_others, deduction_pending_cod, deduction_hq_penalty, deduction_duitnow_penalty,
         deduction_late_cod_penalty, deduction_lost_individual, deduction_lost_parcel_hub,
         nett_commission, final_amount_to_pay,
         addition_others, parcel_qty_jms, status_payment, date_payment, remark,
@@ -249,7 +249,7 @@ class UploadRepository {
 
       values.push(
         batchId, r.dispatcher_id, r.ic_number, r.name,
-        r.deduction_advance || 0, r.deduction_pending_cod || 0, r.deduction_hq_penalty || 0, r.deduction_duitnow_penalty || 0,
+        r.deduction_others || 0, r.deduction_pending_cod || 0, r.deduction_hq_penalty || 0, r.deduction_duitnow_penalty || 0,
         r.deduction_late_cod_penalty || 0, r.deduction_lost_individual || 0, r.deduction_lost_parcel_hub || 0,
         r.lost_pic_signed || 0, r.lost_rate || 0, r.total_all_lost_shared || 0, r.lost_parcel_pic_signed || 0,
         r.arbi_individual || 0, r.rcgen_penalty || 0, r.qc_penalty || 0, r.total_hq_penalty_detail || 0
@@ -261,7 +261,7 @@ class UploadRepository {
     const text = `
       INSERT INTO deduction_records (
         batch_id, dispatcher_id, ic_number, name,
-        deduction_advance, deduction_pending_cod, deduction_hq_penalty, deduction_duitnow_penalty,
+        deduction_others, deduction_pending_cod, deduction_hq_penalty, deduction_duitnow_penalty,
         deduction_late_cod_penalty, deduction_lost_individual, deduction_lost_parcel_hub,
         lost_pic_signed, lost_rate, total_all_lost_shared, lost_parcel_pic_signed,
         arbi_individual, rcgen_penalty, qc_penalty, total_hq_penalty_detail

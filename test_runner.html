@@ -174,7 +174,7 @@
             count_pickup: ['count of pick up dispatcher name', 'count of pick up'],
             extra_weight_commission: ['extra weight commission', 'extra weight commission (=>5.01kg, add rm0.10/kg)'],
             total_commission: ['total commission'],
-            deduction_advance: ['deduction: advance', 'deduction: advance ', 'deduction advance'],
+            deduction_others: ['deduction others', 'deduction: others', 'deduction: advance', 'deduction: advance ', 'deduction advance'],
             deduction_pending_cod: ['deduction: pending cod', 'deduction: pending cod ', 'deduction pending cod'],
             deduction_hq_penalty: ['deduction: hq penalty', 'deduction: hq penalty ', 'deduction hq penalty'],
             deduction_duitnow_penalty: ['deduction: duitnow penalty', 'deduction: duitnow penalty ', 'deduction duitnow penalty'],
@@ -364,7 +364,7 @@
                 const addition_fuel_allowance = this.parseNumericValue(row[commHeadersMap.addition_fuel_allowance]);
                 const addition_sorter = this.parseNumericValue(row[commHeadersMap.addition_sorter]);
 
-                const deduction_advance = this.parseNumericValue(row[commHeadersMap.deduction_advance]);
+                const deduction_others = this.parseNumericValue(row[commHeadersMap.deduction_others]);
                 const deduction_pending_cod = this.parseNumericValue(row[commHeadersMap.deduction_pending_cod]);
                 const deduction_hq_penalty = this.parseNumericValue(row[commHeadersMap.deduction_hq_penalty]);
                 const deduction_duitnow_penalty = this.parseNumericValue(row[commHeadersMap.deduction_duitnow_penalty]);
@@ -390,7 +390,7 @@
                     addition_pickup_commission,
                     addition_fuel_allowance,
                     addition_sorter,
-                    deduction_advance,
+                    deduction_others,
                     deduction_pending_cod,
                     deduction_hq_penalty,
                     deduction_duitnow_penalty,
@@ -458,7 +458,7 @@
                                 dispatcher_id,
                                 ic_number,
                                 name,
-                                deduction_advance: commRec.deduction_advance || 0,
+                                deduction_others: commRec.deduction_others || 0,
                                 deduction_pending_cod: commRec.deduction_pending_cod || 0,
                                 deduction_duitnow_penalty: commRec.deduction_duitnow_penalty || 0,
                                 deduction_late_cod_penalty: commRec.deduction_late_cod_penalty || 0,
@@ -485,7 +485,7 @@
                         dispatcher_id: c.dispatcher_id,
                         ic_number: c.ic_number,
                         name: c.name,
-                        deduction_advance: c.deduction_advance,
+                        deduction_others: c.deduction_others,
                         deduction_pending_cod: c.deduction_pending_cod,
                         deduction_duitnow_penalty: c.deduction_duitnow_penalty,
                         deduction_late_cod_penalty: c.deduction_late_cod_penalty,
@@ -822,7 +822,7 @@
                 addition_pickup_commission: 0,
                 addition_fuel_allowance: 0,
                 addition_sorter: 0,
-                deduction_advance: 20,
+                deduction_others: 20,
                 deduction_pending_cod: 0,
                 deduction_hq_penalty: 20,
                 deduction_duitnow_penalty: 0,
@@ -837,7 +837,7 @@
                 dispatcher_id: 'DSP123',
                 ic_number: '900101141234',
                 name: 'Ahmad Bin Ali',
-                deduction_advance: 20,
+                deduction_others: 20,
                 deduction_pending_cod: 0,
                 deduction_duitnow_penalty: 0,
                 deduction_late_cod_penalty: 0,

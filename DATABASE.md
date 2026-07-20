@@ -72,7 +72,7 @@ Menyimpan butiran potongan dispatcher bagi setiap batch.
 | `batchId` | Number | Rujukan ke ID Batch | `1` |
 | `ic_number` | String | ID Kad Pengenalan (tanpa sengkang) | `"900101141234"` |
 | `name` | String | Nama penuh dispatcher | `"Ahmad Bin Ali"` |
-| `deduction_advance` | Number | Potongan pinjaman pendahuluan | `50.00` |
+| `deduction_others` | Number | Potongan pinjaman pendahuluan / lain-lain | `50.00` |
 | `deduction_pending_cod` | Number | Potongan COD tertangguh | `0.00` |
 | `deduction_hq_penalty` | Number | Potongan denda HQ | `10.00` |
 | `deduction_duitnow_penalty`| Number | Potongan denda DuitNow | `0.00` |

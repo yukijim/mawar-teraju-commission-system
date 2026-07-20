@@ -36,7 +36,7 @@ function runRuntimePdfVerification() {
     addition_extra_reward: 125.00,
     
     // Deductions inputs (negative floats testing)
-    deduction_advance: -100.00,
+    deduction_others: -100.00,
     deduction_pending_cod: -25.50,
     deduction_hq_penalty: -15.00,
     deduction_duitnow_penalty: 0.00,

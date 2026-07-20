@@ -26,7 +26,7 @@ class SearchRepository {
       SELECT 
         c.*, 
         d.id as deduction_record_id,
-        d.deduction_advance, d.deduction_pending_cod, d.deduction_hq_penalty, d.deduction_duitnow_penalty,
+        d.deduction_others, d.deduction_pending_cod, d.deduction_hq_penalty, d.deduction_duitnow_penalty,
         d.deduction_late_cod_penalty, d.deduction_lost_individual, d.deduction_lost_parcel_hub,
         d.lost_pic_signed, d.lost_rate, d.total_all_lost_shared, d.lost_parcel_pic_signed,
         d.arbi_individual, d.rcgen_penalty, d.qc_penalty, d.total_hq_penalty_detail,

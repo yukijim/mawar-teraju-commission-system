@@ -161,7 +161,7 @@ Dokumen ini menyediakan spesifikasi reka bentuk konseptual API RESTful sekiranya
         "commission_rate": 161.00,
         "total_commission": 181.00,
         "nett_commission": 161.00,
-        "deduction_advance": 50.00,
+        "deduction_others": 50.00,
         "deduction_hq_penalty": 10.00,
         "final_amount_to_pay": 101.00
       }

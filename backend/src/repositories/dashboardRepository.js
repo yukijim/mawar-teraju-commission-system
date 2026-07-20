@@ -13,7 +13,7 @@ class DashboardRepository {
         COALESCE(SUM(c.final_amount_to_pay), 0) as total_payouts,
         COALESCE(AVG(c.total_commission), 0) as avg_commission,
         COUNT(DISTINCT c.dispatcher_id) as total_dispatchers,
-        COALESCE(SUM(c.deduction_hq_penalty + c.deduction_advance + c.deduction_pending_cod + c.deduction_duitnow_penalty + c.deduction_late_cod_penalty + c.deduction_lost_individual + c.deduction_lost_parcel_hub), 0) as total_deductions
+        COALESCE(SUM(c.deduction_hq_penalty + c.deduction_others + c.deduction_pending_cod + c.deduction_duitnow_penalty + c.deduction_late_cod_penalty + c.deduction_lost_individual + c.deduction_lost_parcel_hub), 0) as total_deductions
       FROM commission_records c
       WHERE c.batch_id IN (
         SELECT id FROM batches WHERE status = 'PUBLISHED' AND deleted_at IS NULL
@@ -38,7 +38,7 @@ class DashboardRepository {
         b.month,
         COALESCE(SUM(c.final_amount_to_pay), 0) as total_payouts,
         COUNT(DISTINCT c.dispatcher_id) as total_dispatchers,
-        COALESCE(SUM(c.deduction_hq_penalty + c.deduction_advance + c.deduction_pending_cod + c.deduction_duitnow_penalty + c.deduction_late_cod_penalty + c.deduction_lost_individual + c.deduction_lost_parcel_hub), 0) as total_deductions
+        COALESCE(SUM(c.deduction_hq_penalty + c.deduction_others + c.deduction_pending_cod + c.deduction_duitnow_penalty + c.deduction_late_cod_penalty + c.deduction_lost_individual + c.deduction_lost_parcel_hub), 0) as total_deductions
       FROM batches b
       LEFT JOIN commission_records c ON b.id = c.batch_id
       WHERE b.status = 'PUBLISHED' AND b.deleted_at IS NULL

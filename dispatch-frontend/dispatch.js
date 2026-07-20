@@ -247,7 +247,7 @@ const Dispatch = {
 
         // Math calculations for split views
         const grossComm = Number(record.total_commission || record.nett_commission || 0);
-        const totalDeds = Number(record.deduction_advance || 0) +
+        const totalDeds = Number(record.deduction_others || 0) +
                           Number(record.deduction_pending_cod || 0) +
                           Number(record.deduction_hq_penalty || 0) +
                           Number(record.deduction_duitnow_penalty || 0) +
@@ -285,7 +285,7 @@ const Dispatch = {
                 { key: 'addition_others', label: 'ADD: OTHERS', type: 'currency' },
                 { key: 'addition_sorter', label: 'ADD: SORTER', type: 'currency' },
                 { key: 'addition_extra_reward', label: 'EXTRA REWARD', type: 'currency' },
-                { key: 'deduction_advance', label: 'DEDUCTION: ADVANCE', type: 'currency' },
+                { key: 'deduction_others', label: 'DEDUCTION: OTHERS', type: 'currency' },
                 { key: 'deduction_pending_cod', label: 'DEDUCTION: PENDING COD', type: 'currency' },
                 { key: 'deduction_hq_penalty', label: 'DEDUCTION: HQ PENALTY', type: 'currency' },
                 { key: 'deduction_duitnow_penalty', label: 'DEDUCTION: DUITNOW PENALTY', type: 'currency' },

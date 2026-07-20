@@ -27,7 +27,7 @@ class ReportService {
     const queryText = `
       SELECT 
         c.*, 
-        COALESCE(d.deduction_advance, 0) as deduction_advance,
+        COALESCE(d.deduction_others, 0) as deduction_others,
         COALESCE(d.deduction_pending_cod, 0) as deduction_pending_cod,
         COALESCE(d.deduction_hq_penalty, 0) as deduction_hq_penalty,
         COALESCE(d.deduction_duitnow_penalty, 0) as deduction_duitnow_penalty,
@@ -177,7 +177,7 @@ class ReportService {
       const queryText = `
         SELECT 
           c.*, 
-          COALESCE(d.deduction_advance, 0) as deduction_advance,
+          COALESCE(d.deduction_others, 0) as deduction_others,
           COALESCE(d.deduction_pending_cod, 0) as deduction_pending_cod,
           COALESCE(d.deduction_hq_penalty, 0) as deduction_hq_penalty,
           COALESCE(d.deduction_duitnow_penalty, 0) as deduction_duitnow_penalty,

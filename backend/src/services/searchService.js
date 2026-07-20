@@ -157,7 +157,7 @@ class SearchService {
       },
       deduction: {
         id: r.deduction_record_id,
-        deductionAdvance: parseFloat(r.deduction_advance),
+        deductionOthers: parseFloat(r.deduction_others),
         deductionPendingCod: parseFloat(r.deduction_pending_cod),
         deductionHqPenalty: parseFloat(r.deduction_hq_penalty),
         deductionDuitnowPenalty: parseFloat(r.deduction_duitnow_penalty),

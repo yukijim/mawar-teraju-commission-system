@@ -546,7 +546,7 @@ class IndexedDBRepository extends CommissionRepository {
                 final_amount_to_pay: commission ? commission.final_amount_to_pay : 0,
                 
                 // General deductions
-                deduction_advance: deduction ? deduction.deduction_advance : 0,
+                deduction_others: deduction ? deduction.deduction_others : 0,
                 deduction_pending_cod: deduction ? deduction.deduction_pending_cod : 0,
                 deduction_hq_penalty: deduction ? deduction.deduction_hq_penalty : 0,
                 deduction_duitnow_penalty: deduction ? deduction.deduction_duitnow_penalty : 0,
@@ -1078,7 +1078,7 @@ class PostgresRestRepository extends CommissionRepository {
                     date_payment: comm.datePayment || '',
                     remark: comm.remark || '',
 
-                    deduction_advance: ded.deductionAdvance || 0,
+                    deduction_others: ded.deductionOthers || 0,
                     deduction_pending_cod: ded.deductionPendingCod || 0,
                     deduction_hq_penalty: ded.deductionHqPenalty || 0,
                     deduction_duitnow_penalty: ded.deductionDuitnowPenalty || 0,

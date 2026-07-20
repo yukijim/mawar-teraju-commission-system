@@ -105,7 +105,7 @@ Menyimpan semua perincian potongan akhir dari sheet `Deduction`.
 | `dispatcher_id` | String | Rujukan ke `dispatcher_mappings.dispatcher_id` (FK) | `"NSN3052004"` |
 | `ic_number` | String | No. IC yang dipetakan | `"070614101708"` |
 | `name` | String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
-| `deduction_advance` | Number | Potongan pinjaman pendahuluan | `50.00` |
+| `deduction_others` | Number | Potongan pinjaman pendahuluan / lain-lain | `50.00` |
 | `deduction_pending_cod` | Number | Potongan COD tertangguh | `0.00` |
 | `deduction_hq_penalty` | Number | Potongan denda HQ | `10.00` |
 | `deduction_duitnow_penalty` | Number | Potongan denda DuitNow | `0.00` |

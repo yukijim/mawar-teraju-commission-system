@@ -26,7 +26,7 @@ function runCombinedPdfVerification() {
     nett_commission: 716.30,
     
     // Deductions inputs (positive floats as stored in database)
-    deduction_advance: 100.00,
+    deduction_others: 100.00,
     deduction_pending_cod: 25.50,
     deduction_hq_penalty: 15.00,
     deduction_duitnow_penalty: 0.00,
@@ -51,7 +51,7 @@ function runCombinedPdfVerification() {
   
   // Verify both sections exist
   assert.ok(pdfString.includes('EXTRA REWARD'), 'Combined PDF is missing commission fields');
-  assert.ok(pdfString.includes('DEDUCTION: ADVANCE'), 'Combined PDF is missing deduction fields');
+  assert.ok(pdfString.includes('DEDUCTION: OTHERS'), 'Combined PDF is missing deduction fields');
   assert.ok(pdfString.includes('TOTAL NET INCOME'), 'Combined PDF is missing Total Net Income summary');
   assert.ok(pdfString.includes('TOTAL ADDITION'), 'Combined PDF is missing Total Addition summary');
   assert.ok(pdfString.includes('TOTAL DEDUCTION'), 'Combined PDF is missing Total Deduction summary');

@@ -163,7 +163,7 @@ class SimplePdfGenerator {
       ];
 
       const deductions = [
-        { label: 'DEDUCTION: ADVANCE', val: record.deduction_advance },
+        { label: 'DEDUCTION: OTHERS', val: record.deduction_others },
         { label: 'DEDUCTION: PENDING COD', val: record.deduction_pending_cod },
         { label: 'DEDUCTION: HQ PENALTY', val: record.deduction_hq_penalty },
         { label: 'DEDUCTION: DUITNOW PENALTY', val: record.deduction_duitnow_penalty },
@@ -313,7 +313,7 @@ class SimplePdfGenerator {
         addRow('EXTRA REWARD', record.addition_extra_reward, 'currency');
         addRow('NETT COMMISSION', record.nett_commission, 'currency');
       } else if (type === 'deduction') {
-        addRow('DEDUCTION: ADVANCE', record.deduction_advance, 'currency');
+        addRow('DEDUCTION: OTHERS', record.deduction_others, 'currency');
         addRow('DEDUCTION: PENDING COD', record.deduction_pending_cod, 'currency');
         addRow('DEDUCTION: HQ PENALTY', record.deduction_hq_penalty, 'currency');
         addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty, 'currency');

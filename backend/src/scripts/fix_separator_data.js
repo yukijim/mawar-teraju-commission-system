@@ -55,7 +55,7 @@ const DEDUCTION_MAPPING_RULES = {
   ic_number: ['delivery dispatcher ic no', 'delivery dispatcher ic no.'],
   dispatcher_id: ['delivery dispatcher id'],
   name: ['delivery dispatcher name'],
-  advance: ['deduction advance', 'deduction: advance'],
+  others: ['deduction others', 'deduction: others', 'deduction advance', 'deduction: advance'],
   pending_cod: ['deduction pending cod', 'deduction: pending cod'],
   hq_penalty: ['deduction hq penalty', 'deduction: hq penalty'],
   duitnow_penalty: ['deduction duitnow penalty', 'deduction: duitnow penalty'],
@@ -231,7 +231,7 @@ async function main() {
           if (!rawId || rawId.toString().trim() === '') continue;
           const dispatcherId = rawId.toString().trim();
 
-          const deductionAdvance = parseNumericValue(row[dedHeadersMap.advance]);
+          const deductionOthers = parseNumericValue(row[dedHeadersMap.others]);
           const deductionPendingCod = parseNumericValue(row[dedHeadersMap.pending_cod]);
           const deductionHqPenalty = parseNumericValue(row[dedHeadersMap.hq_penalty]);
           const deductionDuitnowPenalty = parseNumericValue(row[dedHeadersMap.duitnow_penalty]);
@@ -241,12 +241,12 @@ async function main() {
 
           const updateRes = await client.query(
             `UPDATE deduction_records 
-             SET deduction_advance = $1, deduction_pending_cod = $2, deduction_hq_penalty = $3, 
+             SET deduction_others = $1, deduction_pending_cod = $2, deduction_hq_penalty = $3, 
                  deduction_duitnow_penalty = $4, deduction_late_cod_penalty = $5, 
                  deduction_lost_individual = $6, deduction_lost_parcel_hub = $7
              WHERE batch_id = $8 AND dispatcher_id = $9`,
             [
-              deductionAdvance, deductionPendingCod, deductionHqPenalty, 
+              deductionOthers, deductionPendingCod, deductionHqPenalty, 
               deductionDuitnowPenalty, deductionLateCodPenalty, 
               deductionLostIndividual, deductionLostParcelHub, 
               dedBatch.id, dispatcherId

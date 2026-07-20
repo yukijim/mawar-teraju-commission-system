@@ -59,7 +59,7 @@ erDiagram
         string dispatcher_id FK "Rujukan ke DISPATCHER_MAPPINGS.dispatcher_id"
         string ic_number "No. IC (diambil dari mapping)"
         string name "Nama penuh dispatcher"
-        number deduction_advance "Potongan advance"
+        number deduction_others "Potongan advance / lain-lain"
         number deduction_pending_cod "Potongan pending COD"
         number deduction_duitnow_penalty "Potongan denda DuitNow"
         number deduction_late_cod_penalty "Potongan denda COD lewat"

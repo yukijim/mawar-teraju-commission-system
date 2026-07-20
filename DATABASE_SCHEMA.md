@@ -247,7 +247,7 @@ CREATE TABLE commission_records (
     addition_fuel_allowance NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     addition_sorter NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     
-    deduction_advance NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_others NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     deduction_pending_cod NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     deduction_hq_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     deduction_duitnow_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
@@ -282,7 +282,7 @@ CREATE TABLE deduction_records (
     ic_number VARCHAR(20) NOT NULL,
     name VARCHAR(255) NOT NULL,
     
-    deduction_advance NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
+    deduction_others NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     deduction_pending_cod NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     deduction_hq_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
     deduction_duitnow_penalty NUMERIC(15, 4) NOT NULL DEFAULT 0.0000,
