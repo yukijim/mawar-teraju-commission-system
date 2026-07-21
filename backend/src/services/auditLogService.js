@@ -13,8 +13,8 @@ class AuditLogService {
     if (!req) {
       return { ipAddress: 'unknown', userAgent: 'unknown' };
     }
-    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'unknown';
-    const userAgent = req.headers['user-agent'] || 'unknown';
+    const ipAddress = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || req.ip || 'unknown';
+    const userAgent = req.headers?.['user-agent'] || 'unknown';
     return { ipAddress, userAgent };
   }
 

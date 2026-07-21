@@ -8,14 +8,32 @@ class SearchService {
    * Resolves a dispatcher's username to their mapping NRIC
    */
   async resolveDispatcherIc(username) {
-    if (/^\d{12}$/.test(username)) {
-      return username;
-    }
-    const mappingRes = await db.query(
-      'SELECT ic_number FROM dispatcher_mappings WHERE dispatcher_id = $1',
-      [username]
+    const clean = username.toString().trim().toUpperCase();
+    
+    // First, check if clean is a dispatcher_id in mappings
+    const idRes = await db.query(
+      'SELECT ic_number FROM dispatcher_mappings WHERE UPPER(dispatcher_id) = $1',
+      [clean]
     );
-    return mappingRes.rows[0]?.ic_number || null;
+    if (idRes.rows.length > 0) {
+      return idRes.rows[0].ic_number;
+    }
+    
+    // If not found as dispatcher_id, check if it exists as ic_number in mappings
+    const icRes = await db.query(
+      'SELECT ic_number FROM dispatcher_mappings WHERE UPPER(ic_number) = $1',
+      [clean]
+    );
+    if (icRes.rows.length > 0) {
+      return icRes.rows[0].ic_number;
+    }
+    
+    // Fallback to check standard NRIC or Passport formats
+    if (/^\d{12}$/.test(clean) || /^[A-Z]\d{7,8}$/i.test(clean)) {
+      return clean;
+    }
+    
+    return null;
   }
 
   /**
@@ -99,7 +117,36 @@ class SearchService {
     });
 
     if (records.length === 0) {
-      throw new AppError('No commission records found matching search filters.', 404, 'SEARCH_RECORD_NOT_FOUND');
+      console.error('=== SEARCH FAILURE DIAGNOSTICS ===');
+      console.error(`Query parameters: ${JSON.stringify(queryParams)}`);
+      console.error(`Resolved search parameters: icNumber="${icNumber}", dispatcherId="${dispatcherId}", batchId="${batchId}", status="${status}", is_active=${is_active}, month=${month}, year=${year}, version=${version}`);
+      
+      try {
+        // Let's check if the dispatcher exists at all in mappings
+        const mappingCheck = await db.query(
+          'SELECT * FROM dispatcher_mappings WHERE UPPER(dispatcher_id) = $1 OR UPPER(ic_number) = $2',
+          [(queryParams.dispatcher_id || '').toString().toUpperCase(), (queryParams.ic_number || '').toString().toUpperCase()]
+        );
+        console.error(`Dispatcher mapping records found in DB: ${JSON.stringify(mappingCheck.rows)}`);
+        
+        // Check if any commission records exist for this dispatcher
+        const commCheck = await db.query(
+          'SELECT id, batch_id, dispatcher_id, ic_number FROM commission_records WHERE UPPER(dispatcher_id) = $1 OR UPPER(ic_number) = $2 LIMIT 5',
+          [(dispatcherId || queryParams.dispatcher_id || '').toString().toUpperCase(), (icNumber || queryParams.ic_number || '').toString().toUpperCase()]
+        );
+        console.error(`Commission records found in DB: ${JSON.stringify(commCheck.rows)}`);
+        
+        // Check active batches
+        const activeBatches = await db.query(
+          'SELECT id, name, month, year, status, is_active, type FROM batches WHERE deleted_at IS NULL'
+        );
+        console.error(`Active batches in DB: ${JSON.stringify(activeBatches.rows)}`);
+      } catch (logErr) {
+        console.error(`Diagnostic logging failed: ${logErr.message}`);
+      }
+      console.error('==================================');
+
+      throw new AppError(`No commission records found matching search filters (IC: ${icNumber || 'N/A'}, ID: ${dispatcherId || 'N/A'}).`, 404, 'SEARCH_RECORD_NOT_FOUND');
     }
 
     const totalPages = Math.ceil(totalRecords / limit);

@@ -33,7 +33,11 @@ class SearchRepository {
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
       JOIN batches b ON c.batch_id = b.id
-      LEFT JOIN batches b2 ON b.name = b2.name AND b2.type = 'DEDUCTION' AND b2.status = b.status AND b2.version = b.version
+      LEFT JOIN batches b2 ON b.month = b2.month AND b.year = b2.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL AND (
+        (b.status = 'PUBLISHED' AND b2.status = 'PUBLISHED' AND b2.is_active = TRUE)
+        OR
+        (b.status != 'PUBLISHED' AND b2.status = b.status AND b2.version = b.version AND b.name = b2.name)
+      )
       LEFT JOIN deduction_records d ON b2.id = d.batch_id AND c.dispatcher_id = d.dispatcher_id
       WHERE b.deleted_at IS NULL
     `;
@@ -41,15 +45,15 @@ class SearchRepository {
     const params = [];
     let paramIndex = 1;
 
-    // Apply main query filters
+    // Apply main query filters with dispatcher mapping fallback
     if (icNumber) {
-      queryText += ` AND c.ic_number = $${paramIndex}`;
+      queryText += ` AND (c.ic_number = $${paramIndex} OR c.dispatcher_id IN (SELECT dispatcher_id FROM dispatcher_mappings WHERE ic_number = $${paramIndex}))`;
       params.push(icNumber);
       paramIndex++;
     }
 
     if (dispatcherId) {
-      queryText += ` AND c.dispatcher_id = $${paramIndex}`;
+      queryText += ` AND (c.dispatcher_id = $${paramIndex} OR c.ic_number IN (SELECT ic_number FROM dispatcher_mappings WHERE dispatcher_id = $${paramIndex}))`;
       params.push(dispatcherId);
       paramIndex++;
     }
@@ -114,12 +118,12 @@ class SearchRepository {
     let countParamIndex = 1;
 
     if (icNumber) {
-      countQueryText += ` AND c.ic_number = $${countParamIndex}`;
+      countQueryText += ` AND (c.ic_number = $${countParamIndex} OR c.dispatcher_id IN (SELECT dispatcher_id FROM dispatcher_mappings WHERE ic_number = $${countParamIndex}))`;
       countParams.push(icNumber);
       countParamIndex++;
     }
     if (dispatcherId) {
-      countQueryText += ` AND c.dispatcher_id = $${countParamIndex}`;
+      countQueryText += ` AND (c.dispatcher_id = $${countParamIndex} OR c.ic_number IN (SELECT ic_number FROM dispatcher_mappings WHERE dispatcher_id = $${countParamIndex}))`;
       countParams.push(dispatcherId);
       countParamIndex++;
     }

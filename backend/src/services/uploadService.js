@@ -288,6 +288,13 @@ class UploadService {
         }
       });
 
+      // Retrieve mapping table from DB to resolve IC values
+      const mappingsRes = await db.query('SELECT dispatcher_id, ic_number FROM dispatcher_mappings');
+      const dbMappings = {};
+      mappingsRes.rows.forEach(m => {
+        dbMappings[m.dispatcher_id] = m.ic_number;
+      });
+
       // 3. Process rows and check duplicates (Batch ID, Dispatcher ID, IC Number)
       const dispatcherMappings = [];
       const commissionRecords = [];
@@ -310,10 +317,13 @@ class UploadService {
           }
 
           const dispatcher_id = rawId.toString().trim();
-          const ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+          let ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+          if (!ic_number || ic_number.length < 7) {
+            ic_number = dbMappings[dispatcher_id] || '';
+          }
           const name = rawName ? rawName.toString().trim() : '';
 
-          if (!ic_number || ic_number.length < 9) {
+          if (!ic_number || ic_number.length < 7) {
             recordsSkipped++;
             return;
           }
@@ -568,7 +578,7 @@ class UploadService {
 
           const rawIcString = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
           let ic_number = rawIcString;
-          if (!ic_number || ic_number.length < 9) {
+          if (!ic_number || ic_number.length < 7) {
             ic_number = dbMappings[dispatcher_id] || '';
           }
           if (!ic_number) {
@@ -967,6 +977,13 @@ class UploadService {
         }
       });
 
+      // Retrieve mapping table from DB to resolve IC values
+      const mappingsRes = await db.query('SELECT dispatcher_id, ic_number FROM dispatcher_mappings');
+      const dbMappings = {};
+      mappingsRes.rows.forEach(m => {
+        dbMappings[m.dispatcher_id] = m.ic_number;
+      });
+
       const dispatcherMappings = [];
       const commissionRecords = [];
       const commProcessedKeys = new Set();
@@ -982,10 +999,13 @@ class UploadService {
         if (!rawId || rawId.toString().trim() === '') return;
 
         const dispatcher_id = rawId.toString().trim();
-        const ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+        let ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
+        if (!ic_number || ic_number.length < 7) {
+          ic_number = dbMappings[dispatcher_id] || '';
+        }
         const name = rawName ? rawName.toString().trim() : '';
 
-        if (!ic_number || ic_number.length < 9) return;
+        if (!ic_number || ic_number.length < 7) return;
 
         resolvedDispatcherIcs[dispatcher_id] = ic_number;
         resolvedDispatcherNames[dispatcher_id] = name;
@@ -1028,6 +1048,7 @@ class UploadService {
           nett_commission: parseNumericValue(row[commHeadersMap.nett_commission]),
           final_amount_to_pay: parseNumericValue(row[commHeadersMap.nett_commission]),
           addition_others: parseNumericValue(row[commHeadersMap.others]),
+          addition_extra_reward: parseNumericValue(row[commHeadersMap.extra_reward]),
           parcel_qty_jms: 0,
           status_payment: 'SUCCESS',
           date_payment: '',
@@ -1051,11 +1072,7 @@ class UploadService {
         }
       });
 
-      const mappingsRes = await db.query('SELECT dispatcher_id, ic_number FROM dispatcher_mappings');
-      const dbMappings = {};
-      mappingsRes.rows.forEach(m => {
-        dbMappings[m.dispatcher_id] = m.ic_number;
-      });
+
 
       const deductionRecords = [];
       const dedProcessedKeys = new Set();
@@ -1070,7 +1087,7 @@ class UploadService {
         const dispatcher_id = rawId.toString().trim();
         
         let ic_number = rawIc ? rawIc.toString().replace(/[\s-]/g, '') : '';
-        if (!ic_number || ic_number.length < 9) {
+        if (!ic_number || ic_number.length < 7) {
           ic_number = resolvedDispatcherIcs[dispatcher_id] || dbMappings[dispatcher_id] || '';
         }
         if (!ic_number) {
