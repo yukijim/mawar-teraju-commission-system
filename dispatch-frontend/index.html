@@ -55,7 +55,7 @@
             <div class="view-header">
                 <div class="view-title">
                     <h2>Semakan Komisen Dispatch</h2>
-                    <p>Sila masukkan nombor Kad Pengenalan anda untuk carian komisen pantas.</p>
+                    <p>Sila masukkan No. IC, Passport, atau Dispatcher ID anda untuk carian komisen pantas.</p>
                 </div>
             </div>
 
@@ -65,14 +65,14 @@
                 <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">MAWAR TERAJU Commission Management System</p>
                 <form id="dispatch-search-form" onsubmit="App.handleSearch(event)" style="text-align: left;">
                     <div class="form-group">
-                        <label for="dispatch-ic-input">Nombor Kad Pengenalan (IC Number)</label>
+                        <label for="dispatch-ic-input">No. Kad Pengenalan / No. Passport / Dispatcher ID</label>
                         <div class="input-wrapper">
-                            <input type="text" id="dispatch-ic-input" class="form-control" placeholder="900101-14-1234" maxlength="14" required style="font-size: 1.25rem; padding-left: 2.75rem;">
+                            <input type="text" id="dispatch-ic-input" class="form-control" placeholder="Cth: 900101141234 / E7431725 / PJS3524399" required style="font-size: 1.25rem; padding-left: 2.75rem;">
                             <span class="input-icon" style="font-size: 1.25rem;">
                                 <i data-lucide="credit-card"></i>
                             </span>
                         </div>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem;">Format standard: XXXXXX-XX-XXXX (cth: 900101141234 atau 900101-14-1234)</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem;">Format diterima: No. IC (900101141234), No. Passport (E7431725), atau Dispatcher ID (PJS3524399)</p>
                     </div>
                     
                     <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 0.9rem;">
@@ -140,10 +140,10 @@
                 </div>
                 <h3 class="empty-state-title">Data tidak dijumpai</h3>
                 <p class="empty-state-text-primary">
-                    Tiada rekod komisen bagi nombor Kad Pengenalan <strong id="searched-ic-number" style="color: var(--text-primary);">-</strong> dalam sistem kami.
+                    Tiada rekod komisen bagi No. IC / Passport / Dispatcher ID <strong id="searched-ic-number" style="color: var(--text-primary);">-</strong> dalam sistem kami.
                 </p>
                 <p class="empty-state-text-secondary">
-                    Sila pastikan nombor IC dimasukkan dengan betul atau hubungi bahagian Pentadbiran untuk pengesahan muat naik data.
+                    Sila pastikan No. IC, Passport, atau Dispatcher ID dimasukkan dengan betul atau hubungi bahagian Pentadbiran untuk pengesahan muat naik data.
                 </p>
                 <button class="btn btn-secondary empty-state-btn" onclick="App.resetSearch()">
                     Cuba Carian Lain

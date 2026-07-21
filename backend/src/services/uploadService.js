@@ -13,9 +13,10 @@ const normalizeHeader = (str) => {
   return str.toString()
     .replace(/[\r\n]+/g, ' ')
     .replace(/[\xa0\u2007\u202F\u205F\u3000]/g, ' ')
-    .toLowerCase()
+    .replace(/\s*:\s*/g, ': ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
+    .toUpperCase();
 };
 
 /**
@@ -158,7 +159,8 @@ class UploadService {
       const cleanHeader = normalizeHeader(header);
       let recognized = false;
       for (const [key, aliases] of Object.entries(mappingRules)) {
-        if (aliases.includes(cleanHeader)) {
+        const normAliases = aliases.map(a => normalizeHeader(a));
+        if (normAliases.includes(cleanHeader) || (key === 'others' && cleanHeader.includes('OTHERS'))) {
           matchedKeys.add(key);
           recognized = true;
           break;
@@ -278,7 +280,8 @@ class UploadService {
       Object.keys(firstRow).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.COMMISSION_MAPPING_RULES)) {
-          if (aliases.includes(cleanHeader)) {
+          const normAliases = aliases.map(a => normalizeHeader(a));
+          if (normAliases.includes(cleanHeader) || (key === 'others' && cleanHeader.includes('OTHERS'))) {
             commHeadersMap[key] = header;
             break;
           }
@@ -525,7 +528,8 @@ class UploadService {
       Object.keys(firstRow).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.DEDUCTION_MAPPING_RULES)) {
-          if (aliases.includes(cleanHeader)) {
+          const normAliases = aliases.map(a => normalizeHeader(a));
+          if (normAliases.includes(cleanHeader) || (key === 'others' && cleanHeader.includes('OTHERS'))) {
             dedHeadersMap[key] = header;
             break;
           }
@@ -955,7 +959,8 @@ class UploadService {
       Object.keys(commRows[0]).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.COMMISSION_MAPPING_RULES)) {
-          if (aliases.includes(cleanHeader)) {
+          const normAliases = aliases.map(a => normalizeHeader(a));
+          if (normAliases.includes(cleanHeader) || (key === 'others' && cleanHeader.includes('OTHERS'))) {
             commHeadersMap[key] = header;
             break;
           }
@@ -1038,7 +1043,8 @@ class UploadService {
       Object.keys(dedRows[0]).forEach(header => {
         const cleanHeader = normalizeHeader(header);
         for (const [key, aliases] of Object.entries(this.DEDUCTION_MAPPING_RULES)) {
-          if (aliases.includes(cleanHeader)) {
+          const normAliases = aliases.map(a => normalizeHeader(a));
+          if (normAliases.includes(cleanHeader) || (key === 'others' && cleanHeader.includes('OTHERS'))) {
             dedHeadersMap[key] = header;
             break;
           }
