@@ -43,7 +43,6 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     'ADD: PICKUP COMMISSION',
     'ADD: OTHERS',
     'ADD: SORTER',
-    'ADD: EXTRA REWARD',
     'NETT COMMISSION'
   ];
 

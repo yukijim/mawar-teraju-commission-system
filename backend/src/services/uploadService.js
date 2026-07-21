@@ -123,7 +123,7 @@ class UploadService {
       requiredKeys = [
         'ic_number', 'dispatcher_id', 'name', 'parcel_qty', 'parcel_commission', 
         'extra_weight_commission', 'total_commission', 'refund_penalty', 
-        'pickup_commission', 'others', 'sorter', 'extra_reward', 'nett_commission'
+        'pickup_commission', 'others', 'sorter', 'nett_commission'
       ];
       mappingRules = this.COMMISSION_MAPPING_RULES;
     } else if (type === 'DEDUCTION') {

@@ -324,7 +324,11 @@ const Dispatch = {
                 let displayValue = val;
 
                 if (field.type === 'currency') {
-                    displayValue = `RM ${Number(val || 0).toFixed(2)}`;
+                    if (field.key === 'addition_extra_reward' && (!val || Number(val) === 0)) {
+                        displayValue = '-';
+                    } else {
+                        displayValue = `RM ${Number(val || 0).toFixed(2)}`;
+                    }
                 } else if (field.type === 'number') {
                     displayValue = Number(val || 0).toLocaleString('ms-MY');
                 } else if (field.key === 'ic_number' && val) {
