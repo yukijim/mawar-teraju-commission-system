@@ -142,31 +142,35 @@ const Upload = {
         const createTab = document.getElementById('create-batch-tab');
         const penaltyTab = document.getElementById('upload-penalty-tab');
 
+        const tabs = [
+            { id: 'batch-list', btn: listBtn, tab: listTab },
+            { id: 'create-batch', btn: createBtn, tab: createTab },
+            { id: 'upload-penalty', btn: penaltyBtn, tab: penaltyTab }
+        ];
+
+        tabs.forEach(t => {
+            if (t.btn) {
+                if (t.id === tabId) t.btn.classList.add('active');
+                else t.btn.classList.remove('active');
+            }
+            if (t.tab) {
+                if (t.id === tabId) {
+                    t.tab.style.display = 'block';
+                    t.tab.classList.add('active');
+                    // Force reflow to retrigger CSS fadeIn animation
+                    t.tab.style.animation = 'none';
+                    void t.tab.offsetHeight;
+                    t.tab.style.animation = '';
+                } else {
+                    t.tab.style.display = 'none';
+                    t.tab.classList.remove('active');
+                }
+            }
+        });
+
         if (tabId === 'batch-list') {
-            if (listBtn) listBtn.classList.add('active');
-            if (createBtn) createBtn.classList.remove('active');
-            if (penaltyBtn) penaltyBtn.classList.remove('active');
-            
-            if (listTab) listTab.style.display = 'block';
-            if (createTab) createTab.style.display = 'none';
-            if (penaltyTab) penaltyTab.style.display = 'none';
             this.resetBatchForm();
-        } else if (tabId === 'create-batch') {
-            if (listBtn) listBtn.classList.remove('active');
-            if (createBtn) createBtn.classList.add('active');
-            if (penaltyBtn) penaltyBtn.classList.remove('active');
-            
-            if (listTab) listTab.style.display = 'none';
-            if (createTab) createTab.style.display = 'block';
-            if (penaltyTab) penaltyTab.style.display = 'none';
         } else if (tabId === 'upload-penalty') {
-            if (listBtn) listBtn.classList.remove('active');
-            if (createBtn) createBtn.classList.remove('active');
-            if (penaltyBtn) penaltyBtn.classList.add('active');
-            
-            if (listTab) listTab.style.display = 'none';
-            if (createTab) createTab.style.display = 'none';
-            if (penaltyTab) penaltyTab.style.display = 'block';
             this.clearPenaltyFile();
         }
     },
