@@ -179,7 +179,13 @@ class SearchService {
 
     // 6. Format responses to partition Dispatcher Info, Commission, and Deductions
     const formattedRecords = await Promise.all(records.map(async (r) => {
-      const pSum = await penaltyRepository.getPenaltySummary(r.dispatcher_id);
+      let pSum = { fake_return: 0, fake_problematic: 0, fraud_delivery: 0, arbitration: 0, individual_lost: 0 };
+      try {
+        pSum = (await penaltyRepository.getPenaltySummary(r.dispatcher_id)) || pSum;
+      } catch (pErr) {
+        console.warn(`[SearchService] Error loading penalty summary for ${r.dispatcher_id}:`, pErr.message);
+      }
+
       return {
         dispatcherInfo: {
           dispatcherId: r.dispatcher_id,
@@ -224,12 +230,11 @@ class SearchService {
           totalHqPenaltyDetail: parseFloat(r.total_hq_penalty_detail || 0)
         },
         penaltySummary: {
-          fakeReturn: parseFloat(pSum.fake_return),
-          fakeProblematic: parseFloat(pSum.fake_problematic),
-          fraudDelivery: parseFloat(pSum.fraud_delivery),
-          arbitration: parseFloat(pSum.arbitration),
-          individualLost: parseFloat(pSum.individual_lost),
-          logic: parseFloat(pSum.logic)
+          fakeReturn: parseFloat(pSum.fake_return || 0),
+          fakeProblematic: parseFloat(pSum.fake_problematic || 0),
+          fraudDelivery: parseFloat(pSum.fraud_delivery || 0),
+          arbitration: parseFloat(pSum.arbitration || 0),
+          individualLost: parseFloat(pSum.individual_lost || 0)
         },
         netAmount: {
           nettCommission: parseFloat(r.nett_commission),

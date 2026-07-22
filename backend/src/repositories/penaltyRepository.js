@@ -127,7 +127,7 @@ class PenaltyRepository {
    */
   async getPenaltySummary(identifier) {
     if (!identifier) {
-      return { fake_return: 0, fake_problematic: 0, fraud_delivery: 0, arbitration: 0, individual_lost: 0, logic: 0 };
+      return { fake_return: 0, fake_problematic: 0, fraud_delivery: 0, arbitration: 0, individual_lost: 0 };
     }
 
     const cleanId = identifier.toString().toUpperCase().trim();
@@ -139,8 +139,7 @@ class PenaltyRepository {
         COALESCE(SUM(fake_problematic), 0.0000) as fake_problematic,
         COALESCE(SUM(fraud_delivery), 0.0000) as fraud_delivery,
         COALESCE(SUM(arbitration), 0.0000) as arbitration,
-        COALESCE(SUM(individual_lost), 0.0000) as individual_lost,
-        COALESCE(SUM(logic), 0.0000) as logic
+        COALESCE(SUM(individual_lost), 0.0000) as individual_lost
       FROM penalty_records
       WHERE UPPER(delivery_dispatcher_id) = $1
          OR UPPER(delivery_dispatcher_id) IN (
@@ -150,17 +149,17 @@ class PenaltyRepository {
     `;
     try {
       const result = await db.query(text, [cleanId, cleanIc]);
-      return result.rows[0];
+      return result.rows[0] || { fake_return: 0, fake_problematic: 0, fraud_delivery: 0, arbitration: 0, individual_lost: 0 };
     } catch (err) {
-      if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
-        console.warn('[PenaltyRepository] DB unavailable, computing in-memory fallback summary.');
+      if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED') || err.code === '42P01') {
+        console.warn('[PenaltyRepository] DB unavailable or penalty_records table missing, returning default summary.');
         const matching = inMemoryPenalties.filter(r => 
           (r.delivery_dispatcher_id || '').toUpperCase().trim() === cleanId ||
           (r.delivery_dispatcher_id || '').toUpperCase().trim() === cleanIc
         );
         const summary = {
           fake_return: 0, fake_problematic: 0, fraud_delivery: 0,
-          arbitration: 0, individual_lost: 0, logic: 0
+          arbitration: 0, individual_lost: 0
         };
         matching.forEach(r => {
           summary.fake_return += Number(r.fake_return || 0);
@@ -168,11 +167,11 @@ class PenaltyRepository {
           summary.fraud_delivery += Number(r.fraud_delivery || 0);
           summary.arbitration += Number(r.arbitration || 0);
           summary.individual_lost += Number(r.individual_lost || 0);
-          summary.logic += Number(r.logic || 0);
         });
         return summary;
       }
-      throw err;
+      console.error('[PenaltyRepository] Error fetching penalty summary:', err.message);
+      return { fake_return: 0, fake_problematic: 0, fraud_delivery: 0, arbitration: 0, individual_lost: 0 };
     }
   }
 }
