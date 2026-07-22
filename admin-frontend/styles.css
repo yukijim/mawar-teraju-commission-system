@@ -953,10 +953,10 @@ footer {
     box-shadow: var(--shadow-sm) !important;
 }
 .tab-content {
-    display: none !important;
+    display: none;
 }
 .tab-content.active {
-    display: block !important;
+    display: block;
     animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
