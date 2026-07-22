@@ -155,15 +155,15 @@ const Upload = {
             }
             if (t.tab) {
                 if (t.id === tabId) {
-                    t.tab.style.display = 'block';
                     t.tab.classList.add('active');
+                    t.tab.style.display = '';
                     // Force reflow to retrigger CSS fadeIn animation
                     t.tab.style.animation = 'none';
                     void t.tab.offsetHeight;
                     t.tab.style.animation = '';
                 } else {
-                    t.tab.style.display = 'none';
                     t.tab.classList.remove('active');
+                    t.tab.style.display = '';
                 }
             }
         });
