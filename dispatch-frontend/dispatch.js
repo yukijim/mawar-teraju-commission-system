@@ -254,15 +254,35 @@ const Dispatch = {
         this.currentSearchedRecord = record;
 
         // Math calculations for split views
+        const hasPenaltyDetails = !!record.penaltySummary;
+        const pSum = record.penaltySummary || {};
+        
+        const hqPenaltyVal = hasPenaltyDetails ? 
+          (Number(pSum.fake_return || 0) + Number(pSum.fake_problematic || 0) + Number(pSum.fraud_delivery || 0) + Number(pSum.arbitration || 0)) : 
+          Number(record.deduction_hq_penalty || 0);
+          
+        const lostIndividualVal = hasPenaltyDetails ? 
+          Number(pSum.individual_lost || 0) : 
+          Number(record.deduction_lost_individual || 0);
+
         const grossComm = Number(record.total_commission || record.nett_commission || 0);
         const totalDeds = Number(record.deduction_others || 0) +
                           Number(record.deduction_pending_cod || 0) +
-                          Number(record.deduction_hq_penalty || 0) +
+                          hqPenaltyVal +
                           Number(record.deduction_duitnow_penalty || 0) +
                           Number(record.deduction_late_cod_penalty || 0) +
-                          Number(record.deduction_lost_individual || 0) +
+                          lostIndividualVal +
                           Number(record.deduction_lost_parcel_hub || 0);
-        const netComm = Number(record.final_amount_to_pay || record.nett_commission || 0);
+
+        const additions = Number(record.addition_refund_penalty || 0) +
+                          Number(record.addition_pickup_commission || 0) +
+                          Number(record.addition_others || 0) +
+                          Number(record.addition_sorter || 0) +
+                          Number(record.addition_extra_reward || 0);
+
+        const netComm = hasPenaltyDetails ? 
+          Math.max(0, grossComm + additions - totalDeds) : 
+          Number(record.final_amount_to_pay || record.nett_commission || 0);
 
         // Populate elements
         const nameEl = window.DomCache.get('result-rider-name');
@@ -320,6 +340,53 @@ const Dispatch = {
 
             let fieldsHtml = '';
             displayFields.forEach(field => {
+                if (hasPenaltyDetails && field.key === 'deduction_hq_penalty') {
+                    const penalty = record.penaltySummary || {};
+                    const fakeReturn = penalty.fake_return || 0;
+                    const fakeProblematic = penalty.fake_problematic || 0;
+                    const fraudDelivery = penalty.fraud_delivery || 0;
+                    const arbitration = penalty.arbitration || 0;
+
+                    fieldsHtml += `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
+                            <span style="color: var(--text-secondary);">↳ FAKE RETURN</span>
+                            <span style="color: var(--danger); font-weight: 600;">${fakeReturn > 0 ? 'RM ' + fakeReturn.toFixed(2) : '-'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
+                            <span style="color: var(--text-secondary);">↳ FAKE PROBLEMATIC</span>
+                            <span style="color: var(--danger); font-weight: 600;">${fakeProblematic > 0 ? 'RM ' + fakeProblematic.toFixed(2) : '-'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
+                            <span style="color: var(--text-secondary);">↳ FRAUD DELIVERY</span>
+                            <span style="color: var(--danger); font-weight: 600;">${fraudDelivery > 0 ? 'RM ' + fraudDelivery.toFixed(2) : '-'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
+                            <span style="color: var(--text-secondary);">↳ ARBITRATION</span>
+                            <span style="color: var(--danger); font-weight: 600;">${arbitration > 0 ? 'RM ' + arbitration.toFixed(2) : '-'}</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (hasPenaltyDetails && field.key === 'deduction_lost_individual') {
+                    const penalty = record.penaltySummary || {};
+                    const lostInd = penalty.individual_lost || 0;
+                    const dispId = record.dispatcher_id || '';
+                    const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
+                    const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${dispId}` : `https://penalty.reekod.com?dispatcher_id=${dispId}`;
+
+                    fieldsHtml += `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
+                            <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: LOST INDIVIDUAL</span>
+                            <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                                <span>${lostInd > 0 ? 'RM ' + lostInd.toFixed(2) : '-'}</span>
+                                <i data-lucide="external-link" style="width: 12px; height: 12px; color: var(--primary);"></i>
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
                 let val = record[field.key];
                 let displayValue = val;
 

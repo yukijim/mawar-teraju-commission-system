@@ -1,4 +1,5 @@
 const searchRepository = require('../repositories/searchRepository');
+const penaltyRepository = require('../repositories/penaltyRepository');
 const auditLogService = require('./auditLogService');
 const db = require('../config/database');
 const { AppError } = require('../middleware/error');
@@ -177,63 +178,74 @@ class SearchService {
     }
 
     // 6. Format responses to partition Dispatcher Info, Commission, and Deductions
-    const formattedRecords = records.map(r => ({
-      dispatcherInfo: {
-        dispatcherId: r.dispatcher_id,
-        icNumber: r.ic_number,
-        name: r.name
-      },
-      commission: {
-        id: r.id,
-        parcelQty: r.parcel_qty,
-        netParcel: r.net_parcel,
-        excludeExtraWeightYoyi: r.exclude_extra_weight_yoyi,
-        commissionRate: parseFloat(r.commission_rate),
-        diffRateNewJoiner: parseFloat(r.diff_rate_new_joiner),
-        countPickup: r.count_pickup,
-        extraWeightCommission: parseFloat(r.extra_weight_commission),
-        totalCommission: parseFloat(r.total_commission),
-        additionPickupCommission: parseFloat(r.addition_pickup_commission),
-        additionRefundPenalty: parseFloat(r.addition_refund_penalty),
-        additionSorter: parseFloat(r.addition_sorter),
-        additionOthers: parseFloat(r.addition_others),
-        additionExtraReward: parseFloat(r.addition_extra_reward || 0),
-        statusPayment: r.status_payment,
-        datePayment: r.date_payment,
-        remark: r.remark
-      },
-      deduction: {
-        id: r.deduction_record_id,
-        deductionOthers: parseFloat(r.deduction_others),
-        deductionPendingCod: parseFloat(r.deduction_pending_cod),
-        deductionHqPenalty: parseFloat(r.deduction_hq_penalty),
-        deductionDuitnowPenalty: parseFloat(r.deduction_duitnow_penalty),
-        deductionLateCodPenalty: parseFloat(r.deduction_late_cod_penalty),
-        deductionLostIndividual: parseFloat(r.deduction_lost_individual),
-        deductionLostParcelHub: parseFloat(r.deduction_lost_parcel_hub),
-        lostPicSigned: parseFloat(r.lost_pic_signed || 0),
-        lostRate: parseFloat(r.lost_rate || 0),
-        totalAllLostShared: parseFloat(r.total_all_lost_shared || 0),
-        lostParcelPicSigned: parseFloat(r.lost_parcel_pic_signed || 0),
-        arbiIndividual: parseFloat(r.arbi_individual || 0),
-        rcgenPenalty: parseFloat(r.rcgen_penalty || 0),
-        qcPenalty: parseFloat(r.qc_penalty || 0),
-        totalHqPenaltyDetail: parseFloat(r.total_hq_penalty_detail || 0)
-      },
-      netAmount: {
-        nettCommission: parseFloat(r.nett_commission),
-        finalAmountToPay: parseFloat(r.final_amount_to_pay)
-      },
-      batchInfo: {
-        batchId: r.batch_id,
-        batchName: r.batch_name,
-        month: r.month,
-        year: r.year,
-        batchStatus: r.batch_status,
-        isActive: r.is_active,
-        batchVersion: r.version,
-        publishedDate: r.published_at
-      }
+    const formattedRecords = await Promise.all(records.map(async (r) => {
+      const pSum = await penaltyRepository.getPenaltySummary(r.dispatcher_id);
+      return {
+        dispatcherInfo: {
+          dispatcherId: r.dispatcher_id,
+          icNumber: r.ic_number,
+          name: r.name
+        },
+        commission: {
+          id: r.id,
+          parcelQty: r.parcel_qty,
+          netParcel: r.net_parcel,
+          excludeExtraWeightYoyi: r.exclude_extra_weight_yoyi,
+          commissionRate: parseFloat(r.commission_rate),
+          diffRateNewJoiner: parseFloat(r.diff_rate_new_joiner),
+          countPickup: r.count_pickup,
+          extraWeightCommission: parseFloat(r.extra_weight_commission),
+          totalCommission: parseFloat(r.total_commission),
+          additionPickupCommission: parseFloat(r.addition_pickup_commission),
+          additionRefundPenalty: parseFloat(r.addition_refund_penalty),
+          additionSorter: parseFloat(r.addition_sorter),
+          additionOthers: parseFloat(r.addition_others),
+          additionExtraReward: parseFloat(r.addition_extra_reward || 0),
+          statusPayment: r.status_payment,
+          datePayment: r.date_payment,
+          remark: r.remark
+        },
+        deduction: {
+          id: r.deduction_record_id,
+          deductionOthers: parseFloat(r.deduction_others),
+          deductionPendingCod: parseFloat(r.deduction_pending_cod),
+          deductionHqPenalty: parseFloat(r.deduction_hq_penalty),
+          deductionDuitnowPenalty: parseFloat(r.deduction_duitnow_penalty),
+          deductionLateCodPenalty: parseFloat(r.deduction_late_cod_penalty),
+          deductionLostIndividual: parseFloat(r.deduction_lost_individual),
+          deductionLostParcelHub: parseFloat(r.deduction_lost_parcel_hub),
+          lostPicSigned: parseFloat(r.lost_pic_signed || 0),
+          lostRate: parseFloat(r.lost_rate || 0),
+          totalAllLostShared: parseFloat(r.total_all_lost_shared || 0),
+          lostParcelPicSigned: parseFloat(r.lost_parcel_pic_signed || 0),
+          arbiIndividual: parseFloat(r.arbi_individual || 0),
+          rcgenPenalty: parseFloat(r.rcgen_penalty || 0),
+          qcPenalty: parseFloat(r.qc_penalty || 0),
+          totalHqPenaltyDetail: parseFloat(r.total_hq_penalty_detail || 0)
+        },
+        penaltySummary: {
+          fakeReturn: parseFloat(pSum.fake_return),
+          fakeProblematic: parseFloat(pSum.fake_problematic),
+          fraudDelivery: parseFloat(pSum.fraud_delivery),
+          arbitration: parseFloat(pSum.arbitration),
+          individualLost: parseFloat(pSum.individual_lost),
+          logic: parseFloat(pSum.logic)
+        },
+        netAmount: {
+          nettCommission: parseFloat(r.nett_commission),
+          finalAmountToPay: parseFloat(r.final_amount_to_pay)
+        },
+        batchInfo: {
+          batchId: r.batch_id,
+          batchName: r.batch_name,
+          month: r.month,
+          year: r.year,
+          batchStatus: r.batch_status,
+          isActive: r.is_active,
+          batchVersion: r.version,
+          publishedDate: r.published_at
+        }
+      };
     }));
 
     return {

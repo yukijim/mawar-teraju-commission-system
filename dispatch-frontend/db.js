@@ -1044,6 +1044,7 @@ class PostgresRestRepository extends CommissionRepository {
                 const ded = item.deduction || {};
                 const net = item.netAmount || {};
                 const batch = item.batchInfo || {};
+                const penalty = item.penaltySummary || {};
 
                 return {
                     commission_record_id: comm.id || '',
@@ -1089,7 +1090,16 @@ class PostgresRestRepository extends CommissionRepository {
                     arbi_individual: ded.arbiIndividual || 0,
                     rcgen_penalty: ded.rcgenPenalty || 0,
                     qc_penalty: ded.qcPenalty || 0,
-                    total_hq_penalty_detail: ded.totalHqPenaltyDetail || 0
+                    total_hq_penalty_detail: ded.totalHqPenaltyDetail || 0,
+
+                    penaltySummary: {
+                        fake_return: penalty.fakeReturn || 0,
+                        fake_problematic: penalty.fakeProblematic || 0,
+                        fraud_delivery: penalty.fraudDelivery || 0,
+                        arbitration: penalty.arbitration || 0,
+                        individual_lost: penalty.individualLost || 0,
+                        logic: penalty.logic || 0
+                    }
                 };
             });
         } catch (error) {

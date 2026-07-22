@@ -10,6 +10,7 @@ const Upload = {
     // Temp storage for batch creation
     tempCommissionFile: null,
     tempDeductionFile: null,
+    tempPenaltyFile: null,
     tempCommissionRecords: [],
     tempDeductionRecords: [],
 
@@ -102,20 +103,38 @@ const Upload = {
     switchTab(tabId) {
         const listBtn = document.getElementById('tab-batch-list-btn');
         const createBtn = document.getElementById('tab-create-batch-btn');
+        const penaltyBtn = document.getElementById('tab-upload-penalty-btn');
+        
         const listTab = document.getElementById('batch-list-tab');
         const createTab = document.getElementById('create-batch-tab');
+        const penaltyTab = document.getElementById('upload-penalty-tab');
 
         if (tabId === 'batch-list') {
             if (listBtn) listBtn.classList.add('active');
             if (createBtn) createBtn.classList.remove('active');
+            if (penaltyBtn) penaltyBtn.classList.remove('active');
+            
             if (listTab) listTab.style.display = 'block';
             if (createTab) createTab.style.display = 'none';
+            if (penaltyTab) penaltyTab.style.display = 'none';
             this.resetBatchForm();
-        } else {
+        } else if (tabId === 'create-batch') {
             if (listBtn) listBtn.classList.remove('active');
             if (createBtn) createBtn.classList.add('active');
+            if (penaltyBtn) penaltyBtn.classList.remove('active');
+            
             if (listTab) listTab.style.display = 'none';
             if (createTab) createTab.style.display = 'block';
+            if (penaltyTab) penaltyTab.style.display = 'none';
+        } else if (tabId === 'upload-penalty') {
+            if (listBtn) listBtn.classList.remove('active');
+            if (createBtn) createBtn.classList.remove('active');
+            if (penaltyBtn) penaltyBtn.classList.add('active');
+            
+            if (listTab) listTab.style.display = 'none';
+            if (createTab) createTab.style.display = 'none';
+            if (penaltyTab) penaltyTab.style.display = 'block';
+            this.clearPenaltyFile();
         }
     },
 
@@ -533,6 +552,107 @@ const Upload = {
             window.UI.showToast('Simulasi Berjaya', 'Data contoh Julai 2026 sedia diterbitkan.', 'success');
         } catch (error) {
             window.ErrorHandler.handle(error, 'Simulation Batch');
+        }
+    },
+
+    handlePenaltyFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'xlsx' && ext !== 'xls') {
+            window.UI.showToast('Format Fail Salah', 'Sila muat naik fail Excel (.xlsx atau .xls) sahaja.', 'danger');
+            this.clearPenaltyFile();
+            return;
+        }
+
+        this.tempPenaltyFile = file;
+
+        document.getElementById('penalty-file-name').textContent = file.name;
+        document.getElementById('penalty-file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+        document.getElementById('penalty-upload-zone').style.display = 'none';
+        document.getElementById('penalty-file-details').style.display = 'flex';
+
+        const btnUpload = document.getElementById('btn-upload-penalty');
+        if (btnUpload) btnUpload.disabled = false;
+
+        window.UI.showToast('Fail Dipilih', `Fail Excel denda sedia untuk dimuat naik.`, 'success');
+    },
+
+    clearPenaltyFile() {
+        this.tempPenaltyFile = null;
+        
+        const input = document.getElementById('penalty-file-input');
+        if (input) input.value = '';
+        
+        const uploadZone = document.getElementById('penalty-upload-zone');
+        if (uploadZone) uploadZone.style.display = 'flex';
+        
+        const fileDetails = document.getElementById('penalty-file-details');
+        if (fileDetails) fileDetails.style.display = 'none';
+
+        const btnUpload = document.getElementById('btn-upload-penalty');
+        if (btnUpload) btnUpload.disabled = true;
+
+        const progressContainer = document.getElementById('penalty-progress-container');
+        if (progressContainer) progressContainer.style.display = 'none';
+    },
+
+    async uploadPenalty() {
+        if (!this.tempPenaltyFile) {
+            window.UI.showToast('Fail Tidak Lengkap', 'Sila pilih fail denda sebelum memuat naik.', 'danger');
+            return;
+        }
+
+        const btnUpload = document.getElementById('btn-upload-penalty');
+        const progressContainer = document.getElementById('penalty-progress-container');
+        const progressBarFill = document.getElementById('penalty-progress-bar-fill');
+        const progressPercent = document.getElementById('penalty-progress-percent');
+
+        if (btnUpload) btnUpload.disabled = true;
+        if (progressContainer) progressContainer.style.display = 'block';
+        if (progressBarFill) progressBarFill.style.width = '20%';
+        if (progressPercent) progressPercent.textContent = '20%';
+
+        try {
+            window.UI.showToast('Memuat Naik', 'Menghantar fail Excel denda ke pelayan...', 'info');
+
+            const formData = new FormData();
+            formData.append('file', this.tempPenaltyFile);
+
+            if (progressBarFill) progressBarFill.style.width = '50%';
+            if (progressPercent) progressPercent.textContent = '50%';
+
+            const res = await window.apiFetch('/api/v1/penalty/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (progressBarFill) progressBarFill.style.width = '80%';
+            if (progressPercent) progressPercent.textContent = '80%';
+
+            if (!res.ok) {
+                const errResult = await res.json().catch(() => ({}));
+                const errMsg = errResult.message || 'Gagal memuat naik fail Excel denda.';
+                throw new Error(errMsg);
+            }
+
+            const result = await res.json();
+            
+            if (progressBarFill) progressBarFill.style.width = '100%';
+            if (progressPercent) progressPercent.textContent = '100%';
+
+            window.UI.showToast(
+                'Import Berjaya',
+                `Fail denda berjaya diimport. (${result.data?.summary?.recordsImported || 0} rekod)`,
+                'success'
+            );
+
+            this.clearPenaltyFile();
+        } catch (error) {
+            if (progressContainer) progressContainer.style.display = 'none';
+            if (btnUpload) btnUpload.disabled = false;
+            window.ErrorHandler.handle(error, 'Upload Penalty');
         }
     }
 };

@@ -73,10 +73,24 @@ erDiagram
         number total_hq_penalty_detail "Jumlah denda HQ"
     }
 
+    PENALTY_RECORDS {
+        uuid id PK "gen_random_uuid()"
+        string delivery_dispatcher_id FK "Rujukan ke DISPATCHER_MAPPINGS.dispatcher_id"
+        string delivery_dispatcher_name "Nama dispatcher"
+        string awb "Nombor AWB, unik"
+        number fake_return "Potongan denda fake return"
+        number fake_problematic "Potongan denda fake problematic"
+        number fraud_delivery "Potongan denda fraud delivery"
+        number arbitration "Potongan denda arbitration"
+        number individual_lost "Potongan denda lost individual"
+        number logic "Potongan denda logic"
+    }
+
     BATCHES ||--o{ COMMISSION_RECORDS : "contains"
     BATCHES ||--o{ DEDUCTION_RECORDS : "contains"
     DISPATCHER_MAPPINGS ||--o{ COMMISSION_RECORDS : "maps"
     DISPATCHER_MAPPINGS ||--o{ DEDUCTION_RECORDS : "maps"
+    DISPATCHER_MAPPINGS ||--o{ PENALTY_RECORDS : "maps"
 ```
 
 ---

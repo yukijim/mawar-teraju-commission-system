@@ -16,6 +16,7 @@ const uploadRouter = require('./routes/upload');
 const searchRouter = require('./routes/search');
 const reportRouter = require('./routes/report');
 const dashboardRouter = require('./routes/dashboard');
+const penaltyRouter = require('./routes/penalty');
 
 const app = express();
 
@@ -39,12 +40,15 @@ app.use(helmet({
 const allowedOrigins = [
   'https://semak.reekod.com',
   'https://admin.reekod.com',
+  'https://penalty.reekod.com',
   'http://localhost:5000',
   'http://localhost:9999',
   'http://127.0.0.1:9999',
   'http://localhost:3000',
   'http://localhost:8080',
-  'http://127.0.0.1:8080'
+  'http://127.0.0.1:8080',
+  'http://localhost:4000',
+  'http://127.0.0.1:4000'
 ];
 
 app.use(cors({
@@ -84,6 +88,7 @@ app.use('/api/admin', authenticate(), authorize('ADMIN'), adminRouter);
 app.use('/api/dispatch', authenticate(), authorize('DISPATCH'), dispatchRouter);
 app.use('/api/v1/upload', uploadRouter);
 app.use('/api/v1/search', searchRouter);
+app.use('/api/v1/penalty', penaltyRouter);
 app.use('/api/v1/reports', reportRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/admin', authenticate(), authorize('ADMIN'), adminRouter);

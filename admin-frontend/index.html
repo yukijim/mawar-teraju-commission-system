@@ -109,12 +109,15 @@
                 <!-- Left: Batch Management & Upload Setup -->
                 <div>
                     <!-- Tab Switcher -->
-                    <div class="tabs-container" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <div class="tabs-container" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                         <button class="btn btn-secondary tab-btn active" id="tab-batch-list-btn" onclick="Upload.switchTab('batch-list')">
                             <i data-lucide="list"></i> Senarai Batch
                         </button>
                         <button class="btn btn-secondary tab-btn" id="tab-create-batch-btn" onclick="Upload.switchTab('create-batch')">
                             <i data-lucide="plus-circle"></i> Cipta Batch Baharu
+                        </button>
+                        <button class="btn btn-secondary tab-btn" id="tab-upload-penalty-btn" onclick="Upload.switchTab('upload-penalty')">
+                            <i data-lucide="alert-circle"></i> Muat Naik Denda (Penalty)
                         </button>
                     </div>
 
@@ -251,7 +254,61 @@
                                 <button class="btn btn-secondary btn-sm" onclick="Upload.runSimulationBatch()" style="padding: 0.3rem 0.5rem; font-size: 0.7rem;">
                                     <i data-lucide="beaker" style="width: 12px; height: 12px;"></i> Simulasi Batch Julai 2026
                                 </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: Upload Penalty View -->
+                    <div id="upload-penalty-tab" class="tab-content card" style="margin-bottom: 2rem; display: none;">
+                        <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="upload-cloud" style="color: var(--primary);"></i> Muat Naik Fail Denda (Penalty)
+                        </h3>
+
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                            Muat naik butiran denda AWB untuk dispatcher. Sila pastikan fail Excel mengandungi sheet 'Penalty'.
+                        </p>
+
+                        <!-- Penalty File Upload Dropzone -->
+                        <div class="file-uploader-container" style="margin-bottom: 1.5rem;">
+                            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                Fail Laporan Denda (Penalty Report) *
+                            </label>
+                            <div class="upload-zone compact" id="penalty-upload-zone" onclick="document.getElementById('penalty-file-input').click()" style="padding: 2rem; border-style: dashed; text-align: center; cursor: pointer; border: 2px dashed var(--border-color); border-radius: var(--radius-md); transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <input type="file" id="penalty-file-input" style="display: none;" accept=".xlsx, .xls" onchange="Upload.handlePenaltyFileSelect(event)">
+                                <div class="upload-icon" style="font-size: 2.25rem; color: var(--primary);"><i data-lucide="alert-octagon"></i></div>
+                                <h4 style="font-size: 1rem; margin-bottom: 0.25rem;">Klik atau Tarik Laporan Denda</h4>
+                                <p style="font-size: 0.75rem; color: var(--text-muted);">(.xlsx, .xls - Data denda AWB dispatcher)</p>
                             </div>
+                            <div id="penalty-file-details" class="file-details-card" style="display: none; padding: 0.75rem 1rem; margin-top: 0.5rem; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                                <div class="file-info" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div class="file-info-icon"><i data-lucide="check-circle" style="color: var(--success);"></i></div>
+                                    <div>
+                                        <div class="file-name" id="penalty-file-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">-</div>
+                                        <div class="file-size" id="penalty-file-size" style="font-size: 0.75rem; color: var(--text-muted);">-</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary btn-sm" onclick="Upload.clearPenaltyFile()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <i data-lucide="x"></i> Batal
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div id="penalty-progress-container" class="progress-container" style="margin-top: 1rem; margin-bottom: 1rem; display: none;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
+                                <span>Mengimport Rekod Denda...</span>
+                                <span id="penalty-progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar" id="penalty-progress-bar" style="height: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; position: relative;">
+                                <div id="penalty-progress-bar-fill" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.2s ease;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
+                            <button class="btn btn-secondary" onclick="Upload.clearPenaltyFile()">Kosongkan</button>
+                            <button class="btn btn-primary" id="btn-upload-penalty" onclick="Upload.uploadPenalty()" disabled>
+                                Muat Naik Denda <i data-lucide="upload"></i>
+                            </button>
                         </div>
                     </div>
                 </div>

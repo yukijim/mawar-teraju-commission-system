@@ -112,3 +112,24 @@ Menyimpan semua perincian potongan akhir dari sheet `Deduction`.
 | `deduction_late_cod_penalty`| Number | Potongan denda COD lewat | `0.00` |
 | `deduction_lost_individual` | Number | Potongan lost parcel individu | `0.00` |
 | `deduction_lost_parcel_hub` | Number | Potongan lost parcel hub | `0.00` |
+
+---
+
+### E. Table: `penalty_records` (PostgreSQL / Backend storage)
+Menyimpan semua perincian denda AWB dari sheet `Penalty`.
+*   **Key Path**: `id` (UUID)
+*   **Index**:
+    *   `delivery_dispatcher_id` (Unique: `false`)
+
+| Nama Medan (Property) | Jenis Data | Penerangan | Contoh Nilai |
+| :--- | :--- | :--- | :--- |
+| `id` | String (UUID) | ID Kunci Utama (PK) | `"a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"` |
+| `delivery_dispatcher_id` | String | Rujukan ke `dispatcher_mappings.dispatcher_id` (FK) | `"NSN3052004"` |
+| `delivery_dispatcher_name`| String | Nama penuh dispatcher | `"MOHAMAD AZLAN BIN JAAPAR"` |
+| `awb` | String | Nombor AWB parcel (Unik) | `"MY123456789"` |
+| `fake_return` | Number | Denda fake return | `5.00` |
+| `fake_problematic` | Number | Denda fake problematic | `0.00` |
+| `fraud_delivery` | Number | Denda fraud delivery | `0.00` |
+| `arbitration` | Number | Denda arbitration | `10.00` |
+| `individual_lost` | Number | Denda lost individual | `0.00` |
+| `logic` | Number | Denda logic | `0.00` |
