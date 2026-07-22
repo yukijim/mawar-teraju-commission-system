@@ -214,19 +214,24 @@ const Upload = {
         
         const commInput = document.getElementById('comm-file-input');
         if (commInput) commInput.value = '';
-        document.getElementById('comm-upload-zone').style.display = 'flex';
-        document.getElementById('comm-file-details').style.display = 'none';
+        const commZone = document.getElementById('comm-upload-zone');
+        if (commZone) commZone.style.display = 'flex';
+        const commDetails = document.getElementById('comm-file-details');
+        if (commDetails) commDetails.style.display = 'none';
 
         const dedInput = document.getElementById('ded-file-input');
         if (dedInput) dedInput.value = '';
-        document.getElementById('ded-upload-zone').style.display = 'flex';
-        document.getElementById('ded-file-details').style.display = 'none';
+        const dedZone = document.getElementById('ded-upload-zone');
+        if (dedZone) dedZone.style.display = 'flex';
+        const dedDetails = document.getElementById('ded-file-details');
+        if (dedDetails) dedDetails.style.display = 'none';
 
         this.updatePublishButtonState();
     },
 
     updatePublishButtonState() {
-        const nameVal = document.getElementById('batch-name-input').value.trim();
+        const nameInput = document.getElementById('batch-name-input');
+        const nameVal = nameInput ? nameInput.value.trim() : '';
         const hasComm = !!this.tempCommissionFile;
         const hasDed = !!this.tempDeductionFile;
         
@@ -237,9 +242,14 @@ const Upload = {
     },
 
     resetBatchForm() {
-        document.getElementById('batch-name-input').value = '';
-        document.getElementById('edit-batch-id').value = '';
-        document.getElementById('create-batch-title').innerHTML = `<i data-lucide="upload-cloud" style="color: var(--primary);"></i> Muat Naik Fail Batch Baharu`;
+        const batchNameInput = document.getElementById('batch-name-input');
+        if (batchNameInput) batchNameInput.value = '';
+        
+        const editBatchId = document.getElementById('edit-batch-id');
+        if (editBatchId) editBatchId.value = '';
+        
+        const createBatchTitle = document.getElementById('create-batch-title');
+        if (createBatchTitle) createBatchTitle.innerHTML = `<i data-lucide="upload-cloud" style="color: var(--primary);"></i> Muat Naik Fail Batch Baharu`;
         
         this.clearFile('commission');
         this.clearFile('deduction');
