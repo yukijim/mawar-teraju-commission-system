@@ -84,6 +84,38 @@ const Upload = {
             });
         }
 
+        // 4. Penalty Upload Zone
+        const penaltyZone = window.DomCache.get('penalty-upload-zone');
+        if (penaltyZone) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                penaltyZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                penaltyZone.addEventListener(eventName, () => {
+                    penaltyZone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                penaltyZone.addEventListener(eventName, () => {
+                    penaltyZone.classList.remove('dragover');
+                }, false);
+            });
+
+            penaltyZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    const mockEvent = { target: { files: [files[0]] } };
+                    this.handlePenaltyFileSelect(mockEvent);
+                }
+            });
+        }
+
         // Add change listener to batch name input to update publish button dynamically
         const nameInput = window.DomCache.get('batch-name-input');
         if (nameInput) {
@@ -101,6 +133,7 @@ const Upload = {
      * Switches dashboard views between batch listing and new batch form.
      */
     switchTab(tabId) {
+        console.log('[Upload.switchTab] Called with tabId:', tabId);
         const listBtn = document.getElementById('tab-batch-list-btn');
         const createBtn = document.getElementById('tab-create-batch-btn');
         const penaltyBtn = document.getElementById('tab-upload-penalty-btn');
