@@ -47,7 +47,7 @@ class PenaltyRepository {
         r.fraud_delivery || 0,
         r.arbitration || 0,
         r.individual_lost || 0,
-        r.logic || 0,
+        r.logic || '',
         r.uploaded_by
       );
 

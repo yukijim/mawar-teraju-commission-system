@@ -210,7 +210,7 @@ class PenaltyService {
           fraud_delivery: parseNumericValue(row[headersMap.fraud_delivery]),
           arbitration: parseNumericValue(row[headersMap.arbitration]),
           individual_lost: parseNumericValue(row[headersMap.individual_lost]),
-          logic: parseNumericValue(row[headersMap.logic]),
+          logic: row[headersMap.logic] ? row[headersMap.logic].toString().trim() : '',
           uploaded_by: validUploaderId
         });
       });
