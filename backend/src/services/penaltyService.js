@@ -60,15 +60,15 @@ const getSheetRows = (sheet) => {
  */
 class PenaltyService {
   PENALTY_MAPPING_RULES = {
-    delivery_dispatcher_id: ['delivery dispatcher id', 'dispatcher id'],
-    delivery_dispatcher_name: ['delivery dispatcher name', 'dispatcher name'],
-    awb: ['awb', 'awb number', 'awb no', 'awb no.'],
-    fake_return: ['fake return'],
-    fake_problematic: ['fake problematic'],
-    fraud_delivery: ['fraud delivery'],
-    arbitration: ['arbitration'],
-    individual_lost: ['individual lost', 'lost individual'],
-    logic: ['logic']
+    delivery_dispatcher_id: ['delivery dispatcher id', 'dispatcher id', 'delivery dispatcher', 'id dispatcher', 'dispatcher_id', 'delivery_dispatcher_id'],
+    delivery_dispatcher_name: ['delivery dispatcher name', 'dispatcher name', 'nama dispatcher', 'name', 'dispatcher_name', 'delivery_dispatcher_name'],
+    awb: ['awb', 'awb number', 'awb no', 'awb no.', 'no awb', 'no. awb', 'awb_number', 'awb_no'],
+    fake_return: ['fake return', 'return fake', 'fake_return'],
+    fake_problematic: ['fake problematic', 'problematic fake', 'fake_problematic'],
+    fraud_delivery: ['fraud delivery', 'delivery fraud', 'fraud_delivery'],
+    arbitration: ['arbitration', 'arbitrasi'],
+    individual_lost: ['individual lost', 'lost individual', 'individual_lost'],
+    logic: ['logic', 'logik']
   };
 
   /**
@@ -163,6 +163,16 @@ class PenaltyService {
     try {
       if (client) await client.query('BEGIN');
 
+      // Resolve valid UUID for uploader_by
+      let validUploaderId = uploaderId;
+      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(uploaderId || '');
+      if (!isUuid && client) {
+        const userRes = await client.query("SELECT id FROM users WHERE role = 'ADMIN' ORDER BY created_at ASC LIMIT 1");
+        if (userRes.rows.length > 0) {
+          validUploaderId = userRes.rows[0].id;
+        }
+      }
+
       const penaltyRecords = [];
       const firstRow = rows[0];
       const headersMap = {};
@@ -200,8 +210,8 @@ class PenaltyService {
           fraud_delivery: parseNumericValue(row[headersMap.fraud_delivery]),
           arbitration: parseNumericValue(row[headersMap.arbitration]),
           individual_lost: parseNumericValue(row[headersMap.individual_lost]),
-          logic: row[headersMap.logic] ? row[headersMap.logic].toString().trim() : '',
-          uploaded_by: uploaderId
+          logic: parseNumericValue(row[headersMap.logic]),
+          uploaded_by: validUploaderId
         });
       });
 
