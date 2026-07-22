@@ -80,9 +80,9 @@ const App = {
                 const fraudDelivery = parseFloat(r.fraud_delivery || 0);
                 const arbitration = parseFloat(r.arbitration || 0);
                 const individualLost = parseFloat(r.individual_lost || 0);
-                const logic = parseFloat(r.logic || 0);
+                const logicText = (r.logic && r.logic.toString().trim() !== '') ? r.logic.toString().trim() : '-';
 
-                const rowTotal = fakeReturn + fakeProblematic + fraudDelivery + arbitration + individualLost + logic;
+                const rowTotal = fakeReturn + fakeProblematic + fraudDelivery + arbitration + individualLost;
                 grandTotal += rowTotal;
 
                 const tr = document.createElement('tr');
@@ -93,7 +93,7 @@ const App = {
                     <td style="color: ${fraudDelivery > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fraudDelivery > 0 ? 'RM ' + fraudDelivery.toFixed(2) : '-'}</td>
                     <td style="color: ${arbitration > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${arbitration > 0 ? 'RM ' + arbitration.toFixed(2) : '-'}</td>
                     <td style="color: ${individualLost > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${individualLost > 0 ? 'RM ' + individualLost.toFixed(2) : '-'}</td>
-                    <td style="color: ${logic > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${logic > 0 ? 'RM ' + logic.toFixed(2) : '-'}</td>
+                    <td style="color: ${logicText !== '-' ? 'var(--text-primary)' : 'var(--text-muted)'}; font-weight: 500;">${logicText}</td>
                 `;
                 tableBody.appendChild(tr);
             });
