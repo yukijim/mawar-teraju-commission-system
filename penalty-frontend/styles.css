@@ -88,7 +88,7 @@ header {
 }
 
 .logo-text span {
-    color: var(--primary);
+    color: inherit;
 }
 
 main {
