@@ -202,6 +202,21 @@ footer {
     display: block;
 }
 
+/* Financial Summary 3-Column Equal Grid */
+.summary-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    align-items: stretch;
+}
+
+@media (max-width: 640px) {
+    .summary-metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
 /* Glassmorphism Card Style */
 .card {
     background: var(--bg-card);
