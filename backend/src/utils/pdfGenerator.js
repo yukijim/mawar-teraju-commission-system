@@ -55,9 +55,19 @@ class SimplePdfGenerator {
    * Builds the PDF page objects and cross-reference table (xref)
    */
   static buildPdf({ title, themeColor, record, searcherUsername, ipAddress, type }) {
-    // Generate unique reference number matching the specifications
     const refNum = `REF-${record.batch_id.substring(0, 8).toUpperCase()}-${crypto.createHash('sha256').update(record.ic_number).digest('hex').substring(0, 8).toUpperCase()}`;
-    const publishDate = record.published_at ? new Date(record.published_at).toLocaleDateString() : 'N/A';
+
+    const formatDateDDMMYYYY = (dateInput) => {
+      if (!dateInput) return 'N/A';
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return 'N/A';
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+
+    const publishDate = formatDateDDMMYYYY(record.published_at);
     const genTime = new Date().toLocaleString();
 
     // Load logo image
@@ -245,12 +255,7 @@ class SimplePdfGenerator {
       currentStream += `BT\n/F2 8.5 Tf\n307 225 Td\n(TOTAL NET INCOME :) Tj\nET\n`;
       currentStream += `BT\n/F2 8.5 Tf\n465 225 Td\n(${formatCurrency(totalNetPay).toUpperCase()}) Tj\nET\n`;
 
-      // Final signature/meta footer
-      const companyConfig = require('../config/company');
-      currentStream += `0.5 w\n40 100 m\n555 100 l\nS\n`;
-      currentStream += `BT\n/F1 8.5 Tf\n40 85 Td\n(PENJANA: ${searcherUsername.toUpperCase()} | IP ADDRESS: ${ipAddress} | TARIKH CETAK: ${genTime}) Tj\nET\n`;
-      currentStream += `BT\n/F1 8.5 Tf\n420 85 Td\n(${companyConfig.portalName.toUpperCase()} - HALAMAN 1 / 1) Tj\nET\n`;
-
+      // Remove meta footer lines per user specification
       pageStreams.push(currentStream);
 
     } else {
