@@ -52,31 +52,31 @@
         
         <!-- SECTION 4: Dispatch Search Screen (Active View) -->
         <div id="dispatch-search-view" class="view active fade-in">
-            <div class="view-header">
+            <div class="view-header" style="text-align: center; margin-bottom: 2rem;">
                 <div class="view-title">
-                    <h2>Semakan Komisen Dispatch</h2>
-                    <p>Sila masukkan No. IC, Passport, atau Dispatcher ID anda untuk carian komisen pantas.</p>
+                    <h2 style="font-family: var(--font-heading); font-weight: 800; font-size: 2rem; color: var(--primary);">Semakan Rekod Pendapatan</h2>
+                    <p style="color: var(--text-secondary); margin-top: 0.25rem;">Sila masukkan No. Kad Pengenalan atau No. Pasport untuk semakan rekod anda.</p>
                 </div>
             </div>
 
             <!-- Search Form Card -->
             <div class="card" style="max-width: 600px; margin: 1rem auto 2rem auto; text-align: center;">
-                <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 80px; width: auto; object-fit: contain; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 1rem auto 0.75rem auto; display: block;">
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">MAWAR TERAJU Commission Management System</p>
+                <img src="assets/images/branding/logo.png" alt="REEKOD Logo" style="height: 90px; width: auto; object-fit: contain; background: white; padding: 6px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.15); margin: 1rem auto 0.75rem auto; display: block;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">SISTEM REKOD PEMBAYARAN VENDOR MAWAR TERAJU</p>
                 <form id="dispatch-search-form" onsubmit="App.handleSearch(event)" style="text-align: left;">
                     <div class="form-group">
-                        <label for="dispatch-ic-input">No. Kad Pengenalan / No. Passport / Dispatcher ID</label>
+                        <label for="dispatch-ic-input">No. Kad Pengenalan atau No. Pasport</label>
                         <div class="input-wrapper">
-                            <input type="text" id="dispatch-ic-input" class="form-control" placeholder="Cth: 900101141234 / E7431725 / PJS3524399" required style="font-size: 1.25rem; padding-left: 2.75rem;">
+                            <input type="text" id="dispatch-ic-input" class="form-control" placeholder="900101-14-1234" required style="font-size: 1.25rem; padding-left: 2.75rem;">
                             <span class="input-icon" style="font-size: 1.25rem;">
                                 <i data-lucide="credit-card"></i>
                             </span>
                         </div>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem;">Format diterima: No. IC (900101141234), No. Passport (E7431725), atau Dispatcher ID (PJS3524399)</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem;">Format diterima: No. IC (contoh: 900101-14-1234) atau No. Pasport</p>
                     </div>
                     
                     <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 0.9rem;">
-                        Semak Komisen <i data-lucide="search"></i>
+                        Jom Semak <i data-lucide="search"></i>
                     </button>
                 </form>
             </div>
@@ -162,10 +162,10 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Script References -->
-    <script src="db.js?v=3aad193"></script>
-    <script src="ui.js?v=3aad193"></script>
-    <script src="router.js?v=3aad193"></script>
-    <script src="dispatch.js?v=3aad193"></script>
-    <script src="app.js?v=3aad193"></script>
+    <script src="db.js?v=31b5b30"></script>
+    <script src="ui.js?v=31b5b30"></script>
+    <script src="router.js?v=31b5b30"></script>
+    <script src="dispatch.js?v=31b5b30"></script>
+    <script src="app.js?v=31b5b30"></script>
 </body>
 </html>

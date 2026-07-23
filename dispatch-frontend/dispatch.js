@@ -73,13 +73,12 @@ const Dispatch = {
         const cleanQuery = rawIc.trim().toUpperCase().replace(/[\s-]/g, '');
 
         const isIc = /^\d{12}$/.test(cleanQuery);
-        const isPassport = /^[A-Z]\d{7}$/.test(cleanQuery);
-        const isDispatcherId = /^[A-Z]{3}\d{3,7}$/.test(cleanQuery);
+        const isPassport = /^[A-Z0-9]{6,12}$/.test(cleanQuery) && !/^\d+$/.test(cleanQuery) && !/^PJS\d+$/i.test(cleanQuery);
 
-        if (!isIc && !isPassport && !isDispatcherId) {
+        if (!isIc && !isPassport) {
             window.UI.showToast(
                 'Format Input Salah', 
-                'Format input tidak sah. Sila masukkan No. IC (12 digit), No. Passport (1 huruf + 7 digit), atau Dispatcher ID (cth: PJS3524399).', 
+                'Format input tidak sah. Sila masukkan No. Kad Pengenalan (12 digit) atau No. Pasport yang sah.', 
                 'warning'
             );
             return;
