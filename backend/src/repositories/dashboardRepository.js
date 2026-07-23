@@ -20,11 +20,15 @@ class DashboardRepository {
       )
     `;
     const result = await db.query(text);
+    const penaltyRes = await db.query('SELECT COUNT(*) as count FROM penalty_records').catch(() => ({ rows: [{ count: 0 }] }));
+    const totalPenaltyRecords = parseInt(penaltyRes.rows[0]?.count || 0, 10);
+
     return {
       totalPayouts: parseFloat(result.rows[0].total_payouts),
       avgCommission: parseFloat(result.rows[0].avg_commission),
       totalDispatchers: parseInt(result.rows[0].total_dispatchers, 10),
-      totalDeductions: parseFloat(result.rows[0].total_deductions)
+      totalDeductions: parseFloat(result.rows[0].total_deductions),
+      totalPenaltyRecords
     };
   }
 

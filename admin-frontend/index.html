@@ -97,6 +97,13 @@
                     </div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);"><i data-lucide="alert-circle"></i></div>
+                    <div class="stat-info">
+                        <h4>Jumlah Rekod Denda</h4>
+                        <p id="stats-total-penalty-records">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-icon" style="color: var(--accent); background: rgba(245, 158, 11, 0.1);"><i data-lucide="history"></i></div>
                     <div class="stat-info">
                         <h4>Kemas Kini Terakhir</h4>
@@ -310,6 +317,34 @@
                             <button class="btn btn-primary" id="btn-upload-penalty" onclick="Upload.uploadPenalty()" disabled>
                                 Muat Naik Denda <i data-lucide="upload"></i>
                             </button>
+                        </div>
+
+                        <!-- Penalty Upload History Table -->
+                        <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; color: var(--primary);">
+                                    <i data-lucide="history"></i> Sejarah Muat Naik Denda
+                                </h4>
+                                <button class="btn btn-secondary btn-sm" onclick="Upload.fetchPenaltyHistory()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                                    <i data-lucide="refresh-cw"></i> Segarkan
+                                </button>
+                            </div>
+                            <div style="overflow-x: auto;">
+                                <table class="data-table" style="width: 100%; font-size: 0.85rem;">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarikh & Masa</th>
+                                            <th>Nama Fail</th>
+                                            <th>Rekod Diimport</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="penalty-history-table-body">
+                                        <tr>
+                                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Memuatkan sejarah muat naik denda...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

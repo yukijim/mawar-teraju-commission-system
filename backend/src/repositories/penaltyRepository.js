@@ -174,6 +174,65 @@ class PenaltyRepository {
       return { fake_return: 0, fake_problematic: 0, fraud_delivery: 0, arbitration: 0, individual_lost: 0 };
     }
   }
+
+  /**
+   * Logs a new penalty file upload entry
+   */
+  async createPenaltyUploadBatch({ filename, recordsImported, uploadedBy }) {
+    const text = `
+      INSERT INTO penalty_upload_batches (filename, records_imported, uploaded_by)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `;
+    try {
+      const result = await db.query(text, [filename, recordsImported, uploadedBy || null]);
+      return result.rows[0];
+    } catch (err) {
+      if (err.code === '42P01') {
+        console.warn('[PenaltyRepository] penalty_upload_batches table does not exist yet.');
+        return { id: 0, filename, records_imported: recordsImported, uploaded_at: new Date() };
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Retrieves past penalty upload logs
+   */
+  async getPenaltyUploadHistory(limit = 20) {
+    const text = `
+      SELECT b.id, b.filename, b.records_imported, b.uploaded_at, u.username as uploaded_by_user
+      FROM penalty_upload_batches b
+      LEFT JOIN users u ON b.uploaded_by = u.id
+      ORDER BY b.uploaded_at DESC
+      LIMIT $1
+    `;
+    try {
+      const result = await db.query(text, [limit]);
+      return result.rows;
+    } catch (err) {
+      if (err.code === '42P01') {
+        return [];
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Returns total count of penalty_records rows
+   */
+  async getTotalPenaltyRecordsCount() {
+    const text = `SELECT COUNT(*) as count FROM penalty_records`;
+    try {
+      const result = await db.query(text);
+      return parseInt(result.rows[0].count, 10);
+    } catch (err) {
+      if (err.code === '42P01') {
+        return inMemoryPenalties.length;
+      }
+      return inMemoryPenalties.length;
+    }
+  }
 }
 
 module.exports = new PenaltyRepository();

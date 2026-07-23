@@ -39,6 +39,30 @@ class PenaltyController {
       next(err);
     }
   };
+
+  /**
+   * GET /api/v1/penalty/upload-history
+   */
+  getUploadHistory = async (req, res, next) => {
+    try {
+      const history = await penaltyService.getPenaltyUploadHistory();
+      return sendResponse(res, 200, true, 'Penalty upload history retrieved successfully.', { history });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  /**
+   * GET /api/v1/penalty/stats
+   */
+  getStats = async (req, res, next) => {
+    try {
+      const stats = await penaltyService.getPenaltyStats();
+      return sendResponse(res, 200, true, 'Penalty stats retrieved successfully.', stats);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new PenaltyController();

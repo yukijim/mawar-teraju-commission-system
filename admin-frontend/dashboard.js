@@ -43,6 +43,20 @@ const Dashboard = {
                 statsUploadsEl.textContent = batches.length;
             }
 
+            // Fetch total penalty records count
+            const penaltyStatsEl = window.DomCache.get('stats-total-penalty-records');
+            if (penaltyStatsEl) {
+                try {
+                    const pRes = await window.apiFetch('/api/v1/penalty/stats');
+                    if (pRes.ok) {
+                        const pData = await pRes.json();
+                        penaltyStatsEl.textContent = (pData.data?.totalRecords || 0).toLocaleString();
+                    }
+                } catch (pErr) {
+                    console.warn('[Dashboard] Failed to fetch penalty stats:', pErr.message);
+                }
+            }
+
             // Render last updated
             const lastUpdatedEl = window.DomCache.get('stats-last-updated');
             if (lastUpdatedEl) {

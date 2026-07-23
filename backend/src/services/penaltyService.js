@@ -227,6 +227,14 @@ class PenaltyService {
       }
 
       if (client) await client.query('COMMIT');
+      
+      // Log upload entry into penalty_upload_batches
+      await penaltyRepository.createPenaltyUploadBatch({
+        filename,
+        recordsImported: penaltyRecords.length,
+        uploadedBy: uploaderId
+      }).catch(bErr => console.warn('[PenaltyService] Failed to record upload batch log:', bErr.message));
+
       await auditLogService.logSuccessLogin(uploaderId, req, { action: 'PENALTY_UPLOAD_SUCCESS', filename, recordCount: penaltyRecords.length }).catch(() => {});
 
       const duration = Date.now() - startTime;
@@ -256,6 +264,23 @@ class PenaltyService {
     const cleanId = dispatcherId.toString().trim().toUpperCase();
     const records = await penaltyRepository.searchPenaltyRecords(cleanId);
     return records;
+  }
+
+  /**
+   * Returns past penalty upload history
+   */
+  async getPenaltyUploadHistory() {
+    return await penaltyRepository.getPenaltyUploadHistory();
+  }
+
+  /**
+   * Returns penalty stats summary (total penalty records count)
+   */
+  async getPenaltyStats() {
+    const totalRecords = await penaltyRepository.getTotalPenaltyRecordsCount();
+    return {
+      totalRecords
+    };
   }
 }
 

@@ -24,6 +24,22 @@ router.post(
   penaltyController.uploadPenalty
 );
 
+// GET /api/v1/penalty/upload-history (restricted to ADMIN)
+router.get(
+  '/upload-history',
+  authenticate(),
+  authorize('ADMIN'),
+  penaltyController.getUploadHistory
+);
+
+// GET /api/v1/penalty/stats (restricted to ADMIN)
+router.get(
+  '/stats',
+  authenticate(),
+  authorize('ADMIN'),
+  penaltyController.getStats
+);
+
 // GET /api/v1/penalty/search (public search for dispatcher detailed penalties)
 router.get(
   '/search',

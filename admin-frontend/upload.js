@@ -172,6 +172,7 @@ const Upload = {
             this.resetBatchForm();
         } else if (tabId === 'upload-penalty') {
             this.clearPenaltyFile();
+            this.fetchPenaltyHistory();
         }
     },
 
@@ -696,10 +697,53 @@ const Upload = {
             );
 
             this.clearPenaltyFile();
+            await this.fetchPenaltyHistory();
+            if (window.App && typeof window.App.loadDashboardStats === 'function') {
+                await window.App.loadDashboardStats();
+            }
         } catch (error) {
             if (progressContainer) progressContainer.style.display = 'none';
             if (btnUpload) btnUpload.disabled = false;
             window.ErrorHandler.handle(error, 'Upload Penalty');
+        }
+    },
+
+    /**
+     * Fetches past penalty upload logs and populates table
+     */
+    async fetchPenaltyHistory() {
+        const tbody = document.getElementById('penalty-history-table-body');
+        if (!tbody) return;
+
+        try {
+            const res = await window.apiFetch('/api/v1/penalty/upload-history');
+            if (!res.ok) return;
+
+            const result = await res.json();
+            const history = result.data?.history || [];
+
+            tbody.innerHTML = '';
+            if (history.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Tiada rekod sejarah muat naik denda lagi.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            history.forEach(item => {
+                const tr = document.createElement('tr');
+                const dateStr = item.uploaded_at ? new Date(item.uploaded_at).toLocaleString('ms-MY', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+                tr.innerHTML = `
+                    <td style="white-space: nowrap; font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
+                    <td style="font-weight: 600; color: var(--text-primary);">${item.filename || '-'}</td>
+                    <td><span class="badge badge-success" style="font-size: 0.75rem;">${(item.records_imported || 0).toLocaleString()} rekod</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error('[Upload.fetchPenaltyHistory] Error:', err);
         }
     }
 };
