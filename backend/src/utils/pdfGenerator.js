@@ -122,23 +122,64 @@ class SimplePdfGenerator {
       header += `0.5 w\n40 748 m\n555 748 l\nS\n`;
 
       // Dispatcher Profile Box (Payslip style)
-      header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 680 515 55 re\nb\nQ\n`;
-      
-      const escapedName = record.name.replace(/\(/g, '\\(').replace(/\)/g, '\\)');
-      header += `BT\n/F2 8.5 Tf\n50 718 Td\n(NAME:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n110 718 Td\n(${escapedName.toUpperCase()}) Tj\nET\n`;
-      header += `BT\n/F2 8.5 Tf\n330 718 Td\n(CODE/DISPATCHER ID:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n430 718 Td\n(${record.dispatcher_id.toUpperCase()}) Tj\nET\n`;
+      // Fixed 2-column grid layout with fixed column widths & word wrapping
+      const rawName = (record.name || '').replace(/\(/g, '\\(').replace(/\)/g, '\\)').toUpperCase().trim();
+      let nameLine1 = rawName;
+      let nameLine2 = '';
 
-      header += `BT\n/F2 8.5 Tf\n50 702 Td\n(IC/PASSPORT:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n110 702 Td\n(${record.ic_number.toUpperCase()}) Tj\nET\n`;
-      header += `BT\n/F2 8.5 Tf\n330 702 Td\n(BATCH/PERIOD:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n430 702 Td\n(${record.batch_name.toUpperCase()}) Tj\nET\n`;
+      if (rawName.length > 25) {
+        let splitIdx = rawName.lastIndexOf(' ', 25);
+        if (splitIdx === -1 || splitIdx < 10) {
+          splitIdx = 25;
+        }
+        nameLine1 = rawName.substring(0, splitIdx).trim();
+        nameLine2 = rawName.substring(splitIdx).trim();
+      }
 
-      header += `BT\n/F2 8.5 Tf\n50 686 Td\n(REFERENCE:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n110 686 Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
-      header += `BT\n/F2 8.5 Tf\n330 686 Td\n(PUBLISHED DATE:) Tj\nET\n`;
-      header += `BT\n/F1 8.5 Tf\n430 686 Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
+      if (nameLine2) {
+        // Expanded profile box height when name wraps to 2 lines
+        header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 672 515 63 re\nb\nQ\n`;
+
+        header += `BT\n/F2 8.5 Tf\n50 719 Td\n(NAME:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 719 Td\n(${nameLine1}) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 707 Td\n(${nameLine2}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n315 719 Td\n(CODE/DISPATCHER ID:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n425 719 Td\n(${record.dispatcher_id.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n50 693 Td\n(IC/PASSPORT:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 693 Td\n(${record.ic_number.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n315 693 Td\n(BATCH/PERIOD:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n425 693 Td\n(${record.batch_name.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n50 679 Td\n(REFERENCE:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 679 Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n315 679 Td\n(PUBLISHED DATE:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n425 679 Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
+      } else {
+        // Standard single line name
+        header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 680 515 55 re\nb\nQ\n`;
+
+        header += `BT\n/F2 8.5 Tf\n50 718 Td\n(NAME:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 718 Td\n(${nameLine1}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n315 718 Td\n(CODE/DISPATCHER ID:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n425 718 Td\n(${record.dispatcher_id.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n50 702 Td\n(IC/PASSPORT:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 702 Td\n(${record.ic_number.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n315 702 Td\n(BATCH/PERIOD:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n425 702 Td\n(${record.batch_name.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n50 686 Td\n(REFERENCE:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n120 686 Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
+
+        header += `BT\n/F2 8.5 Tf\n315 686 Td\n(PUBLISHED DATE:) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n425 686 Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
+      }
 
       currentStream += header;
 
