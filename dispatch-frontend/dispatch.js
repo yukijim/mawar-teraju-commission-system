@@ -339,37 +339,46 @@ const Dispatch = {
 
             let fieldsHtml = '';
             displayFields.forEach(field => {
-                if (hasPenaltyDetails && field.key === 'deduction_hq_penalty') {
+                if (field.key === 'deduction_hq_penalty') {
                     const penalty = record.penaltySummary || {};
-                    const fakeReturn = penalty.fake_return || 0;
-                    const fakeProblematic = penalty.fake_problematic || 0;
-                    const fraudDelivery = penalty.fraud_delivery || 0;
-                    const arbitration = penalty.arbitration || 0;
+                    const hqVal = hasPenaltyDetails ? 
+                        (Number(penalty.fake_return || 0) + Number(penalty.fake_problematic || 0) + Number(penalty.fraud_delivery || 0) + Number(penalty.arbitration || 0)) : 
+                        parseFloat(record.deduction_hq_penalty || 0);
+
+                    const hqDisplay = (!isNaN(hqVal) && hqVal > 0) ? `RM ${hqVal.toFixed(2)}` : '-';
 
                     fieldsHtml += `
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
-                            <span style="color: var(--text-secondary);">↳ FAKE RETURN</span>
-                            <span style="color: var(--danger); font-weight: 600;">${fakeReturn > 0 ? 'RM ' + fakeReturn.toFixed(2) : '-'}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
-                            <span style="color: var(--text-secondary);">↳ FAKE PROBLEMATIC</span>
-                            <span style="color: var(--danger); font-weight: 600;">${fakeProblematic > 0 ? 'RM ' + fakeProblematic.toFixed(2) : '-'}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
-                            <span style="color: var(--text-secondary);">↳ FRAUD DELIVERY</span>
-                            <span style="color: var(--danger); font-weight: 600;">${fraudDelivery > 0 ? 'RM ' + fraudDelivery.toFixed(2) : '-'}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
-                            <span style="color: var(--text-secondary);">↳ ARBITRATION</span>
-                            <span style="color: var(--danger); font-weight: 600;">${arbitration > 0 ? 'RM ' + arbitration.toFixed(2) : '-'}</span>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem;">
+                            <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: HQ PENALTY</span>
+                            <span style="color: var(--text-primary); font-weight: 600;">${hqDisplay}</span>
                         </div>
                     `;
+
+                    if (hasPenaltyDetails) {
+                        const subCats = [
+                            { label: '↳ FAKE RETURN', val: Number(penalty.fake_return || 0) },
+                            { label: '↳ FAKE PROBLEMATIC', val: Number(penalty.fake_problematic || 0) },
+                            { label: '↳ FRAUD DELIVERY', val: Number(penalty.fraud_delivery || 0) },
+                            { label: '↳ ARBITRATION', val: Number(penalty.arbitration || 0) }
+                        ];
+
+                        subCats.forEach(sub => {
+                            if (sub.val > 0) {
+                                fieldsHtml += `
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0 0.5rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.85rem; font-style: italic;">
+                                        <span style="color: var(--text-secondary);">${sub.label}</span>
+                                        <span style="color: var(--danger); font-weight: 600;">RM ${sub.val.toFixed(2)}</span>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
                     return;
                 }
 
-                if (hasPenaltyDetails && field.key === 'deduction_lost_individual') {
+                if (field.key === 'deduction_lost_individual') {
                     const penalty = record.penaltySummary || {};
-                    const lostInd = penalty.individual_lost || 0;
+                    const lostInd = hasPenaltyDetails ? Number(penalty.individual_lost || 0) : Number(record.deduction_lost_individual || 0);
                     const dispId = record.dispatcher_id || '';
                     const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
                     const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${dispId}` : `https://penalty.reekod.com?dispatcher_id=${dispId}`;
