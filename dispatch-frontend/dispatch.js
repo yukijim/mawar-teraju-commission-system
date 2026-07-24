@@ -346,11 +346,18 @@ const Dispatch = {
                         parseFloat(record.deduction_hq_penalty || 0);
 
                     const hqDisplay = (!isNaN(hqVal) && hqVal > 0) ? `RM ${hqVal.toFixed(2)}` : '-';
+                    const dispId = record.dispatcher_id || record.ic_number || rawIc || '';
+                    const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
+                    const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${encodeURIComponent(dispId)}` : `https://penalty.reekod.com?dispatcher_id=${encodeURIComponent(dispId)}`;
 
                     fieldsHtml += `
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: HQ PENALTY</span>
-                            <span style="color: var(--text-primary); font-weight: 600;">${hqDisplay}</span>
+                            <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                                <span>${hqDisplay}</span>
+                                <span style="color: var(--primary); font-weight: 500; font-size: 0.75rem;">(klik disini)</span>
+                                <i data-lucide="external-link" style="width: 12px; height: 12px; color: var(--primary);"></i>
+                            </a>
                         </div>
                     `;
 
@@ -379,15 +386,16 @@ const Dispatch = {
                 if (field.key === 'deduction_lost_individual') {
                     const penalty = record.penaltySummary || {};
                     const lostInd = hasPenaltyDetails ? Number(penalty.individual_lost || 0) : Number(record.deduction_lost_individual || 0);
-                    const dispId = record.dispatcher_id || '';
+                    const dispId = record.dispatcher_id || record.ic_number || rawIc || '';
                     const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
-                    const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${dispId}` : `https://penalty.reekod.com?dispatcher_id=${dispId}`;
+                    const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${encodeURIComponent(dispId)}` : `https://penalty.reekod.com?dispatcher_id=${encodeURIComponent(dispId)}`;
 
                     fieldsHtml += `
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: LOST INDIVIDUAL</span>
-                            <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                            <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
                                 <span>${lostInd > 0 ? 'RM ' + lostInd.toFixed(2) : '-'}</span>
+                                <span style="color: var(--primary); font-weight: 500; font-size: 0.75rem;">(klik disini)</span>
                                 <i data-lucide="external-link" style="width: 12px; height: 12px; color: var(--primary);"></i>
                             </a>
                         </div>
