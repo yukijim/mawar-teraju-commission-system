@@ -337,15 +337,29 @@ const Dispatch = {
                 </div>
             `;
 
+            const alwaysShowFields = [
+                'parcel_qty',
+                'commission_rate',
+                'extra_weight_commission',
+                'total_commission',
+                'nett_commission'
+            ];
+
             let fieldsHtml = '';
             displayFields.forEach(field => {
+                const isCoreField = alwaysShowFields.includes(field.key);
+
                 if (field.key === 'deduction_hq_penalty') {
                     const penalty = record.penaltySummary || {};
                     const hqVal = hasPenaltyDetails ? 
                         (Number(penalty.fake_return || 0) + Number(penalty.fake_problematic || 0) + Number(penalty.fraud_delivery || 0) + Number(penalty.arbitration || 0)) : 
                         parseFloat(record.deduction_hq_penalty || 0);
 
-                    const hqDisplay = (!isNaN(hqVal) && hqVal > 0) ? `RM ${hqVal.toFixed(2)}` : '-';
+                    if (isNaN(hqVal) || hqVal <= 0) {
+                        return; // Hide HQ PENALTY row completely if 0 / empty
+                    }
+
+                    const hqDisplay = `RM ${hqVal.toFixed(2)}`;
                     const dispId = record.dispatcher_id || record.ic_number || rawIc || '';
                     const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
                     const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${encodeURIComponent(dispId)}` : `https://penalty.reekod.com?dispatcher_id=${encodeURIComponent(dispId)}`;
@@ -386,6 +400,11 @@ const Dispatch = {
                 if (field.key === 'deduction_lost_individual') {
                     const penalty = record.penaltySummary || {};
                     const lostInd = hasPenaltyDetails ? Number(penalty.individual_lost || 0) : Number(record.deduction_lost_individual || 0);
+
+                    if (isNaN(lostInd) || lostInd <= 0) {
+                        return; // Hide LOST INDIVIDUAL row completely if 0 / empty
+                    }
+
                     const dispId = record.dispatcher_id || record.ic_number || rawIc || '';
                     const isLocalTesting = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '9999' || window.location.port === '3000' || window.location.port === '4000' || window.location.port === '8080');
                     const penaltyUrl = isLocalTesting ? `http://localhost:3000?dispatcher_id=${encodeURIComponent(dispId)}` : `https://penalty.reekod.com?dispatcher_id=${encodeURIComponent(dispId)}`;
@@ -394,7 +413,7 @@ const Dispatch = {
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: LOST INDIVIDUAL</span>
                             <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
-                                <span>${lostInd > 0 ? 'RM ' + lostInd.toFixed(2) : '-'}</span>
+                                <span>RM ${lostInd.toFixed(2)}</span>
                                 <span style="color: var(--primary); font-weight: 500; font-size: 0.75rem;">(klik disini)</span>
                                 <i data-lucide="external-link" style="width: 12px; height: 12px; color: var(--primary);"></i>
                             </a>
@@ -404,10 +423,17 @@ const Dispatch = {
                 }
 
                 let val = record[field.key];
+                const numVal = parseFloat(val);
+
+                if (!isCoreField) {
+                    if (isNaN(numVal) || numVal <= 0) {
+                        return; // Hide non-core ADD / DEDUCTION row completely if <= 0
+                    }
+                }
+
                 let displayValue = val;
 
                 if (field.type === 'currency') {
-                    const numVal = parseFloat(val);
                     if (isNaN(numVal) || numVal === 0) {
                         displayValue = '-';
                     } else {
