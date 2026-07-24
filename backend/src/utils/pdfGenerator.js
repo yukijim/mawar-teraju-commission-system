@@ -111,7 +111,7 @@ class SimplePdfGenerator {
         header += `/I1 Do\n`;
         header += `Q\n`;
 
-        header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN BHD) Tj\nET\n`;
+        header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN. BHD.) Tj\nET\n`;
         header += `BT\n/F1 8.5 Tf\n115 773 Td\n(MONTHLY INCOME REPORT: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
       } else {
         header += `q\n`;
@@ -132,75 +132,84 @@ class SimplePdfGenerator {
       header += `0.5 w\n40 748 m\n555 748 l\nS\n`;
 
       // Dispatcher Profile Box (Payslip style)
-      // Fixed 2-column grid layout with fixed column widths & word wrapping
-      const rawName = (record.name || '').replace(/\(/g, '\\(').replace(/\)/g, '\\)').toUpperCase().trim();
-      let nameLine1 = rawName;
-      let nameLine2 = '';
+      // Fixed 2-column grid layout with vertical colon alignment & word wrapping for long names
+      const wrapName = (nameStr) => {
+        const raw = (nameStr || '').replace(/\(/g, '\\(').replace(/\)/g, '\\)').toUpperCase().trim();
+        if (raw.length <= 26) return [raw];
+        const words = raw.split(' ');
+        const lines = [];
+        let currentLine = '';
+        words.forEach(w => {
+          if ((currentLine + ' ' + w).trim().length <= 26) {
+            currentLine = (currentLine + ' ' + w).trim();
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = w;
+          }
+        });
+        if (currentLine) lines.push(currentLine);
+        return lines.length > 0 ? lines : [raw];
+      };
 
-      if (rawName.length > 25) {
-        let splitIdx = rawName.lastIndexOf(' ', 25);
-        if (splitIdx === -1 || splitIdx < 10) {
-          splitIdx = 25;
-        }
-        nameLine1 = rawName.substring(0, splitIdx).trim();
-        nameLine2 = rawName.substring(splitIdx).trim();
+      const nameLines = wrapName(record.name);
+      const numNameLines = nameLines.length;
+
+      // Calculate dynamic box height based on number of wrapped name lines
+      const boxHeight = 55 + (numNameLines - 1) * 14;
+      const boxY = 735 - boxHeight;
+
+      header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 ${boxY} 515 ${boxHeight} re\nb\nQ\n`;
+
+      let currentY = 718;
+
+      // Row 1: NAME (Left) & DISPATCHER ID (Right)
+      header += `BT\n/F2 8.5 Tf\n50 ${currentY} Td\n(NAME) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n112 ${currentY} Td\n(:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n118 ${currentY} Td\n(${nameLines[0]}) Tj\nET\n`;
+
+      header += `BT\n/F2 8.5 Tf\n305 ${currentY} Td\n(DISPATCHER ID) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n395 ${currentY} Td\n(:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n401 ${currentY} Td\n(${(record.dispatcher_id || '').toUpperCase()}) Tj\nET\n`;
+
+      // Extra name lines if name wraps to line 2+
+      for (let i = 1; i < numNameLines; i++) {
+        currentY -= 14;
+        header += `BT\n/F1 8.5 Tf\n118 ${currentY} Td\n(${nameLines[i]}) Tj\nET\n`;
       }
 
-      if (nameLine2) {
-        // Expanded profile box height when name wraps to 2 lines
-        header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 672 515 63 re\nb\nQ\n`;
+      // Row 2: IC/PASSPORT (Left) & BATCH/PERIOD (Right)
+      currentY -= 16;
+      header += `BT\n/F2 8.5 Tf\n50 ${currentY} Td\n(IC/PASSPORT) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n112 ${currentY} Td\n(:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n118 ${currentY} Td\n(${(record.ic_number || '').toUpperCase()}) Tj\nET\n`;
 
-        header += `BT\n/F2 8.5 Tf\n50 719 Td\n(NAME:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 719 Td\n(${nameLine1}) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 707 Td\n(${nameLine2}) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n305 ${currentY} Td\n(BATCH/PERIOD) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n395 ${currentY} Td\n(:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n401 ${currentY} Td\n(${(record.batch_name || '').toUpperCase()}) Tj\nET\n`;
 
-        header += `BT\n/F2 8.5 Tf\n315 719 Td\n(CODE/DISPATCHER ID:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n425 719 Td\n(${record.dispatcher_id.toUpperCase()}) Tj\nET\n`;
+      // Row 3: REFERENCE (Left) & PUBLISHED DATE (Right)
+      currentY -= 16;
+      header += `BT\n/F2 8.5 Tf\n50 ${currentY} Td\n(REFERENCE) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n112 ${currentY} Td\n(:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n118 ${currentY} Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
 
-        header += `BT\n/F2 8.5 Tf\n50 693 Td\n(IC/PASSPORT:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 693 Td\n(${record.ic_number.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n315 693 Td\n(BATCH/PERIOD:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n425 693 Td\n(${record.batch_name.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n50 679 Td\n(REFERENCE:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 679 Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n315 679 Td\n(PUBLISHED DATE:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n425 679 Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
-      } else {
-        // Standard single line name
-        header += `q\n0.98 0.98 0.98 rg\n0.5 w\n40 680 515 55 re\nb\nQ\n`;
-
-        header += `BT\n/F2 8.5 Tf\n50 718 Td\n(NAME:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 718 Td\n(${nameLine1}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n315 718 Td\n(CODE/DISPATCHER ID:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n425 718 Td\n(${record.dispatcher_id.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n50 702 Td\n(IC/PASSPORT:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 702 Td\n(${record.ic_number.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n315 702 Td\n(BATCH/PERIOD:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n425 702 Td\n(${record.batch_name.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n50 686 Td\n(REFERENCE:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n120 686 Td\n(${refNum.toUpperCase()}) Tj\nET\n`;
-
-        header += `BT\n/F2 8.5 Tf\n315 686 Td\n(PUBLISHED DATE:) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n425 686 Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
-      }
+      header += `BT\n/F2 8.5 Tf\n305 ${currentY} Td\n(PUBLISHED DATE) Tj\nET\n`;
+      header += `BT\n/F2 8.5 Tf\n395 ${currentY} Td\n(:) Tj\nET\n`;
+      header += `BT\n/F1 8.5 Tf\n401 ${currentY} Td\n(${publishDate.toUpperCase()}) Tj\nET\n`;
 
       currentStream += header;
 
+      const tableHeaderY = boxY - 22;
+      const tableBodyH = tableHeaderY - 300;
+
       // Table Header Block
-      currentStream += `q\n0.93 0.93 0.93 rg\n40 645 515 20 re\nf\nQ\n`;
-      currentStream += `BT\n/F2 8.5 Tf\n50 651 Td\n(ADDITION) Tj\nET\n`;
-      currentStream += `BT\n/F2 8.5 Tf\n307 651 Td\n(DEDUCTION) Tj\nET\n`;
+      currentStream += `q\n0.93 0.93 0.93 rg\n40 ${tableHeaderY} 515 20 re\nf\nQ\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n50 ${tableHeaderY + 6} Td\n(ADDITION) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n307 ${tableHeaderY + 6} Td\n(DEDUCTION) Tj\nET\n`;
 
       // Columns box and divider lines
-      currentStream += `0.5 w\n40 300 515 345 re\nS\n`;
-      currentStream += `0.5 w\n297 300 m\n297 645 l\nS\n`;
+      currentStream += `0.5 w\n40 300 515 ${tableBodyH} re\nS\n`;
+      currentStream += `0.5 w\n297 300 m\n297 ${tableHeaderY} l\nS\n`;
 
       // Items list
       const additions = [
@@ -224,13 +233,13 @@ class SimplePdfGenerator {
       ];
 
       for (let i = 0; i < 7; i++) {
-        const yRow = 615 - i * 22;
+        const yRow = tableHeaderY - 25 - i * 22;
         
-        // Addition
+        // Addition (Left justified at X=50 for label, X=210 for amount)
         currentStream += `BT\n/F1 8.5 Tf\n50 ${yRow} Td\n(${additions[i].label.toUpperCase()}) Tj\nET\n`;
         currentStream += `BT\n/F1 8.5 Tf\n210 ${yRow} Td\n(${formatCurrency(additions[i].val).toUpperCase()}) Tj\nET\n`;
 
-        // Deduction
+        // Deduction (Left justified at X=307 for label, X=465 for amount)
         currentStream += `BT\n/F1 8.5 Tf\n307 ${yRow} Td\n(${deductions[i].label.toUpperCase()}) Tj\nET\n`;
         currentStream += `BT\n/F1 8.5 Tf\n465 ${yRow} Td\n(${formatCurrency(deductions[i].val).toUpperCase()}) Tj\nET\n`;
       }
@@ -252,7 +261,7 @@ class SimplePdfGenerator {
 
       // Total Net Pay box
       currentStream += `q\n0.92 0.96 0.92 rg\n0.5 w\n40 215 515 30 re\nb\nQ\n`;
-      currentStream += `BT\n/F2 8.5 Tf\n307 225 Td\n(TOTAL NET INCOME :) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n307 225 Td\n(TOTAL NET INCOME:) Tj\nET\n`;
       currentStream += `BT\n/F2 8.5 Tf\n465 225 Td\n(${formatCurrency(totalNetPay).toUpperCase()}) Tj\nET\n`;
 
       // Remove meta footer lines per user specification
@@ -270,7 +279,7 @@ class SimplePdfGenerator {
           header += `/I1 Do\n`;
           header += `Q\n`;
 
-          header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN BHD) Tj\nET\n`;
+          header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN. BHD.) Tj\nET\n`;
           header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Income Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
         } else {
           header += `q\n`;
