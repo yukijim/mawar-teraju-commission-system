@@ -96,6 +96,36 @@ class SimplePdfGenerator {
       return Math.round(parseFloat(val || 0)).toString();
     };
 
+    // Helper to calculate text width for precise right-alignment in PDF
+    const getTextWidth = (str, fontSize = 8.5, isBold = false) => {
+      let width = 0;
+      const factor = isBold ? 1.08 : 1.0;
+      for (let i = 0; i < str.length; i++) {
+        const c = str.charAt(i);
+        if (c >= '0' && c <= '9') {
+          width += 556;
+        } else if (c === 'R') {
+          width += 667;
+        } else if (c === 'M') {
+          width += 833;
+        } else if (c === ' ' || c === '.' || c === ',') {
+          width += 278;
+        } else if (c === '-') {
+          width += 333;
+        } else if (c >= 'A' && c <= 'Z') {
+          width += 650;
+        } else {
+          width += 500;
+        }
+      }
+      return (width * fontSize / 1000) * factor;
+    };
+
+    const getRightX = (textStr, rightMarginX, fontSize = 8.5, isBold = false) => {
+      const w = getTextWidth(textStr, fontSize, isBold);
+      return Math.round((rightMarginX - w) * 10) / 10;
+    };
+
     let pageStreams = [];
     let currentStream = '';
     let currentPage = 1;
@@ -211,10 +241,10 @@ class SimplePdfGenerator {
       currentStream += `0.5 w\n40 300 515 ${tableBodyH} re\nS\n`;
       currentStream += `0.5 w\n297 300 m\n297 ${tableHeaderY} l\nS\n`;
 
-      // Items list
-      const additions = [
-        { label: `Parcel Commission (Qty: ${record.parcel_qty})`, val: record.commission_rate },
-        { label: 'Extra Weight Commission', val: record.extra_weight_commission },
+      // Items list (Filter out zero-value non-core rows)
+      const rawAdditions = [
+        { label: `Parcel Commission (Qty: ${record.parcel_qty})`, val: record.commission_rate, isCore: true },
+        { label: 'Extra Weight Commission', val: record.extra_weight_commission, isCore: true },
         { label: 'ADD: REFUND PENALTY', val: record.addition_refund_penalty },
         { label: 'ADD: PICKUP COMMISSION', val: record.addition_pickup_commission },
         { label: 'ADD: OTHERS', val: record.addition_others },
@@ -222,7 +252,7 @@ class SimplePdfGenerator {
         { label: 'EXTRA REWARD', val: record.addition_extra_reward }
       ];
 
-      const deductions = [
+      const rawDeductions = [
         { label: 'DEDUCTION: OTHERS', val: record.deduction_others },
         { label: 'DEDUCTION: PENDING COD', val: record.deduction_pending_cod },
         { label: 'DEDUCTION: HQ PENALTY', val: record.deduction_hq_penalty },
@@ -232,37 +262,61 @@ class SimplePdfGenerator {
         { label: 'DEDUCTION: LOST PARCEL HUB', val: record.deduction_lost_parcel_hub }
       ];
 
-      for (let i = 0; i < 7; i++) {
+      const additions = rawAdditions.filter(item => item.isCore || parseFloat(item.val || 0) > 0);
+      const deductions = rawDeductions.filter(item => parseFloat(item.val || 0) > 0);
+
+      const rowCount = Math.max(additions.length, deductions.length, 1);
+
+      for (let i = 0; i < rowCount; i++) {
         const yRow = tableHeaderY - 25 - i * 22;
         
-        // Addition (Left justified at X=50 for label, X=210 for amount)
-        currentStream += `BT\n/F1 8.5 Tf\n50 ${yRow} Td\n(${additions[i].label.toUpperCase()}) Tj\nET\n`;
-        currentStream += `BT\n/F1 8.5 Tf\n210 ${yRow} Td\n(${formatCurrency(additions[i].val).toUpperCase()}) Tj\nET\n`;
+        // Addition (Right-aligned at right margin X=285)
+        if (i < additions.length) {
+          const item = additions[i];
+          const valText = formatCurrency(item.val).toUpperCase();
+          const valX = getRightX(valText, 285, 8.5);
+          currentStream += `BT\n/F1 8.5 Tf\n50 ${yRow} Td\n(${item.label.toUpperCase()}) Tj\nET\n`;
+          currentStream += `BT\n/F1 8.5 Tf\n${valX} ${yRow} Td\n(${valText}) Tj\nET\n`;
+        }
 
-        // Deduction (Left justified at X=307 for label, X=465 for amount)
-        currentStream += `BT\n/F1 8.5 Tf\n307 ${yRow} Td\n(${deductions[i].label.toUpperCase()}) Tj\nET\n`;
-        currentStream += `BT\n/F1 8.5 Tf\n465 ${yRow} Td\n(${formatCurrency(deductions[i].val).toUpperCase()}) Tj\nET\n`;
+        // Deduction (Right-aligned at right margin X=545)
+        if (i < deductions.length) {
+          const item = deductions[i];
+          const valText = formatCurrency(item.val).toUpperCase();
+          const valX = getRightX(valText, 545, 8.5);
+          currentStream += `BT\n/F1 8.5 Tf\n307 ${yRow} Td\n(${item.label.toUpperCase()}) Tj\nET\n`;
+          currentStream += `BT\n/F1 8.5 Tf\n${valX} ${yRow} Td\n(${valText}) Tj\nET\n`;
+        }
       }
 
       // Calculations for Bottom Summary
-      const totalDeduction = deductions.reduce((sum, item) => sum + parseFloat(item.val || 0), 0);
+      const totalDeduction = rawDeductions.reduce((sum, item) => sum + parseFloat(item.val || 0), 0);
       const totalNetPay = parseFloat(record.nett_commission || 0);
       const totalAddition = totalNetPay + totalDeduction;
+
+      const totAddText = formatCurrency(totalAddition).toUpperCase();
+      const totAddX = getRightX(totAddText, 285, 8.5, true);
+
+      const totDedText = formatCurrency(totalDeduction).toUpperCase();
+      const totDedX = getRightX(totDedText, 545, 8.5, true);
+
+      const netPayText = formatCurrency(totalNetPay).toUpperCase();
+      const netPayX = getRightX(netPayText, 545, 8.5, true);
 
       // Bottom summary box (Total Addition, Total Deduction)
       currentStream += `q\n0.97 0.97 0.97 rg\n0.5 w\n40 255 515 30 re\nb\nQ\n`;
       currentStream += `0.5 w\n297 255 m\n297 285 l\nS\n`;
       
       currentStream += `BT\n/F2 8.5 Tf\n50 266 Td\n(TOTAL ADDITION:) Tj\nET\n`;
-      currentStream += `BT\n/F2 8.5 Tf\n210 266 Td\n(${formatCurrency(totalAddition).toUpperCase()}) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n${totAddX} 266 Td\n(${totAddText}) Tj\nET\n`;
 
       currentStream += `BT\n/F2 8.5 Tf\n307 266 Td\n(TOTAL DEDUCTION:) Tj\nET\n`;
-      currentStream += `BT\n/F2 8.5 Tf\n465 266 Td\n(${formatCurrency(totalDeduction).toUpperCase()}) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n${totDedX} 266 Td\n(${totDedText}) Tj\nET\n`;
 
       // Total Net Pay box
       currentStream += `q\n0.92 0.96 0.92 rg\n0.5 w\n40 215 515 30 re\nb\nQ\n`;
       currentStream += `BT\n/F2 8.5 Tf\n307 225 Td\n(TOTAL NET INCOME:) Tj\nET\n`;
-      currentStream += `BT\n/F2 8.5 Tf\n465 225 Td\n(${formatCurrency(totalNetPay).toUpperCase()}) Tj\nET\n`;
+      currentStream += `BT\n/F2 8.5 Tf\n${netPayX} 225 Td\n(${netPayText}) Tj\nET\n`;
 
       // Remove meta footer lines per user specification
       pageStreams.push(currentStream);
@@ -308,8 +362,8 @@ class SimplePdfGenerator {
         header += `BT\n/F1 9 Tf\n475 715 Td\n(${publishDate}) Tj\nET\n`;
 
         // Dispatcher Profile
-        header += `BT\n/F2 9 Tf\n50 695 Td\n(Dispatcher ID:) Tj\nET\n`;
-        header += `BT\n/F1 9 Tf\n120 695 Td\n(${record.dispatcher_id}) Tj\nET\n`;
+        header += `BT\n/F2 9 Tf\n50 695 Td\n(DISPATCHER ID:) Tj\nET\n`;
+        header += `BT\n/F1 9 Tf\n135 695 Td\n(${record.dispatcher_id}) Tj\nET\n`;
         header += `BT\n/F2 9 Tf\n280 695 Td\n(NRIC / IC Number:) Tj\nET\n`;
         header += `BT\n/F1 9 Tf\n370 695 Td\n(${record.ic_number}) Tj\nET\n`;
         
@@ -330,7 +384,11 @@ class SimplePdfGenerator {
       currentStream += writeHeader(currentPage);
       let y = 620;
 
-      const addRow = (label, val, formatType = 'currency') => {
+      const addRow = (label, val, formatType = 'currency', isNonCore = false) => {
+        if (isNonCore && parseFloat(val || 0) <= 0) {
+          return;
+        }
+
         if (y < 120) {
           currentStream += `0.5 w\n50 ${y + 5} m\n545 ${y + 5} l\nS\n`;
           currentStream += `BT\n/F1 8 Tf\n50 ${y - 12} Td\n(Penjana: ${searcherUsername} | IP: ${ipAddress} | Tarikh Cetak: ${genTime}) Tj\nET\n`;
@@ -352,7 +410,9 @@ class SimplePdfGenerator {
           formattedVal = (val || '').toString();
         }
 
-        currentStream += `BT\n/F1 9 Tf\n60 ${y} Td\n(${label}) Tj\nET\nBT\n/F1 9 Tf\n480 ${y} Td\n(${formattedVal}) Tj\nET\n`;
+        const valX = getRightX(formattedVal, 535, 9);
+
+        currentStream += `BT\n/F1 9 Tf\n60 ${y} Td\n(${label}) Tj\nET\nBT\n/F1 9 Tf\n${valX} ${y} Td\n(${formattedVal}) Tj\nET\n`;
         y -= 18;
       };
 
@@ -361,20 +421,20 @@ class SimplePdfGenerator {
         addRow('Parcel Commission', record.commission_rate, 'currency');
         addRow('Extra Weight Commission', record.extra_weight_commission, 'currency');
         addRow('Total Commission', record.total_commission, 'currency');
-        addRow('ADD: REFUND PENALTY', record.addition_refund_penalty, 'currency');
-        addRow('ADD: PICKUP COMMISSION', record.addition_pickup_commission, 'currency');
-        addRow('ADD: OTHERS', record.addition_others, 'currency');
-        addRow('ADD: SORTER', record.addition_sorter, 'currency');
-        addRow('EXTRA REWARD', record.addition_extra_reward, 'currency');
+        addRow('ADD: REFUND PENALTY', record.addition_refund_penalty, 'currency', true);
+        addRow('ADD: PICKUP COMMISSION', record.addition_pickup_commission, 'currency', true);
+        addRow('ADD: OTHERS', record.addition_others, 'currency', true);
+        addRow('ADD: SORTER', record.addition_sorter, 'currency', true);
+        addRow('EXTRA REWARD', record.addition_extra_reward, 'currency', true);
         addRow('NETT COMMISSION', record.nett_commission, 'currency');
       } else if (type === 'deduction') {
-        addRow('DEDUCTION: OTHERS', record.deduction_others, 'currency');
-        addRow('DEDUCTION: PENDING COD', record.deduction_pending_cod, 'currency');
-        addRow('DEDUCTION: HQ PENALTY', record.deduction_hq_penalty, 'currency');
-        addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty, 'currency');
-        addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty, 'currency');
-        addRow('DEDUCTION: LOST INDIVIDUAL', record.deduction_lost_individual, 'currency');
-        addRow('DEDUCTION: LOST PARCEL HUB', record.deduction_lost_parcel_hub, 'currency');
+        addRow('DEDUCTION: OTHERS', record.deduction_others, 'currency', true);
+        addRow('DEDUCTION: PENDING COD', record.deduction_pending_cod, 'currency', true);
+        addRow('DEDUCTION: HQ PENALTY', record.deduction_hq_penalty, 'currency', true);
+        addRow('DEDUCTION: DUITNOW PENALTY', record.deduction_duitnow_penalty, 'currency', true);
+        addRow('DEDUCTION: LATE COD PENALTY', record.deduction_late_cod_penalty, 'currency', true);
+        addRow('DEDUCTION: LOST INDIVIDUAL', record.deduction_lost_individual, 'currency', true);
+        addRow('DEDUCTION: LOST PARCEL HUB', record.deduction_lost_parcel_hub, 'currency', true);
       }
 
       const companyConfig = require('../config/company');
