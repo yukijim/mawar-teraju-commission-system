@@ -88,11 +88,11 @@ const App = {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight: 600; color: var(--text-subtitle);">${r.awb}</td>
-                    <td style="color: ${fakeReturn > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fakeReturn > 0 ? 'RM ' + fakeReturn.toFixed(2) : '-'}</td>
-                    <td style="color: ${fakeProblematic > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fakeProblematic > 0 ? 'RM ' + fakeProblematic.toFixed(2) : '-'}</td>
-                    <td style="color: ${fraudDelivery > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fraudDelivery > 0 ? 'RM ' + fraudDelivery.toFixed(2) : '-'}</td>
-                    <td style="color: ${arbitration > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${arbitration > 0 ? 'RM ' + arbitration.toFixed(2) : '-'}</td>
-                    <td style="color: ${individualLost > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${individualLost > 0 ? 'RM ' + individualLost.toFixed(2) : '-'}</td>
+                    <td class="text-center nowrap" style="color: ${fakeReturn > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fakeReturn > 0 ? 'RM ' + fakeReturn.toFixed(2) : '-'}</td>
+                    <td class="text-center nowrap" style="color: ${fakeProblematic > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fakeProblematic > 0 ? 'RM ' + fakeProblematic.toFixed(2) : '-'}</td>
+                    <td class="text-center nowrap" style="color: ${fraudDelivery > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${fraudDelivery > 0 ? 'RM ' + fraudDelivery.toFixed(2) : '-'}</td>
+                    <td class="text-center nowrap" style="color: ${arbitration > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${arbitration > 0 ? 'RM ' + arbitration.toFixed(2) : '-'}</td>
+                    <td class="text-center nowrap" style="color: ${individualLost > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight: 600;">${individualLost > 0 ? 'RM ' + individualLost.toFixed(2) : '-'}</td>
                     <td style="color: ${logicText !== '-' ? 'var(--text-primary)' : 'var(--text-muted)'}; font-weight: 500;">${logicText}</td>
                 `;
                 tableBody.appendChild(tr);

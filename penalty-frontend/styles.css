@@ -214,6 +214,14 @@ main {
     border-bottom: 1px solid var(--border-color);
 }
 
+.data-table th.text-center, .data-table td.text-center {
+    text-align: center;
+}
+
+.data-table th.nowrap, .data-table td.nowrap {
+    white-space: nowrap;
+}
+
 .data-table th {
     background: var(--bg-secondary);
     font-weight: 700;
