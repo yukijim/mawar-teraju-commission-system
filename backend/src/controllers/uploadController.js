@@ -12,6 +12,7 @@ class UploadController {
    */
   uploadCommission = async (req, res, next) => {
     try {
+      console.log('>>> [UPLOAD CONTROLLER] POST /api/v1/upload/commission called for file:', req.file ? req.file.originalname : 'NO FILE');
       if (!req.file) {
         return sendResponse(res, 400, false, 'No file uploaded. Sila pilih fail Excel.', null, [], 'UPLOAD_MISSING_FILE');
       }
@@ -36,6 +37,7 @@ class UploadController {
    */
   uploadDeduction = async (req, res, next) => {
     try {
+      console.log('>>> [UPLOAD CONTROLLER] POST /api/v1/upload/deduction called for file:', req.file ? req.file.originalname : 'NO FILE');
       if (!req.file) {
         return sendResponse(res, 400, false, 'No file uploaded. Sila pilih fail Excel.', null, [], 'UPLOAD_MISSING_FILE');
       }
@@ -60,6 +62,7 @@ class UploadController {
    */
   uploadBatch = async (req, res, next) => {
     try {
+      console.log('>>> [UPLOAD CONTROLLER] POST /api/v1/upload/batch called for file:', req.file ? req.file.originalname : 'NO FILE');
       if (!req.file) {
         return sendResponse(res, 400, false, 'No file uploaded. Sila pilih fail Excel.', null, [], 'UPLOAD_MISSING_FILE');
       }
