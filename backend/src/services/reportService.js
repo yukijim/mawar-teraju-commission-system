@@ -39,7 +39,12 @@ class ReportService {
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
       JOIN batches b ON c.batch_id = b.id
-      LEFT JOIN batches b2 ON b.month = b2.month AND b.year = b2.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL
+      LEFT JOIN batches b2 ON b2.id = (
+        SELECT id FROM batches 
+        WHERE month = b.month AND year = b.year AND type = 'DEDUCTION' AND status = 'PUBLISHED' AND deleted_at IS NULL
+        ORDER BY published_at DESC NULLS LAST, created_at DESC
+        LIMIT 1
+      )
       LEFT JOIN deduction_records d ON b2.id = d.batch_id AND (c.dispatcher_id = d.dispatcher_id OR c.ic_number = d.ic_number)
       WHERE c.id = $1 AND b.deleted_at IS NULL
     `;
@@ -191,7 +196,12 @@ class ReportService {
           b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
         FROM commission_records c
         JOIN batches b ON c.batch_id = b.id
-        LEFT JOIN batches b2 ON b.month = b2.month AND b.year = b2.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL
+        LEFT JOIN batches b2 ON b2.id = (
+          SELECT id FROM batches 
+          WHERE month = b.month AND year = b.year AND type = 'DEDUCTION' AND status = 'PUBLISHED' AND deleted_at IS NULL
+          ORDER BY published_at DESC NULLS LAST, created_at DESC
+          LIMIT 1
+        )
         LEFT JOIN deduction_records d ON b2.id = d.batch_id AND (c.dispatcher_id = d.dispatcher_id OR c.ic_number = d.ic_number)
         WHERE c.id = $1 AND b.deleted_at IS NULL
       `;
