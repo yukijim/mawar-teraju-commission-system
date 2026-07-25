@@ -253,16 +253,15 @@ const Dispatch = {
         this.currentSearchedRecord = record;
 
         // Math calculations for split views
-        const hasPenaltyDetails = !!record.penaltySummary;
         const pSum = record.penaltySummary || {};
         
-        const hqPenaltyVal = hasPenaltyDetails ? 
-          (Number(pSum.fake_return || 0) + Number(pSum.fake_problematic || 0) + Number(pSum.fraud_delivery || 0) + Number(pSum.arbitration || 0)) : 
-          Number(record.deduction_hq_penalty || 0);
+        const hqPenaltyVal = Number(record.deduction_hq_penalty || 0) > 0 ? 
+          Number(record.deduction_hq_penalty) : 
+          (Number(pSum.fake_return || 0) + Number(pSum.fake_problematic || 0) + Number(pSum.fraud_delivery || 0) + Number(pSum.arbitration || 0));
           
-        const lostIndividualVal = hasPenaltyDetails ? 
-          Number(pSum.individual_lost || 0) : 
-          Number(record.deduction_lost_individual || 0);
+        const lostIndividualVal = Number(record.deduction_lost_individual || 0) > 0 ? 
+          Number(record.deduction_lost_individual) : 
+          Number(pSum.individual_lost || 0);
 
         const grossComm = Number(record.total_commission || record.nett_commission || 0);
         const totalDeds = Number(record.deduction_others || 0) +
@@ -279,9 +278,7 @@ const Dispatch = {
                           Number(record.addition_sorter || 0) +
                           Number(record.addition_extra_reward || 0);
 
-        const netComm = hasPenaltyDetails ? 
-          Math.max(0, grossComm + additions - totalDeds) : 
-          Number(record.final_amount_to_pay || record.nett_commission || 0);
+        const netComm = Math.max(0, grossComm + additions - totalDeds);
 
         // Populate elements
         const nameEl = window.DomCache.get('result-rider-name');
@@ -351,9 +348,9 @@ const Dispatch = {
 
                 if (field.key === 'deduction_hq_penalty') {
                     const penalty = record.penaltySummary || {};
-                    const hqVal = hasPenaltyDetails ? 
-                        (Number(penalty.fake_return || 0) + Number(penalty.fake_problematic || 0) + Number(penalty.fraud_delivery || 0) + Number(penalty.arbitration || 0)) : 
-                        parseFloat(record.deduction_hq_penalty || 0);
+                    const hqVal = Number(record.deduction_hq_penalty || 0) > 0 ? 
+                        parseFloat(record.deduction_hq_penalty) : 
+                        (Number(penalty.fake_return || 0) + Number(penalty.fake_problematic || 0) + Number(penalty.fraud_delivery || 0) + Number(penalty.arbitration || 0));
 
                     if (isNaN(hqVal) || hqVal <= 0) {
                         return; // Hide HQ PENALTY row completely if 0 / empty
@@ -368,7 +365,7 @@ const Dispatch = {
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: HQ PENALTY</span>
                             <div style="display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
-                                <span style="color: var(--text-primary); font-weight: 600;">${hqDisplay}</span>
+                                <span style="color: var(--danger); font-weight: 600;">${hqDisplay}</span>
                                 <a href="${penaltyUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; color: var(--primary); text-decoration: none; padding: 2px;" title="Semak Rekod Penalty">
                                     <i data-lucide="external-link" style="width: 14px; height: 14px; color: var(--primary);"></i>
                                 </a>
@@ -376,7 +373,7 @@ const Dispatch = {
                         </div>
                     `;
 
-                    if (hasPenaltyDetails) {
+                    if (record.penaltySummary) {
                         const subCats = [
                             { label: '↳ FAKE RETURN', val: Number(penalty.fake_return || 0) },
                             { label: '↳ FAKE PROBLEMATIC', val: Number(penalty.fake_problematic || 0) },
@@ -400,7 +397,9 @@ const Dispatch = {
 
                 if (field.key === 'deduction_lost_individual') {
                     const penalty = record.penaltySummary || {};
-                    const lostInd = hasPenaltyDetails ? Number(penalty.individual_lost || 0) : Number(record.deduction_lost_individual || 0);
+                    const lostInd = Number(record.deduction_lost_individual || 0) > 0 ? 
+                        Number(record.deduction_lost_individual) : 
+                        Number(penalty.individual_lost || 0);
 
                     if (isNaN(lostInd) || lostInd <= 0) {
                         return; // Hide LOST INDIVIDUAL row completely if 0 / empty
@@ -414,7 +413,7 @@ const Dispatch = {
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: LOST INDIVIDUAL</span>
                             <div style="display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
-                                <span style="color: var(--text-primary); font-weight: 600;">RM ${lostInd.toFixed(2)}</span>
+                                <span style="color: var(--danger); font-weight: 600;">RM ${lostInd.toFixed(2)}</span>
                                 <a href="${penaltyUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; color: var(--primary); text-decoration: none; padding: 2px;" title="Semak Rekod Penalty">
                                     <i data-lucide="external-link" style="width: 14px; height: 14px; color: var(--primary);"></i>
                                 </a>
