@@ -554,6 +554,12 @@ class UploadService {
         }
       });
 
+      console.log('==================================================');
+      console.log('=== [DEBUG DEDUCTION HEADER MAPPING RESULT] ===');
+      console.log('Original Excel Column Headers:', Object.keys(firstRow));
+      console.log('Mapped Header Map:', JSON.stringify(dedHeadersMap, null, 2));
+      console.log('==================================================');
+
       // 3. Process rows and check duplicates (Batch ID + Dispatcher ID + IC)
       const deductionRecords = [];
       const processedKeys = new Set();
@@ -570,7 +576,7 @@ class UploadService {
         dbMappings[m.dispatcher_id] = m.ic_number;
       });
 
-      dedRows.forEach(row => {
+      dedRows.forEach((row, index) => {
         try {
           const rawId = row[dedHeadersMap.dispatcher_id];
           const rawIc = row[dedHeadersMap.ic_number];
@@ -600,6 +606,36 @@ class UploadService {
             }
           }
 
+          const isTargetDispatcher = dispatcher_id.includes('PJS3544012') || rawIcString.includes('990428') || name.toUpperCase().includes('ZULHELMI');
+          if (isTargetDispatcher || index < 3) {
+            console.log(`\n>>> [DEBUG DEDUCTION ROW #${index + 1}] <<<`);
+            console.log(`Dispatcher ID: "${dispatcher_id}", IC: "${ic_number}", Name: "${name}"`);
+            console.log('Raw Row Object:', JSON.stringify(row, null, 2));
+            console.log('Raw Values:', {
+              othersRaw: dedHeadersMap.others ? row[dedHeadersMap.others] : undefined,
+              pendingCodRaw: dedHeadersMap.pending_cod ? row[dedHeadersMap.pending_cod] : undefined,
+              hqPenaltyRaw: dedHeadersMap.hq_penalty ? row[dedHeadersMap.hq_penalty] : undefined,
+              duitnowRaw: dedHeadersMap.duitnow_penalty ? row[dedHeadersMap.duitnow_penalty] : undefined,
+              lateCodRaw: dedHeadersMap.late_cod_penalty ? row[dedHeadersMap.late_cod_penalty] : undefined,
+              lostIndividualRaw: dedHeadersMap.lost_individual ? row[dedHeadersMap.lost_individual] : undefined,
+              arbitrationRaw: dedHeadersMap.lost_parcel_arbitration ? row[dedHeadersMap.lost_parcel_arbitration] : undefined,
+              roadRaw: dedHeadersMap.lost_parcel_road ? row[dedHeadersMap.lost_parcel_road] : undefined,
+              hubRaw: dedHeadersMap.lost_parcel_hub ? row[dedHeadersMap.lost_parcel_hub] : undefined
+            });
+            console.log('Parsed Values:', {
+              deduction_others: parseNumericValue(dedHeadersMap.others ? row[dedHeadersMap.others] : undefined),
+              deduction_pending_cod: parseNumericValue(dedHeadersMap.pending_cod ? row[dedHeadersMap.pending_cod] : undefined),
+              deduction_hq_penalty: parseNumericValue(dedHeadersMap.hq_penalty ? row[dedHeadersMap.hq_penalty] : undefined),
+              deduction_duitnow_penalty: parseNumericValue(dedHeadersMap.duitnow_penalty ? row[dedHeadersMap.duitnow_penalty] : undefined),
+              deduction_late_cod_penalty: parseNumericValue(dedHeadersMap.late_cod_penalty ? row[dedHeadersMap.late_cod_penalty] : undefined),
+              deduction_lost_individual: parseNumericValue(dedHeadersMap.lost_individual ? row[dedHeadersMap.lost_individual] : undefined),
+              deduction_lost_parcel_arbitration: parseNumericValue(dedHeadersMap.lost_parcel_arbitration ? row[dedHeadersMap.lost_parcel_arbitration] : undefined),
+              deduction_lost_parcel_road: parseNumericValue(dedHeadersMap.lost_parcel_road ? row[dedHeadersMap.lost_parcel_road] : undefined),
+              deduction_lost_parcel_hub: parseNumericValue(dedHeadersMap.lost_parcel_hub ? row[dedHeadersMap.lost_parcel_hub] : undefined)
+            });
+            console.log('-------------------------------------------\n');
+          }
+
           // Detect duplicate records: Batch ID + Dispatcher ID + IC Number
           const recordKey = `${tempBatchId}_${dispatcher_id}_${ic_number}`;
           if (processedKeys.has(recordKey)) {
@@ -612,15 +648,15 @@ class UploadService {
             dispatcher_id,
             ic_number,
             name,
-            deduction_others: parseNumericValue(row[dedHeadersMap.others]),
-            deduction_pending_cod: parseNumericValue(row[dedHeadersMap.pending_cod]),
-            deduction_hq_penalty: parseNumericValue(row[dedHeadersMap.hq_penalty]),
-            deduction_duitnow_penalty: parseNumericValue(row[dedHeadersMap.duitnow_penalty]),
-            deduction_late_cod_penalty: parseNumericValue(row[dedHeadersMap.late_cod_penalty]),
-            deduction_lost_individual: parseNumericValue(row[dedHeadersMap.lost_individual]),
-            deduction_lost_parcel_arbitration: parseNumericValue(row[dedHeadersMap.lost_parcel_arbitration]),
-            deduction_lost_parcel_road: parseNumericValue(row[dedHeadersMap.lost_parcel_road]),
-            deduction_lost_parcel_hub: parseNumericValue(row[dedHeadersMap.lost_parcel_hub]),
+            deduction_others: parseNumericValue(dedHeadersMap.others ? row[dedHeadersMap.others] : undefined),
+            deduction_pending_cod: parseNumericValue(dedHeadersMap.pending_cod ? row[dedHeadersMap.pending_cod] : undefined),
+            deduction_hq_penalty: parseNumericValue(dedHeadersMap.hq_penalty ? row[dedHeadersMap.hq_penalty] : undefined),
+            deduction_duitnow_penalty: parseNumericValue(dedHeadersMap.duitnow_penalty ? row[dedHeadersMap.duitnow_penalty] : undefined),
+            deduction_late_cod_penalty: parseNumericValue(dedHeadersMap.late_cod_penalty ? row[dedHeadersMap.late_cod_penalty] : undefined),
+            deduction_lost_individual: parseNumericValue(dedHeadersMap.lost_individual ? row[dedHeadersMap.lost_individual] : undefined),
+            deduction_lost_parcel_arbitration: parseNumericValue(dedHeadersMap.lost_parcel_arbitration ? row[dedHeadersMap.lost_parcel_arbitration] : undefined),
+            deduction_lost_parcel_road: parseNumericValue(dedHeadersMap.lost_parcel_road ? row[dedHeadersMap.lost_parcel_road] : undefined),
+            deduction_lost_parcel_hub: parseNumericValue(dedHeadersMap.lost_parcel_hub ? row[dedHeadersMap.lost_parcel_hub] : undefined),
             lost_pic_signed: 0,
             lost_rate: 0,
             total_all_lost_shared: 0,
