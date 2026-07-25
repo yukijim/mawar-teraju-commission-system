@@ -38,7 +38,7 @@ class SearchRepository {
         OR
         (b.status != 'PUBLISHED' AND b2.status = b.status AND b2.version = b.version AND b.name = b2.name)
       )
-      LEFT JOIN deduction_records d ON b2.id = d.batch_id AND c.dispatcher_id = d.dispatcher_id
+      LEFT JOIN deduction_records d ON b2.id = d.batch_id AND (c.dispatcher_id = d.dispatcher_id OR c.ic_number = d.ic_number)
       WHERE b.deleted_at IS NULL
     `;
 

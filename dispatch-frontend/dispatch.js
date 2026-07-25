@@ -183,6 +183,38 @@ const Dispatch = {
         this.processDispatcherRecords(id, records, this.tempRawIc, this.tempLatency);
     },
 
+    calculateRecordTotals(record) {
+        const pSum = record.penaltySummary || {};
+        
+        const hqPenaltyVal = Number(record.deduction_hq_penalty || 0) > 0 ? 
+          Number(record.deduction_hq_penalty) : 
+          (Number(pSum.fake_return || 0) + Number(pSum.fake_problematic || 0) + Number(pSum.fraud_delivery || 0) + Number(pSum.arbitration || 0));
+          
+        const lostIndividualVal = Number(record.deduction_lost_individual || 0) > 0 ? 
+          Number(record.deduction_lost_individual) : 
+          Number(pSum.individual_lost || 0);
+
+        const grossComm = Number(record.total_commission || record.nett_commission || 0);
+        const totalDeds = Number(record.deduction_others || 0) +
+                          Number(record.deduction_pending_cod || 0) +
+                          hqPenaltyVal +
+                          Number(record.deduction_duitnow_penalty || 0) +
+                          Number(record.deduction_late_cod_penalty || 0) +
+                          lostIndividualVal +
+                          Number(record.deduction_lost_parcel_arbitration || 0) +
+                          Number(record.deduction_lost_parcel_road || 0) +
+                          Number(record.deduction_lost_parcel_hub || 0);
+
+        const additions = Number(record.addition_refund_penalty || 0) +
+                          Number(record.addition_pickup_commission || 0) +
+                          Number(record.addition_others || 0) +
+                          Number(record.addition_sorter || 0) +
+                          Number(record.addition_extra_reward || 0);
+
+        const netComm = Math.max(0, grossComm + additions - totalDeds);
+        return { grossComm, totalDeds, additions, netComm, hqPenaltyVal, lostIndividualVal };
+    },
+
     processDispatcherRecords(dispatcherId, records, rawIc, latency) {
         const selectionArea = document.getElementById('search-selection-area');
         
@@ -209,10 +241,11 @@ const Dispatch = {
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                         ${records.map((rec, idx) => {
                             const batchName = rec.batch_name || rec.batchName || `Batch ID ${rec.batch_id || rec.batchId}`;
+                            const totals = this.calculateRecordTotals(rec);
                             return `
                                 <button class="btn btn-secondary" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem; width: 100%; border: 1px solid rgba(255, 255, 255, 0.1);" onclick="Dispatch.selectRecord(${idx})">
                                     <i data-lucide="file-text" style="margin-right: 0.5rem; color: var(--info);"></i> 
-                                    <strong style="color: var(--info); margin-right: 0.5rem;">${batchName}</strong> (Bersih: RM ${Number(rec.final_amount_to_pay || rec.nett_commission || 0).toFixed(2)})
+                                    <strong style="color: var(--info); margin-right: 0.5rem;">${batchName}</strong> (Bersih: RM ${totals.netComm.toFixed(2)})
                                 </button>
                             `;
                         }).join('')}
@@ -253,34 +286,7 @@ const Dispatch = {
         this.currentSearchedRecord = record;
 
         // Math calculations for split views
-        const pSum = record.penaltySummary || {};
-        
-        const hqPenaltyVal = Number(record.deduction_hq_penalty || 0) > 0 ? 
-          Number(record.deduction_hq_penalty) : 
-          (Number(pSum.fake_return || 0) + Number(pSum.fake_problematic || 0) + Number(pSum.fraud_delivery || 0) + Number(pSum.arbitration || 0));
-          
-        const lostIndividualVal = Number(record.deduction_lost_individual || 0) > 0 ? 
-          Number(record.deduction_lost_individual) : 
-          Number(pSum.individual_lost || 0);
-
-        const grossComm = Number(record.total_commission || record.nett_commission || 0);
-        const totalDeds = Number(record.deduction_others || 0) +
-                          Number(record.deduction_pending_cod || 0) +
-                          hqPenaltyVal +
-                          Number(record.deduction_duitnow_penalty || 0) +
-                          Number(record.deduction_late_cod_penalty || 0) +
-                          lostIndividualVal +
-                          Number(record.deduction_lost_parcel_arbitration || 0) +
-                          Number(record.deduction_lost_parcel_road || 0) +
-                          Number(record.deduction_lost_parcel_hub || 0);
-
-        const additions = Number(record.addition_refund_penalty || 0) +
-                          Number(record.addition_pickup_commission || 0) +
-                          Number(record.addition_others || 0) +
-                          Number(record.addition_sorter || 0) +
-                          Number(record.addition_extra_reward || 0);
-
-        const netComm = Math.max(0, grossComm + additions - totalDeds);
+        const { grossComm, totalDeds, additions, netComm, hqPenaltyVal, lostIndividualVal } = this.calculateRecordTotals(record);
 
         // Populate elements
         const nameEl = window.DomCache.get('result-rider-name');
