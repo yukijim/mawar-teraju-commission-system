@@ -449,10 +449,13 @@ const Dispatch = {
                     }
                 }
 
+                const isDeduction = field.key.startsWith('deduction_');
+                const valColor = isDeduction ? 'var(--danger)' : 'var(--text-primary)';
+
                 fieldsHtml += `
                     <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem;">
                         <span style="color: var(--text-secondary); text-transform: none;">${field.label}</span>
-                        <span style="color: var(--text-primary); font-weight: 600;">${displayValue}</span>
+                        <span style="color: ${valColor}; font-weight: 600;">${displayValue}</span>
                     </div>
                 `;
             });
