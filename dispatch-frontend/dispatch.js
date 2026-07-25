@@ -367,11 +367,12 @@ const Dispatch = {
                     fieldsHtml += `
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: HQ PENALTY</span>
-                            <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
-                                <span>${hqDisplay}</span>
-                                <span style="color: var(--primary); font-weight: 500; font-size: 0.75rem;">(klik disini)</span>
-                                <i data-lucide="external-link" style="width: 12px; height: 12px; color: var(--primary);"></i>
-                            </a>
+                            <div style="display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
+                                <span style="color: var(--text-primary); font-weight: 600;">${hqDisplay}</span>
+                                <a href="${penaltyUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; color: var(--primary); text-decoration: none; padding: 2px;" title="Semak Rekod Penalty">
+                                    <i data-lucide="external-link" style="width: 14px; height: 14px; color: var(--primary);"></i>
+                                </a>
+                            </div>
                         </div>
                     `;
 
@@ -412,11 +413,12 @@ const Dispatch = {
                     fieldsHtml += `
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; align-items: center;">
                             <span style="color: var(--text-secondary); text-transform: none;">DEDUCTION: LOST INDIVIDUAL</span>
-                            <a href="${penaltyUrl}" target="_blank" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); text-decoration: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
-                                <span>RM ${lostInd.toFixed(2)}</span>
-                                <span style="color: var(--primary); font-weight: 500; font-size: 0.75rem;">(klik disini)</span>
-                                <i data-lucide="external-link" style="width: 12px; height: 12px; color: var(--primary);"></i>
-                            </a>
+                            <div style="display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
+                                <span style="color: var(--text-primary); font-weight: 600;">RM ${lostInd.toFixed(2)}</span>
+                                <a href="${penaltyUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; color: var(--primary); text-decoration: none; padding: 2px;" title="Semak Rekod Penalty">
+                                    <i data-lucide="external-link" style="width: 14px; height: 14px; color: var(--primary);"></i>
+                                </a>
+                            </div>
                         </div>
                     `;
                     return;
