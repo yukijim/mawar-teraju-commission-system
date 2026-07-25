@@ -33,18 +33,18 @@ class SearchRepository {
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
       JOIN batches b ON c.batch_id = b.id
-      LEFT JOIN batches b2 ON b2.id = (
-        SELECT id FROM batches 
-        WHERE month = b.month AND year = b.year AND type = 'DEDUCTION' AND deleted_at IS NULL
+      LEFT JOIN LATERAL (
+        SELECT d_inner.* FROM deduction_records d_inner
+        JOIN batches b2 ON d_inner.batch_id = b2.id
+        WHERE b2.month = b.month AND b2.year = b.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL
           AND (
-            (b.status = 'PUBLISHED' AND status = 'PUBLISHED')
-            OR
-            (b.status != 'PUBLISHED' AND (status = 'PUBLISHED' OR status = b.status))
+            c.dispatcher_id = d_inner.dispatcher_id 
+            OR c.ic_number = d_inner.ic_number 
+            OR (c.ic_number IS NOT NULL AND d_inner.ic_number IS NOT NULL AND REPLACE(REPLACE(c.ic_number, '-', ''), ' ', '') = REPLACE(REPLACE(d_inner.ic_number, '-', ''), ' ', ''))
           )
-        ORDER BY published_at DESC NULLS LAST, created_at DESC
+        ORDER BY CASE WHEN b2.status = 'PUBLISHED' THEN 1 WHEN b2.status = 'DRAFT' THEN 2 ELSE 3 END, b2.published_at DESC NULLS LAST, b2.created_at DESC
         LIMIT 1
-      )
-      LEFT JOIN deduction_records d ON b2.id = d.batch_id AND (c.dispatcher_id = d.dispatcher_id OR c.ic_number = d.ic_number)
+      ) d ON TRUE
       WHERE b.deleted_at IS NULL
     `;
 
