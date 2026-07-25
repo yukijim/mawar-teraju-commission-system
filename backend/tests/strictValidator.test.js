@@ -85,8 +85,7 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     'DEDUCTION: HQ PENALTY',
     'DEDUCTION: DUITNOW PENALTY',
     'DEDUCTION: LATE COD PENALTY',
-    'DEDUCTION: LOST INDIVIDUAL',
-    'DEDUCTION: LOST PARCEL HUB'
+    'DEDUCTION: LOST INDIVIDUAL'
   ];
 
   const dedMappingKeys = {
@@ -98,8 +97,7 @@ describe('Strict Excel Header & Sheet Validator Tests', () => {
     'DEDUCTION: HQ PENALTY': 'hq_penalty',
     'DEDUCTION: DUITNOW PENALTY': 'duitnow_penalty',
     'DEDUCTION: LATE COD PENALTY': 'late_cod_penalty',
-    'DEDUCTION: LOST INDIVIDUAL': 'lost_individual',
-    'DEDUCTION: LOST PARCEL HUB': 'lost_parcel_hub'
+    'DEDUCTION: LOST INDIVIDUAL': 'lost_individual'
   };
 
   validDedHeaders.forEach(col => {

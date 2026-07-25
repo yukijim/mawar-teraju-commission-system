@@ -141,7 +141,7 @@ class UploadService {
       requiredKeys = [
         'ic_number', 'dispatcher_id', 'name', 'others', 'pending_cod', 
         'hq_penalty', 'duitnow_penalty', 'late_cod_penalty', 
-        'lost_individual', 'lost_parcel_hub'
+        'lost_individual'
       ];
       mappingRules = this.DEDUCTION_MAPPING_RULES;
     }
