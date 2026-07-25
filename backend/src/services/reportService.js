@@ -33,6 +33,8 @@ class ReportService {
         COALESCE(d.deduction_duitnow_penalty, 0) as deduction_duitnow_penalty,
         COALESCE(d.deduction_late_cod_penalty, 0) as deduction_late_cod_penalty,
         COALESCE(d.deduction_lost_individual, 0) as deduction_lost_individual,
+        COALESCE(d.deduction_lost_parcel_arbitration, 0) as deduction_lost_parcel_arbitration,
+        COALESCE(d.deduction_lost_parcel_road, 0) as deduction_lost_parcel_road,
         COALESCE(d.deduction_lost_parcel_hub, 0) as deduction_lost_parcel_hub,
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
@@ -183,6 +185,8 @@ class ReportService {
           COALESCE(d.deduction_duitnow_penalty, 0) as deduction_duitnow_penalty,
           COALESCE(d.deduction_late_cod_penalty, 0) as deduction_late_cod_penalty,
           COALESCE(d.deduction_lost_individual, 0) as deduction_lost_individual,
+          COALESCE(d.deduction_lost_parcel_arbitration, 0) as deduction_lost_parcel_arbitration,
+          COALESCE(d.deduction_lost_parcel_road, 0) as deduction_lost_parcel_road,
           COALESCE(d.deduction_lost_parcel_hub, 0) as deduction_lost_parcel_hub,
           b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
         FROM commission_records c

@@ -259,6 +259,8 @@ class SimplePdfGenerator {
         { label: 'DEDUCTION: DUITNOW PENALTY', val: record.deduction_duitnow_penalty },
         { label: 'DEDUCTION: LATE COD PENALTY', val: record.deduction_late_cod_penalty },
         { label: 'DEDUCTION: LOST INDIVIDUAL', val: record.deduction_lost_individual },
+        { label: 'DEDUCTION: LOST PARCEL ARBITRATION', val: record.deduction_lost_parcel_arbitration },
+        { label: 'DEDUCTION: LOST PARCEL ROAD', val: record.deduction_lost_parcel_road },
         { label: 'DEDUCTION: LOST PARCEL HUB', val: record.deduction_lost_parcel_hub }
       ];
 

@@ -270,6 +270,8 @@ const Dispatch = {
                           Number(record.deduction_duitnow_penalty || 0) +
                           Number(record.deduction_late_cod_penalty || 0) +
                           lostIndividualVal +
+                          Number(record.deduction_lost_parcel_arbitration || 0) +
+                          Number(record.deduction_lost_parcel_road || 0) +
                           Number(record.deduction_lost_parcel_hub || 0);
 
         const additions = Number(record.addition_refund_penalty || 0) +
@@ -315,6 +317,8 @@ const Dispatch = {
                 { key: 'deduction_duitnow_penalty', label: 'DEDUCTION: DUITNOW PENALTY', type: 'currency' },
                 { key: 'deduction_late_cod_penalty', label: 'DEDUCTION: LATE COD PENALTY', type: 'currency' },
                 { key: 'deduction_lost_individual', label: 'DEDUCTION: LOST INDIVIDUAL', type: 'currency' },
+                { key: 'deduction_lost_parcel_arbitration', label: 'DEDUCTION: LOST PARCEL ARBITRATION', type: 'currency' },
+                { key: 'deduction_lost_parcel_road', label: 'DEDUCTION: LOST PARCEL ROAD', type: 'currency' },
                 { key: 'deduction_lost_parcel_hub', label: 'DEDUCTION: LOST PARCEL HUB', type: 'currency' },
                 { key: 'nett_commission', label: 'NETT COMMISSION', type: 'currency' }
             ];

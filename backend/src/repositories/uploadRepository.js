@@ -244,25 +244,26 @@ class UploadRepository {
         $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7},
         $${paramIndex + 8}, $${paramIndex + 9}, $${paramIndex + 10}, $${paramIndex + 11},
         $${paramIndex + 12}, $${paramIndex + 13}, $${paramIndex + 14}, $${paramIndex + 15},
-        $${paramIndex + 16}, $${paramIndex + 17}, $${paramIndex + 18}
+        $${paramIndex + 16}, $${paramIndex + 17}, $${paramIndex + 18}, $${paramIndex + 19},
+        $${paramIndex + 20}
       )`);
 
       values.push(
         batchId, r.dispatcher_id, r.ic_number, r.name,
         r.deduction_others || 0, r.deduction_pending_cod || 0, r.deduction_hq_penalty || 0, r.deduction_duitnow_penalty || 0,
-        r.deduction_late_cod_penalty || 0, r.deduction_lost_individual || 0, r.deduction_lost_parcel_hub || 0,
+        r.deduction_late_cod_penalty || 0, r.deduction_lost_individual || 0, r.deduction_lost_parcel_arbitration || 0, r.deduction_lost_parcel_road || 0, r.deduction_lost_parcel_hub || 0,
         r.lost_pic_signed || 0, r.lost_rate || 0, r.total_all_lost_shared || 0, r.lost_parcel_pic_signed || 0,
         r.arbi_individual || 0, r.rcgen_penalty || 0, r.qc_penalty || 0, r.total_hq_penalty_detail || 0
       );
 
-      paramIndex += 19;
+      paramIndex += 21;
     });
 
     const text = `
       INSERT INTO deduction_records (
         batch_id, dispatcher_id, ic_number, name,
         deduction_others, deduction_pending_cod, deduction_hq_penalty, deduction_duitnow_penalty,
-        deduction_late_cod_penalty, deduction_lost_individual, deduction_lost_parcel_hub,
+        deduction_late_cod_penalty, deduction_lost_individual, deduction_lost_parcel_arbitration, deduction_lost_parcel_road, deduction_lost_parcel_hub,
         lost_pic_signed, lost_rate, total_all_lost_shared, lost_parcel_pic_signed,
         arbi_individual, rcgen_penalty, qc_penalty, total_hq_penalty_detail
       )

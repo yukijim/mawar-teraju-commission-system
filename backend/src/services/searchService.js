@@ -219,6 +219,8 @@ class SearchService {
           deductionDuitnowPenalty: parseFloat(r.deduction_duitnow_penalty),
           deductionLateCodPenalty: parseFloat(r.deduction_late_cod_penalty),
           deductionLostIndividual: parseFloat(r.deduction_lost_individual),
+          deductionLostParcelArbitration: parseFloat(r.deduction_lost_parcel_arbitration || 0),
+          deductionLostParcelRoad: parseFloat(r.deduction_lost_parcel_road || 0),
           deductionLostParcelHub: parseFloat(r.deduction_lost_parcel_hub),
           lostPicSigned: parseFloat(r.lost_pic_signed || 0),
           lostRate: parseFloat(r.lost_rate || 0),

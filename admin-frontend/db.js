@@ -552,6 +552,8 @@ class IndexedDBRepository extends CommissionRepository {
                 deduction_duitnow_penalty: deduction ? deduction.deduction_duitnow_penalty : 0,
                 deduction_late_cod_penalty: deduction ? deduction.deduction_late_cod_penalty : 0,
                 deduction_lost_individual: deduction ? deduction.deduction_lost_individual : 0,
+                deduction_lost_parcel_arbitration: deduction ? deduction.deduction_lost_parcel_arbitration : 0,
+                deduction_lost_parcel_road: deduction ? deduction.deduction_lost_parcel_road : 0,
                 deduction_lost_parcel_hub: deduction ? deduction.deduction_lost_parcel_hub : 0,
 
                 // Detailed penalty items (Details Penalty sheet)
@@ -1084,6 +1086,8 @@ class PostgresRestRepository extends CommissionRepository {
                     deduction_duitnow_penalty: ded.deductionDuitnowPenalty || 0,
                     deduction_late_cod_penalty: ded.deductionLateCodPenalty || 0,
                     deduction_lost_individual: ded.deductionLostIndividual || 0,
+                    deduction_lost_parcel_arbitration: ded.deductionLostParcelArbitration || 0,
+                    deduction_lost_parcel_road: ded.deductionLostParcelRoad || 0,
                     deduction_lost_parcel_hub: ded.deductionLostParcelHub || 0,
 
                     lost_pic_signed: ded.lostPicSigned || 0,

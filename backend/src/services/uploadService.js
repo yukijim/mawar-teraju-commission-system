@@ -101,6 +101,8 @@ class UploadService {
     duitnow_penalty: ['deduction duitnow penalty', 'deduction: duitnow penalty'],
     late_cod_penalty: ['deduction late cod penalty', 'deduction: late cod penalty'],
     lost_individual: ['deduction lost individual', 'deduction: lost individual'],
+    lost_parcel_arbitration: ['deduction lost parcel arbitration', 'deduction: lost parcel arbitration', 'lost parcel arbitration'],
+    lost_parcel_road: ['deduction lost parcel road', 'deduction: lost parcel road', 'lost parcel road'],
     lost_parcel_hub: ['deduction lost parcel hub', 'deduction: lost parcel hub']
   };
 
@@ -610,6 +612,8 @@ class UploadService {
             deduction_duitnow_penalty: parseNumericValue(row[dedHeadersMap.duitnow_penalty]),
             deduction_late_cod_penalty: parseNumericValue(row[dedHeadersMap.late_cod_penalty]),
             deduction_lost_individual: parseNumericValue(row[dedHeadersMap.lost_individual]),
+            deduction_lost_parcel_arbitration: parseNumericValue(row[dedHeadersMap.lost_parcel_arbitration]),
+            deduction_lost_parcel_road: parseNumericValue(row[dedHeadersMap.lost_parcel_road]),
             deduction_lost_parcel_hub: parseNumericValue(row[dedHeadersMap.lost_parcel_hub]),
             lost_pic_signed: 0,
             lost_rate: 0,
