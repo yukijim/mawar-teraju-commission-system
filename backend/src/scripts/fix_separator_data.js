@@ -57,11 +57,19 @@ const DEDUCTION_MAPPING_RULES = {
   name: ['delivery dispatcher name'],
   others: ['deduction others', 'deduction: others', 'deduction advance', 'deduction: advance'],
   pending_cod: ['deduction pending cod', 'deduction: pending cod'],
-  hq_penalty: ['deduction hq penalty', 'deduction: hq penalty'],
-  duitnow_penalty: ['deduction duitnow penalty', 'deduction: duitnow penalty'],
-  late_cod_penalty: ['deduction late cod penalty', 'deduction: late cod penalty'],
-  lost_individual: ['deduction lost individual', 'deduction: lost individual'],
-  lost_parcel_hub: ['deduction lost parcel hub', 'deduction: lost parcel hub']
+  hq_penalty: ['deduction hq penalty', 'deduction: hq penalty', 'hq penalty'],
+  duitnow_penalty: ['deduction duitnow penalty', 'deduction: duitnow penalty', 'duitnow penalty'],
+  late_cod_penalty: ['deduction late cod penalty', 'deduction: late cod penalty', 'late cod penalty'],
+  lost_individual: ['deduction lost individual', 'deduction: lost individual', 'lost individual'],
+  lost_parcel_arbitration: [
+    'deduction lost parcel arbitration', 'deduction: lost parcel arbitration', 'lost parcel arbitration',
+    'deduction: lost parcel arbi', 'deduction lost parcel arbi', 'deduction: arbitration', 'deduction arbitration', 'arbitration'
+  ],
+  lost_parcel_road: [
+    'deduction lost parcel road', 'deduction: lost parcel road', 'lost parcel road',
+    'deduction: road', 'deduction road', 'road'
+  ],
+  lost_parcel_hub: ['deduction lost parcel hub', 'deduction: lost parcel hub', 'lost parcel hub']
 };
 
 const getSheetRows = (sheet) => {
