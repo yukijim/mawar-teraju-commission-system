@@ -33,11 +33,7 @@ class SearchRepository {
         b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
       FROM commission_records c
       JOIN batches b ON c.batch_id = b.id
-      LEFT JOIN batches b2 ON b.month = b2.month AND b.year = b2.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL AND (
-        (b.status = 'PUBLISHED' AND b2.status = 'PUBLISHED' AND b2.is_active = TRUE)
-        OR
-        (b.status != 'PUBLISHED' AND b2.status = b.status AND b2.version = b.version AND b.name = b2.name)
-      )
+      LEFT JOIN batches b2 ON b.month = b2.month AND b.year = b2.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL
       LEFT JOIN deduction_records d ON b2.id = d.batch_id AND (c.dispatcher_id = d.dispatcher_id OR c.ic_number = d.ic_number)
       WHERE b.deleted_at IS NULL
     `;
