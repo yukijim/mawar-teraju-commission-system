@@ -70,6 +70,29 @@ class ReportController {
       next(err);
     }
   };
+
+  /**
+   * GET /api/v1/reports/bulk-payslips
+   * Generates and streams a ZIP file containing all individual payslips for the latest upload/active batch.
+   */
+  downloadBulkPayslips = async (req, res, next) => {
+    try {
+      const { batchId } = req.query;
+      const { filename, buffer } = await reportService.generateBulkPayslipsZip(
+        batchId || null,
+        req.user,
+        req.ip,
+        req
+      );
+
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.end(buffer);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new ReportController();
+

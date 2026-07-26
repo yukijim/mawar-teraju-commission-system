@@ -82,12 +82,17 @@
 
             <!-- Stats Grid -->
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><i data-lucide="database"></i></div>
-                    <div class="stat-info">
-                        <h4>Jumlah Rekod</h4>
-                        <p id="stats-total-records">0</p>
+                <div class="stat-card stat-card-action">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div class="stat-icon"><i data-lucide="database"></i></div>
+                        <div class="stat-info">
+                            <h4>Jumlah Rekod</h4>
+                            <p id="stats-total-records">0</p>
+                        </div>
                     </div>
+                    <button id="btn-download-all-payslips" class="btn btn-primary btn-sm" onclick="Dashboard.downloadAllPayslips()" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; padding: 0.45rem 0.75rem; white-space: nowrap; border-radius: var(--radius-sm); transition: all 0.2s ease;">
+                        <i data-lucide="archive" style="width: 14px; height: 14px;"></i> <span>Download Semua Payslip</span>
+                    </button>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="color: var(--info); background: rgba(59, 130, 246, 0.1);"><i data-lucide="file-spreadsheet"></i></div>

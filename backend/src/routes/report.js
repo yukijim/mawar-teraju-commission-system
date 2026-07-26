@@ -25,4 +25,12 @@ router.get(
   reportController.downloadCombinedReport
 );
 
+// GET /api/v1/reports/bulk-payslips (downloads ZIP bundle of all payslips for latest batch)
+router.get(
+  '/bulk-payslips',
+  reportDownloadLimiter,
+  reportController.downloadBulkPayslips
+);
+
 module.exports = router;
+

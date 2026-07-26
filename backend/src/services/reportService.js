@@ -288,6 +288,118 @@ class ReportService {
       buffer: pdfBuffer
     };
   }
+
+  /**
+   * Generates a single ZIP archive containing individual PDF payslips
+   * for ALL records in the specified or latest upload batch.
+   */
+  async generateBulkPayslipsZip(targetBatchId = null, user = null, ipAddress = '127.0.0.1', req = null) {
+    const SimpleZipGenerator = require('../utils/zipGenerator');
+    let batch = null;
+
+    if (targetBatchId) {
+      const batchRes = await db.query('SELECT * FROM batches WHERE id = $1 AND deleted_at IS NULL', [targetBatchId]);
+      batch = batchRes.rows[0];
+    }
+
+    if (!batch) {
+      // Find latest active batch, or fallback to most recent uploaded/created batch
+      const latestBatchRes = await db.query(`
+        SELECT * FROM batches 
+        WHERE deleted_at IS NULL 
+        ORDER BY is_active DESC, published_at DESC NULLS LAST, created_at DESC 
+        LIMIT 1
+      `);
+      batch = latestBatchRes.rows[0];
+    }
+
+    if (!batch) {
+      throw new AppError('No active or uploaded batch found for payslip generation.', 404, 'BATCH_NOT_FOUND');
+    }
+
+    // Query all records in this batch joined with deduction details
+    const recordsQuery = `
+      SELECT 
+        c.*, 
+        COALESCE(d.deduction_others, 0) as deduction_others,
+        COALESCE(d.deduction_pending_cod, 0) as deduction_pending_cod,
+        COALESCE(d.deduction_hq_penalty, 0) as deduction_hq_penalty,
+        COALESCE(d.deduction_duitnow_penalty, 0) as deduction_duitnow_penalty,
+        COALESCE(d.deduction_late_cod_penalty, 0) as deduction_late_cod_penalty,
+        COALESCE(d.deduction_lost_individual, 0) as deduction_lost_individual,
+        COALESCE(d.deduction_lost_parcel_arbitration, 0) as deduction_lost_parcel_arbitration,
+        COALESCE(d.deduction_lost_parcel_road, 0) as deduction_lost_parcel_road,
+        COALESCE(d.deduction_lost_parcel_hub, 0) as deduction_lost_parcel_hub,
+        b.name as batch_name, b.month, b.year, b.status as batch_status, b.is_active, b.version, b.published_at
+      FROM commission_records c
+      JOIN batches b ON c.batch_id = b.id
+      LEFT JOIN LATERAL (
+        SELECT d_inner.* FROM deduction_records d_inner
+        JOIN batches b2 ON d_inner.batch_id = b2.id
+        WHERE b2.month = b.month AND b2.year = b.year AND b2.type = 'DEDUCTION' AND b2.deleted_at IS NULL
+          AND (
+            c.dispatcher_id = d_inner.dispatcher_id 
+            OR c.ic_number = d_inner.ic_number 
+            OR (c.ic_number IS NOT NULL AND d_inner.ic_number IS NOT NULL AND REPLACE(REPLACE(c.ic_number, '-', ''), ' ', '') = REPLACE(REPLACE(d_inner.ic_number, '-', ''), ' ', ''))
+          )
+        ORDER BY CASE WHEN b2.status = 'PUBLISHED' THEN 1 WHEN b2.status = 'DRAFT' THEN 2 ELSE 3 END, b2.published_at DESC NULLS LAST, b2.created_at DESC
+        LIMIT 1
+      ) d ON TRUE
+      WHERE c.batch_id = $1 AND b.deleted_at IS NULL
+      ORDER BY c.dispatcher_id ASC, c.id ASC
+    `;
+
+    const recordsRes = await db.query(recordsQuery, [batch.id]);
+    const records = recordsRes.rows;
+
+    if (records.length === 0) {
+      throw new AppError(`No commission records found for batch "${batch.name}".`, 404, 'RECORDS_NOT_FOUND');
+    }
+
+    const zip = new SimpleZipGenerator();
+    const usedFilenames = new Set();
+    const searcherUsername = user ? user.username : 'ADMIN_USER';
+
+    records.forEach((record, index) => {
+      const pdfBuffer = SimplePdfGenerator.generateCombinedPdf(record, searcherUsername, ipAddress);
+
+      const cleanDispId = (record.dispatcher_id || 'DISPATCH').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const cleanName = (record.name || 'PENGGUNA').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+      let filename = `Payslip_${cleanDispId}_${cleanName}.pdf`;
+
+      if (usedFilenames.has(filename)) {
+        filename = `Payslip_${cleanDispId}_${cleanName}_${index + 1}.pdf`;
+      }
+      usedFilenames.add(filename);
+
+      zip.addFile(filename, pdfBuffer);
+    });
+
+    const zipBuffer = zip.generate();
+    const cleanBatchName = (batch.name || 'BATCH').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const zipFilename = `Payslips_Batch_${cleanBatchName}_${batch.month || ''}_${batch.year || ''}.zip`;
+
+    // Audit Log
+    if (user) {
+      await auditLogService.logSuccessLogin(user.id, req, {
+        action: 'BULK_PAYSLIPS_DOWNLOADED',
+        batchId: batch.id,
+        batchName: batch.name,
+        recordCount: records.length,
+        ipAddress,
+        time: new Date().toISOString(),
+        user: { id: user.id, username: user.username, role: user.role }
+      });
+    }
+
+    return {
+      filename: zipFilename,
+      buffer: zipBuffer,
+      recordCount: records.length,
+      batchName: batch.name
+    };
+  }
 }
 
 module.exports = new ReportService();
+

@@ -284,7 +284,95 @@ const Dashboard = {
                 }
             }
         }
+    },
+
+    /**
+     * Triggers bulk payslips generation & ZIP download for the active/latest batch.
+     */
+    async downloadAllPayslips() {
+        const btn = document.getElementById('btn-download-all-payslips');
+        const statsRecordsEl = window.DomCache ? window.DomCache.get('stats-total-records') : document.getElementById('stats-total-records');
+        const totalCount = statsRecordsEl ? parseInt(statsRecordsEl.textContent.replace(/,/g, ''), 10) || 0 : 0;
+
+        if (totalCount === 0) {
+            if (window.UI) {
+                window.UI.showToast('Tiada Rekod', 'Tiada rekod komisen dikesan dalam batch ini untuk dimuat turun.', 'warning');
+            }
+            return;
+        }
+
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="spin" style="width: 14px; height: 14px; display: inline-block;"></i> <span>Menjana ZIP (${totalCount} rekod)...</span>`;
+            if (window.UI) window.UI.renderIcons();
+        }
+
+        if (window.UI) {
+            window.UI.showToast('Memproses Payslip', `Sedang menjana fail ZIP untuk ${totalCount} rekod payslip... Sila tunggu.`, 'info');
+        }
+
+        try {
+            let targetBatchId = null;
+            if (window.DB && typeof window.DB.getActiveBatch === 'function') {
+                const activeBatch = await window.DB.getActiveBatch();
+                if (activeBatch) {
+                    targetBatchId = activeBatch.commissionBatchId || activeBatch.id;
+                } else {
+                    const batches = await window.DB.getBatches();
+                    if (batches.length > 0) {
+                        targetBatchId = batches[0].commissionBatchId || batches[0].id;
+                    }
+                }
+            }
+
+            const url = targetBatchId ? `/api/v1/reports/bulk-payslips?batchId=${targetBatchId}` : '/api/v1/reports/bulk-payslips';
+            const res = await window.apiFetch(url);
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || 'Gagal menjana fail ZIP payslip.');
+            }
+
+            const blob = await res.blob();
+            const contentDisposition = res.headers.get('Content-Disposition');
+            let filename = `Payslips_Batch_${new Date().toISOString().substring(0,10)}.zip`;
+            
+            if (contentDisposition && contentDisposition.includes('filename=')) {
+                const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (match && match[1]) filename = match[1];
+            }
+
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+            if (window.UI) {
+                window.UI.showToast('Download Sukses', `Muat turun fail ZIP (${filename}) berjaya diselesaikan.`, 'success');
+            }
+        } catch (error) {
+            if (window.ErrorHandler) {
+                window.ErrorHandler.handle(error, 'Bulk Payslip Download');
+            } else {
+                console.error('[Dashboard] Bulk payslip download error:', error);
+                if (window.UI) {
+                    window.UI.showToast('Ralat Muat Turun', error.message || 'Gagal memuat turun fail ZIP.', 'danger');
+                }
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                if (window.UI) window.UI.renderIcons();
+            }
+        }
     }
 };
 
 window.Dashboard = Dashboard;
+
