@@ -22,4 +22,9 @@ describe('REEKOD Penalty Module Unit & Integration Tests', () => {
   it('should allow searching penalties by dispatcher ID', () => {
     assert.equal(typeof penaltyService.searchPenalties, 'function');
   });
+
+  it('should support deleting penalty upload batch and history', () => {
+    assert.equal(typeof penaltyRepository.deletePenaltyUploadBatch, 'function');
+    assert.equal(typeof penaltyService.deletePenaltyUpload, 'function');
+  });
 });

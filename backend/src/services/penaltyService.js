@@ -282,6 +282,15 @@ class PenaltyService {
       totalRecords
     };
   }
+
+  /**
+   * Deletes a penalty upload log entry and cleans up associated records
+   */
+  async deletePenaltyUpload(historyId, userId, req) {
+    const deletedBatch = await penaltyRepository.deletePenaltyUploadBatch(historyId);
+    await penaltyRepository.clearAllPenaltyRecords();
+    return { success: true, deletedBatch };
+  }
 }
 
 module.exports = new PenaltyService();

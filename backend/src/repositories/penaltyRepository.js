@@ -233,6 +233,40 @@ class PenaltyRepository {
       return inMemoryPenalties.length;
     }
   }
+
+  /**
+   * Deletes a penalty upload log entry
+   */
+  async deletePenaltyUploadBatch(id) {
+    const text = `DELETE FROM penalty_upload_batches WHERE id = $1 RETURNING *`;
+    try {
+      const result = await db.query(text, [id]);
+      return result.rows[0] || null;
+    } catch (err) {
+      if (err.code === '42P01') {
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Clears all penalty records (used when penalty upload log is deleted)
+   */
+  async clearAllPenaltyRecords() {
+    const text = `DELETE FROM penalty_records`;
+    try {
+      await db.query(text);
+      inMemoryPenalties.length = 0;
+      return true;
+    } catch (err) {
+      if (err.code === '42P01') {
+        inMemoryPenalties.length = 0;
+        return true;
+      }
+      throw err;
+    }
+  }
 }
 
 module.exports = new PenaltyRepository();

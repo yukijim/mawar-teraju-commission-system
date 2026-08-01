@@ -63,6 +63,19 @@ class PenaltyController {
       next(err);
     }
   };
+
+  /**
+   * DELETE /api/v1/penalty/upload-history/:id
+   */
+  deleteUploadHistory = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const result = await penaltyService.deletePenaltyUpload(id, req.user?.id, req);
+      return sendResponse(res, 200, true, 'Penalty upload record deleted successfully.', result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new PenaltyController();

@@ -40,6 +40,14 @@ router.get(
   penaltyController.getStats
 );
 
+// DELETE /api/v1/penalty/upload-history/:id (restricted to ADMIN)
+router.delete(
+  '/upload-history/:id',
+  authenticate(),
+  authorize('ADMIN'),
+  penaltyController.deleteUploadHistory
+);
+
 // GET /api/v1/penalty/search (public search for dispatcher detailed penalties)
 router.get(
   '/search',

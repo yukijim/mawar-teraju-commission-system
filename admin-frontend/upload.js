@@ -726,7 +726,7 @@ const Upload = {
             if (history.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Tiada rekod sejarah muat naik denda lagi.</td>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Tiada rekod sejarah muat naik denda lagi.</td>
                     </tr>
                 `;
                 return;
@@ -739,11 +739,46 @@ const Upload = {
                     <td style="white-space: nowrap; font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
                     <td style="font-weight: 600; color: var(--text-primary);">${item.filename || '-'}</td>
                     <td><span class="badge badge-success" style="font-size: 0.75rem;">${(item.records_imported || 0).toLocaleString()} rekod</span></td>
+                    <td>
+                        <button class="btn btn-link btn-danger" onclick="Upload.deletePenaltyHistory('${item.id}')" style="padding: 0; color: var(--danger); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Padam
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            if (window.UI) {
+                window.UI.renderIcons();
+            }
         } catch (err) {
             console.error('[Upload.fetchPenaltyHistory] Error:', err);
+        }
+    },
+
+    /**
+     * Deletes a past penalty upload entry from backend database
+     */
+    async deletePenaltyHistory(historyId) {
+        if (!confirm('Adakah anda pasti mahu memadamkan rekod muat naik denda ini?')) return;
+
+        try {
+            const res = await window.apiFetch(`/api/v1/penalty/upload-history/${historyId}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                const errResult = await res.json().catch(() => ({}));
+                throw new Error(errResult.message || 'Gagal memadamkan rekod muat naik denda.');
+            }
+
+            window.UI.showToast('Padam Berjaya', 'Rekod muat naik denda telah dibuang.', 'success');
+            await this.fetchPenaltyHistory();
+            if (window.App && typeof window.App.loadDashboardStats === 'function') {
+                await window.App.loadDashboardStats();
+            }
+        } catch (error) {
+            window.ErrorHandler.handle(error, 'Padam Rekod Denda');
         }
     }
 };

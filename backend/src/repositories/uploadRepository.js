@@ -35,7 +35,7 @@ class UploadRepository {
     const text = `
       SELECT b.*, u.username as uploader_name 
       FROM batches b
-      JOIN users u ON b.uploaded_by = u.id
+      LEFT JOIN users u ON b.uploaded_by = u.id
       WHERE b.deleted_at IS NULL
       ORDER BY b.uploaded_at DESC
     `;
