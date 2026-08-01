@@ -267,6 +267,22 @@ class PenaltyRepository {
       throw err;
     }
   }
+
+  /**
+   * Clears all penalty upload history log entries
+   */
+  async clearAllPenaltyUploadBatches() {
+    const text = `DELETE FROM penalty_upload_batches`;
+    try {
+      await db.query(text);
+      return true;
+    } catch (err) {
+      if (err.code === '42P01') {
+        return true;
+      }
+      throw err;
+    }
+  }
 }
 
 module.exports = new PenaltyRepository();

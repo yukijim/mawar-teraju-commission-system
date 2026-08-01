@@ -885,14 +885,14 @@ function parsePeriodFromName(name) {
 function groupAndMergeBatches(rawHistory) {
     const grouped = {};
     rawHistory.forEach(b => {
-        const key = b.name;
+        const key = b.name || `Batch_${b.id}`;
         if (!grouped[key]) {
             grouped[key] = {
                 id: b.id,
-                name: b.name,
+                name: b.name || 'Batch',
                 month: b.month,
                 year: b.year,
-                createdTime: new Date(b.created_at || b.uploaded_at).getTime(),
+                createdTime: new Date(b.created_at || b.uploaded_at || Date.now()).getTime(),
                 publishedTime: b.published_at ? new Date(b.published_at).getTime() : null,
                 commissionFilename: '',
                 deductionFilename: '',
@@ -904,18 +904,25 @@ function groupAndMergeBatches(rawHistory) {
         }
         
         const g = grouped[key];
-        const isPublished = b.status === 'PUBLISHED';
+        const isPublished = (b.status || '').toUpperCase() === 'PUBLISHED';
         const isActive = !!(b.active || b.is_active);
+        const batchType = (b.type || '').toUpperCase();
+        const recCount = parseInt(b.record_count, 10) || 0;
 
-        if (b.type === 'COMMISSION') {
+        if (batchType === 'COMMISSION' || batchType === 'KOMISEN') {
             g.commissionFilename = b.filename;
-            g.commissionCount = b.record_count;
+            g.commissionCount = recCount;
             g.commissionBatchId = b.id;
             g.id = b.id;
-        } else if (b.type === 'DEDUCTION') {
+        } else if (batchType === 'DEDUCTION' || batchType === 'POTONGAN') {
             g.deductionFilename = b.filename;
-            g.deductionCount = b.record_count;
+            g.deductionCount = recCount;
             g.deductionBatchId = b.id;
+            if (!g.id) g.id = b.id;
+        } else {
+            g.commissionFilename = b.filename;
+            g.commissionCount = recCount;
+            g.commissionBatchId = b.id;
             if (!g.id) g.id = b.id;
         }
 

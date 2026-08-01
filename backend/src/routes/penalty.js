@@ -48,6 +48,14 @@ router.delete(
   penaltyController.deleteUploadHistory
 );
 
+// DELETE /api/v1/penalty/clear (restricted to ADMIN)
+router.delete(
+  '/clear',
+  authenticate(),
+  authorize('ADMIN'),
+  penaltyController.clearAllPenalties
+);
+
 // GET /api/v1/penalty/search (public search for dispatcher detailed penalties)
 router.get(
   '/search',

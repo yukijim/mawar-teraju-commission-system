@@ -16,10 +16,13 @@ const Dashboard = {
             const activeBatch = await window.DB.getActiveBatch();
             const batches = await window.DB.getBatches();
             
-            // Get records count based on active batch, or fallback to legacy records
+            // Get records count based on active batch, or fallback to latest batch/legacy records
             let totalRecordsCount = 0;
             if (activeBatch) {
-                totalRecordsCount = activeBatch.commissionCount;
+                totalRecordsCount = activeBatch.commissionCount || activeBatch.deductionCount || 0;
+            } else if (batches && batches.length > 0) {
+                const latest = batches[0];
+                totalRecordsCount = latest.commissionCount || latest.deductionCount || 0;
             } else if (window.location.pathname.includes('test_runner.html')) {
                 totalRecordsCount = await window.DB.transaction(['records'], 'readonly', async (tx) => {
                     const store = tx.objectStore('records');

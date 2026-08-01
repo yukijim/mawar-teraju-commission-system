@@ -11,9 +11,18 @@ class UploadRepository {
    * @returns {Promise<object|null>}
    */
   async findBatchByChecksum(checksum) {
-    const text = 'SELECT * FROM batches WHERE checksum = $1 AND deleted_at IS NULL';
-    const result = await db.query(text, [checksum]);
-    return result.rows[0] || null;
+    try {
+      const text = 'SELECT * FROM batches WHERE checksum = $1 AND deleted_at IS NULL';
+      const result = await db.query(text, [checksum]);
+      return result.rows[0] || null;
+    } catch (err) {
+      if (err.code === '42703') {
+        const text = 'SELECT * FROM batches WHERE checksum = $1';
+        const result = await db.query(text, [checksum]);
+        return result.rows[0] || null;
+      }
+      throw err;
+    }
   }
 
   /**
@@ -22,9 +31,18 @@ class UploadRepository {
    * @returns {Promise<object|null>}
    */
   async findBatchById(batchId) {
-    const text = 'SELECT * FROM batches WHERE id = $1 AND deleted_at IS NULL';
-    const result = await db.query(text, [batchId]);
-    return result.rows[0] || null;
+    try {
+      const text = 'SELECT * FROM batches WHERE id = $1 AND deleted_at IS NULL';
+      const result = await db.query(text, [batchId]);
+      return result.rows[0] || null;
+    } catch (err) {
+      if (err.code === '42703') {
+        const text = 'SELECT * FROM batches WHERE id = $1';
+        const result = await db.query(text, [batchId]);
+        return result.rows[0] || null;
+      }
+      throw err;
+    }
   }
 
   /**
@@ -32,15 +50,29 @@ class UploadRepository {
    * @returns {Promise<Array<object>>}
    */
   async getUploadHistory() {
-    const text = `
-      SELECT b.*, u.username as uploader_name 
-      FROM batches b
-      LEFT JOIN users u ON b.uploaded_by = u.id
-      WHERE b.deleted_at IS NULL
-      ORDER BY b.uploaded_at DESC
-    `;
-    const result = await db.query(text);
-    return result.rows;
+    try {
+      const text = `
+        SELECT b.*, u.username as uploader_name 
+        FROM batches b
+        LEFT JOIN users u ON b.uploaded_by = u.id
+        WHERE b.deleted_at IS NULL
+        ORDER BY b.uploaded_at DESC
+      `;
+      const result = await db.query(text);
+      return result.rows;
+    } catch (err) {
+      if (err.code === '42703') { // column deleted_at or uploaded_at does not exist
+        const fallbackText = `
+          SELECT b.*, u.username as uploader_name 
+          FROM batches b
+          LEFT JOIN users u ON b.uploaded_by = u.id
+          ORDER BY b.id DESC
+        `;
+        const result = await db.query(fallbackText);
+        return result.rows;
+      }
+      throw err;
+    }
   }
 
   /**

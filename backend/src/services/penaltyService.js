@@ -291,6 +291,15 @@ class PenaltyService {
     await penaltyRepository.clearAllPenaltyRecords();
     return { success: true, deletedBatch };
   }
+
+  /**
+   * Deletes all penalty records and upload batches from database
+   */
+  async clearAllPenalties(userId, req) {
+    await penaltyRepository.clearAllPenaltyRecords();
+    await penaltyRepository.clearAllPenaltyUploadBatches();
+    return { success: true, message: 'Semua data denda telah dipadamkan.' };
+  }
 }
 
 module.exports = new PenaltyService();

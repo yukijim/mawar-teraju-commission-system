@@ -76,6 +76,18 @@ class PenaltyController {
       next(err);
     }
   };
+
+  /**
+   * DELETE /api/v1/penalty/clear
+   */
+  clearAllPenalties = async (req, res, next) => {
+    try {
+      const result = await penaltyService.clearAllPenalties(req.user?.id, req);
+      return sendResponse(res, 200, true, 'Semua rekod denda berjaya dipadamkan.', result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = new PenaltyController();

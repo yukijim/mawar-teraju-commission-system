@@ -627,7 +627,7 @@ const Upload = {
         window.UI.showToast('Fail Dipilih', `Fail Excel denda sedia untuk dimuat naik.`, 'success');
     },
 
-    clearPenaltyFile() {
+    async clearPenaltyFile() {
         this.tempPenaltyFile = null;
         
         const input = document.getElementById('penalty-file-input');
@@ -644,6 +644,29 @@ const Upload = {
 
         const progressContainer = document.getElementById('penalty-progress-container');
         if (progressContainer) progressContainer.style.display = 'none';
+
+        // Confirmation dialog before deleting all penalty data in DB
+        const confirmClear = confirm('Adakah anda pasti mahu memadamkan SEMUA rekod denda daripada pangkalan data? Tindakan ini tidak boleh diundurkan.');
+        if (!confirmClear) return;
+
+        try {
+            const res = await window.apiFetch('/api/v1/penalty/clear', {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                const errResult = await res.json().catch(() => ({}));
+                throw new Error(errResult.message || 'Gagal mengosongkan pangkalan data denda.');
+            }
+
+            window.UI.showToast('Data Denda Dipadam', 'Semua rekod denda dalam pangkalan data telah dibersihkan.', 'success');
+            await this.fetchPenaltyHistory();
+            if (window.App && typeof window.App.loadDashboardStats === 'function') {
+                await window.App.loadDashboardStats();
+            }
+        } catch (error) {
+            window.ErrorHandler.handle(error, 'Kosongkan Data Denda');
+        }
     },
 
     async uploadPenalty() {
