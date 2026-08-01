@@ -171,7 +171,7 @@ const Upload = {
         if (tabId === 'batch-list') {
             this.resetBatchForm();
         } else if (tabId === 'upload-penalty') {
-            this.clearPenaltyFile();
+            this.resetPenaltyFileInput();
             this.fetchPenaltyHistory();
         }
     },
@@ -610,7 +610,7 @@ const Upload = {
         const ext = file.name.split('.').pop().toLowerCase();
         if (ext !== 'xlsx' && ext !== 'xls') {
             window.UI.showToast('Format Fail Salah', 'Sila muat naik fail Excel (.xlsx atau .xls) sahaja.', 'danger');
-            this.clearPenaltyFile();
+            this.resetPenaltyFileInput();
             return;
         }
 
@@ -627,7 +627,10 @@ const Upload = {
         window.UI.showToast('Fail Dipilih', `Fail Excel denda sedia untuk dimuat naik.`, 'success');
     },
 
-    async clearPenaltyFile() {
+    /**
+     * Resets file input UI elements ONLY (no confirmation, no DB deletion)
+     */
+    resetPenaltyFileInput() {
         this.tempPenaltyFile = null;
         
         const input = document.getElementById('penalty-file-input');
@@ -644,10 +647,20 @@ const Upload = {
 
         const progressContainer = document.getElementById('penalty-progress-container');
         if (progressContainer) progressContainer.style.display = 'none';
+    },
 
-        // Confirmation dialog before deleting all penalty data in DB
+    clearPenaltyFile() {
+        this.resetPenaltyFileInput();
+    },
+
+    /**
+     * Deletes ALL penalty data from database after confirmation (for "Kosongkan" button)
+     */
+    async clearAllPenaltyData() {
         const confirmClear = confirm('Adakah anda pasti mahu memadamkan SEMUA rekod denda daripada pangkalan data? Tindakan ini tidak boleh diundurkan.');
         if (!confirmClear) return;
+
+        this.resetPenaltyFileInput();
 
         try {
             const res = await window.apiFetch('/api/v1/penalty/clear', {
@@ -719,7 +732,7 @@ const Upload = {
                 'success'
             );
 
-            this.clearPenaltyFile();
+            this.resetPenaltyFileInput();
             await this.fetchPenaltyHistory();
             if (window.App && typeof window.App.loadDashboardStats === 'function') {
                 await window.App.loadDashboardStats();

@@ -299,7 +299,7 @@
                                         <div class="file-size" id="penalty-file-size" style="font-size: 0.75rem; color: var(--text-muted);">-</div>
                                     </div>
                                 </div>
-                                <button class="btn btn-secondary btn-sm" onclick="Upload.clearPenaltyFile()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                <button class="btn btn-secondary btn-sm" onclick="Upload.resetPenaltyFileInput()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1);">
                                     <i data-lucide="x"></i> Batal
                                 </button>
                             </div>
@@ -318,7 +318,7 @@
 
                         <!-- Action Buttons -->
                         <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
-                            <button class="btn btn-secondary" onclick="Upload.clearPenaltyFile()">Kosongkan</button>
+                            <button class="btn btn-secondary" onclick="Upload.clearAllPenaltyData()">Kosongkan</button>
                             <button class="btn btn-primary" id="btn-upload-penalty" onclick="Upload.uploadPenalty()" disabled>
                                 Muat Naik Denda <i data-lucide="upload"></i>
                             </button>
