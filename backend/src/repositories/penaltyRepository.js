@@ -18,8 +18,31 @@ class PenaltyRepository {
   async bulkInsertPenaltyRecords(client, records) {
     if (!records || records.length === 0) return;
 
-    // Synchronize to in-memory fallback store
+    // Deduplicate records within batch payload by AWB key to avoid PostgreSQL 21000 ON CONFLICT error
+    const deduplicatedMap = new Map();
     records.forEach(rec => {
+      const existing = deduplicatedMap.get(rec.awb);
+      if (existing) {
+        // Merge numeric values and concatenate logic descriptions
+        deduplicatedMap.set(rec.awb, {
+          ...existing,
+          ...rec,
+          fake_return: parseFloat(existing.fake_return || 0) + parseFloat(rec.fake_return || 0),
+          fake_problematic: parseFloat(existing.fake_problematic || 0) + parseFloat(rec.fake_problematic || 0),
+          fraud_delivery: parseFloat(existing.fraud_delivery || 0) + parseFloat(rec.fraud_delivery || 0),
+          arbitration: parseFloat(existing.arbitration || 0) + parseFloat(rec.arbitration || 0),
+          individual_lost: parseFloat(existing.individual_lost || 0) + parseFloat(rec.individual_lost || 0),
+          logic: [existing.logic, rec.logic].filter(Boolean).join('; ')
+        });
+      } else {
+        deduplicatedMap.set(rec.awb, { ...rec });
+      }
+    });
+
+    const uniqueRecords = Array.from(deduplicatedMap.values());
+
+    // Synchronize to in-memory fallback store
+    uniqueRecords.forEach(rec => {
       const idx = inMemoryPenalties.findIndex(p => p.awb === rec.awb);
       if (idx >= 0) {
         inMemoryPenalties[idx] = { ...inMemoryPenalties[idx], ...rec, updated_at: new Date() };
@@ -32,7 +55,7 @@ class PenaltyRepository {
     const values = [];
     let paramIndex = 1;
 
-    records.forEach(r => {
+    uniqueRecords.forEach(r => {
       valuePlaceholders.push(`(
         $${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2},
         $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5},
@@ -84,7 +107,9 @@ class PenaltyRepository {
           console.warn('[PenaltyRepository] DB unavailable, saved to in-memory fallback store.');
           return;
         }
-        if (err.code === '23503') {
+        if (err.code === '21000') {
+          throw new AppError('Ralat pangkalan data: Terdapat rekod AWB bertindih dalam kelompok muat naik yang sama.', 400, 'DB_DUPLICATE_IN_BATCH');
+        } else if (err.code === '23503') {
           throw new AppError('Ralat pangkalan data: Pengguna muat naik tidak wujud (Foreign key violation).', 400, 'DB_FOREIGN_KEY_VIOLATION');
         } else if (err.code === '22P02') {
           throw new AppError('Ralat jenis data pangkalan data: Format nilai tidak sepadan dengan skema pangkalan data.', 400, 'DB_INVALID_DATA_TYPE');

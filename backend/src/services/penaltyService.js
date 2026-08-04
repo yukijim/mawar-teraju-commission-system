@@ -270,6 +270,15 @@ class PenaltyService {
         throw new AppError('Tiada rekod penalty yang sah untuk diimport.', 400, 'UPLOAD_EMPTY_RECORDS');
       }
 
+      // Automatically DELETE ALL existing penalty records & upload batches within transaction before inserting new data
+      if (client) {
+        await client.query('DELETE FROM penalty_records');
+        await client.query('DELETE FROM penalty_upload_batches');
+      } else {
+        await penaltyRepository.clearAllPenaltyRecords();
+        await penaltyRepository.clearAllPenaltyUploadBatches();
+      }
+
       // Chunk inserts in 500 records
       const chunkSize = 500;
       for (let i = 0; i < penaltyRecords.length; i += chunkSize) {
@@ -301,7 +310,9 @@ class PenaltyService {
       await auditLogService.logFailedLogin(req.user?.username || 'Unknown Admin', req, { action: 'PENALTY_UPLOAD_FAILED', reason: err.message, filename }).catch(() => {});
 
       if (!(err instanceof AppError)) {
-        if (err.code === '23503') {
+        if (err.code === '21000') {
+          throw new AppError('Fail Excel mengandungi rekod AWB bertindih (duplicate AWB) dalam kelompok yang sama.', 400, 'UPLOAD_DUPLICATE_IN_BATCH');
+        } else if (err.code === '23503') {
           throw new AppError('Ralat pangkalan data: ID Pengguna muat naik tidak wujud dalam sistem (Foreign Key violation).', 400, 'UPLOAD_USER_INVALID');
         } else if (err.code === '22P02') {
           throw new AppError('Ralat format data: Nilai numerik atau jenis data tidak sah dalam fail Excel.', 400, 'UPLOAD_DATA_TYPE_ERROR');
