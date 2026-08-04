@@ -141,8 +141,9 @@ class SimplePdfGenerator {
         header += `/I1 Do\n`;
         header += `Q\n`;
 
-        header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN. BHD.) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n115 773 Td\n(MONTHLY INCOME REPORT: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
+        header += `BT\n/F2 10.5 Tf\n115 798 Td\n(MAWAR TERAJU SDN. BHD. \\(201901001832 \\(1311158-A\\)\\)) Tj\nET\n`;
+        header += `BT\n/F2 8.5 Tf\n115 785 Td\n(PAYROLL ENQUIRIES : \\(+60 17-485 6757\\)) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n115 772 Td\n(MONTHLY INCOME REPORT: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
       } else {
         header += `q\n`;
         header += `0.15 0.55 0.15 rg\n`;
@@ -154,12 +155,13 @@ class SimplePdfGenerator {
         header += `10 0 0 10 52 780 cm\n`;
         header += `0.5 0 m 0.9 0.2 l 1 0.6 l 0.7 0.9 l 0.3 0.9 l 0 0.6 l 0.1 0.2 l f\n`;
         header += `Q\n`;
-        header += `BT\n/F2 8.5 Tf\n50 755 Td\n(${title.toUpperCase()}) Tj\nET\n`;
-        header += `BT\n/F1 8.5 Tf\n50 740 Td\n(REFERENCE: ${refNum.toUpperCase()} | HALAMAN: 1) Tj\nET\n`;
+        header += `BT\n/F2 10.5 Tf\n50 798 Td\n(MAWAR TERAJU SDN. BHD. \\(201901001832 \\(1311158-A\\)\\)) Tj\nET\n`;
+        header += `BT\n/F2 8.5 Tf\n50 785 Td\n(PAYROLL ENQUIRIES : \\(+60 17-485 6757\\)) Tj\nET\n`;
+        header += `BT\n/F1 8.5 Tf\n50 772 Td\n(${title.toUpperCase()}: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
       }
 
       // Horizontal Divider under header
-      header += `0.5 w\n40 748 m\n555 748 l\nS\n`;
+      header += `0.5 w\n40 760 m\n555 760 l\nS\n`;
 
       // Dispatcher Profile Box (Payslip style)
       // Fixed 2-column grid layout with vertical colon alignment & word wrapping for long names
@@ -335,8 +337,9 @@ class SimplePdfGenerator {
           header += `/I1 Do\n`;
           header += `Q\n`;
 
-          header += `BT\n/F2 12 Tf\n115 788 Td\n(MAWAR TERAJU SDN. BHD.) Tj\nET\n`;
-          header += `BT\n/F1 9.5 Tf\n115 773 Td\n(Monthly Income Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
+          header += `BT\n/F2 10.5 Tf\n115 798 Td\n(MAWAR TERAJU SDN. BHD. \\(201901001832 \\(1311158-A\\)\\)) Tj\nET\n`;
+          header += `BT\n/F2 8.5 Tf\n115 785 Td\n(PAYROLL ENQUIRIES : \\(+60 17-485 6757\\)) Tj\nET\n`;
+          header += `BT\n/F1 8.5 Tf\n115 772 Td\n(Monthly Income Report: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
         } else {
           header += `q\n`;
           header += `0.15 0.55 0.15 rg\n`;
@@ -348,12 +351,13 @@ class SimplePdfGenerator {
           header += `10 0 0 10 52 780 cm\n`;
           header += `0.5 0 m 0.9 0.2 l 1 0.6 l 0.7 0.9 l 0.3 0.9 l 0 0.6 l 0.1 0.2 l f\n`;
           header += `Q\n`;
-          header += `BT\n/F2 14 Tf\n50 755 Td\n(${title}) Tj\nET\n`;
-          header += `BT\n/F1 8 Tf\n50 740 Td\n(Reference: ${refNum} | Halaman: ${pageNumber}) Tj\nET\n`;
+          header += `BT\n/F2 10.5 Tf\n50 798 Td\n(MAWAR TERAJU SDN. BHD. \\(201901001832 \\(1311158-A\\)\\)) Tj\nET\n`;
+          header += `BT\n/F2 8.5 Tf\n50 785 Td\n(PAYROLL ENQUIRIES : \\(+60 17-485 6757\\)) Tj\nET\n`;
+          header += `BT\n/F1 8.5 Tf\n50 772 Td\n(${title}: ${formattedMonth}/${formattedYear}) Tj\nET\n`;
         }
 
         // Horizontal Divider
-        header += `0.5 w\n40 748 m\n555 748 l\nS\n`;
+        header += `0.5 w\n40 760 m\n555 760 l\nS\n`;
 
         // Period Details
         header += `BT\n/F2 9 Tf\n50 715 Td\n(Batch / Period:) Tj\nET\n`;
