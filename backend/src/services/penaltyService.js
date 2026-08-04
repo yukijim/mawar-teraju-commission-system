@@ -30,6 +30,33 @@ const parseNumericValue = (val) => {
 };
 
 /**
+ * Helper to parse clean AWB string from Excel cells, avoiding scientific notation
+ */
+const parseAwbValue = (val) => {
+  if (val === undefined || val === null) return '';
+  let str = val.toString().trim();
+
+  // If in scientific notation (e.g. 6.80096E+14 or 6.80095841092e+14)
+  if (/^[+-]?\d+(\.\d+)?[eE][+-]?\d+$/.test(str)) {
+    const num = Number(str);
+    if (!isNaN(num)) {
+      try {
+        str = BigInt(Math.round(num)).toString();
+      } catch (e) {
+        str = num.toFixed(0);
+      }
+    }
+  }
+
+  // Remove trailing .0 from floating point numeric strings
+  if (/\.0+$/.test(str)) {
+    str = str.replace(/\.0+$/, '');
+  }
+
+  return str;
+};
+
+/**
  * Helper to convert sheet to array of rows, ignoring empty rows
  */
 const getSheetRows = (sheet) => {
@@ -108,7 +135,7 @@ class PenaltyService {
           break;
         }
       }
-      if (!recognized && cleanHeader !== '') {
+      if (!recognized && cleanHeader !== '' && !header.startsWith('__EMPTY')) {
         warnings.push(`Amaran: Kolum tidak dikenali "${header}" dijumpai dan akan diabaikan.`);
       }
     });
@@ -163,14 +190,35 @@ class PenaltyService {
     try {
       if (client) await client.query('BEGIN');
 
-      // Resolve valid UUID for uploader_by
-      let validUploaderId = uploaderId;
-      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(uploaderId || '');
-      if (!isUuid && client) {
-        const userRes = await client.query("SELECT id FROM users WHERE role = 'ADMIN' ORDER BY created_at ASC LIMIT 1");
-        if (userRes.rows.length > 0) {
-          validUploaderId = userRes.rows[0].id;
+      // Resolve valid UUID for uploader_by from users table
+      let validUploaderId = null;
+      if (client) {
+        if (uploaderId) {
+          const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [uploaderId]).catch(() => ({ rows: [] }));
+          if (userCheck.rows.length > 0) {
+            validUploaderId = userCheck.rows[0].id;
+          }
         }
+
+        if (!validUploaderId) {
+          const adminCheck = await client.query("SELECT id FROM users WHERE role = 'ADMIN' ORDER BY created_at ASC LIMIT 1").catch(() => ({ rows: [] }));
+          if (adminCheck.rows.length > 0) {
+            validUploaderId = adminCheck.rows[0].id;
+          }
+        }
+
+        if (!validUploaderId) {
+          const anyUserCheck = await client.query("SELECT id FROM users ORDER BY created_at ASC LIMIT 1").catch(() => ({ rows: [] }));
+          if (anyUserCheck.rows.length > 0) {
+            validUploaderId = anyUserCheck.rows[0].id;
+          }
+        }
+
+        if (!validUploaderId) {
+          throw new AppError('Pengguna muat naik tidak sah atau tiada akaun Admin wujud dalam sistem.', 400, 'UPLOAD_USER_NOT_FOUND');
+        }
+      } else {
+        validUploaderId = uploaderId || '00000000-0000-0000-0000-000000000000';
       }
 
       const penaltyRecords = [];
@@ -201,10 +249,13 @@ class PenaltyService {
           return; // Skip empty rows or missing dispatcher/AWB
         }
 
+        const cleanAwb = parseAwbValue(rawAwb);
+        if (!cleanAwb) return;
+
         penaltyRecords.push({
           delivery_dispatcher_id: rawId.toString().trim(),
           delivery_dispatcher_name: rawName ? rawName.toString().trim() : '',
-          awb: rawAwb.toString().trim(),
+          awb: cleanAwb,
           fake_return: parseNumericValue(row[headersMap.fake_return]),
           fake_problematic: parseNumericValue(row[headersMap.fake_problematic]),
           fraud_delivery: parseNumericValue(row[headersMap.fraud_delivery]),
@@ -232,7 +283,7 @@ class PenaltyService {
       await penaltyRepository.createPenaltyUploadBatch({
         filename,
         recordsImported: penaltyRecords.length,
-        uploadedBy: uploaderId
+        uploadedBy: validUploaderId
       }).catch(bErr => console.warn('[PenaltyService] Failed to record upload batch log:', bErr.message));
 
       await auditLogService.logSuccessLogin(uploaderId, req, { action: 'PENALTY_UPLOAD_SUCCESS', filename, recordCount: penaltyRecords.length }).catch(() => {});
@@ -248,6 +299,18 @@ class PenaltyService {
     } catch (err) {
       if (client) await client.query('ROLLBACK').catch(() => {});
       await auditLogService.logFailedLogin(req.user?.username || 'Unknown Admin', req, { action: 'PENALTY_UPLOAD_FAILED', reason: err.message, filename }).catch(() => {});
+
+      if (!(err instanceof AppError)) {
+        if (err.code === '23503') {
+          throw new AppError('Ralat pangkalan data: ID Pengguna muat naik tidak wujud dalam sistem (Foreign Key violation).', 400, 'UPLOAD_USER_INVALID');
+        } else if (err.code === '22P02') {
+          throw new AppError('Ralat format data: Nilai numerik atau jenis data tidak sah dalam fail Excel.', 400, 'UPLOAD_DATA_TYPE_ERROR');
+        } else if (err.code === '42P01') {
+          throw new AppError('Jadual pangkalan data denda belum dicipta. Sila pastikan migrasi pangkalan data telah dijalankan.', 400, 'DB_TABLE_MISSING');
+        } else {
+          throw new AppError(`Gagal memuat naik fail denda: ${err.message}`, 400, 'UPLOAD_DATABASE_ERROR');
+        }
+      }
       throw err;
     } finally {
       if (client) client.release();

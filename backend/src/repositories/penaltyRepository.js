@@ -1,6 +1,8 @@
 const db = require('../config/database');
+const { AppError } = require('../middleware/error');
 
 const inMemoryPenalties = [];
+const inMemoryBatches = [];
 
 /**
  * Repository layer for Penalty Records database operations.
@@ -81,6 +83,13 @@ class PenaltyRepository {
         if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
           console.warn('[PenaltyRepository] DB unavailable, saved to in-memory fallback store.');
           return;
+        }
+        if (err.code === '23503') {
+          throw new AppError('Ralat pangkalan data: Pengguna muat naik tidak wujud (Foreign key violation).', 400, 'DB_FOREIGN_KEY_VIOLATION');
+        } else if (err.code === '22P02') {
+          throw new AppError('Ralat jenis data pangkalan data: Format nilai tidak sepadan dengan skema pangkalan data.', 400, 'DB_INVALID_DATA_TYPE');
+        } else if (err.code === '42P01') {
+          throw new AppError('Jadual pangkalan data penalty_records belum dicipta.', 400, 'DB_TABLE_MISSING');
         }
         throw err;
       }
@@ -178,7 +187,19 @@ class PenaltyRepository {
   /**
    * Logs a new penalty file upload entry
    */
+  /**
+   * Logs a new penalty file upload entry
+   */
   async createPenaltyUploadBatch({ filename, recordsImported, uploadedBy }) {
+    const newBatch = {
+      id: inMemoryBatches.length + 1,
+      filename,
+      records_imported: recordsImported,
+      uploaded_by: uploadedBy || null,
+      uploaded_at: new Date()
+    };
+    inMemoryBatches.unshift(newBatch);
+
     const text = `
       INSERT INTO penalty_upload_batches (filename, records_imported, uploaded_by)
       VALUES ($1, $2, $3)
@@ -188,9 +209,9 @@ class PenaltyRepository {
       const result = await db.query(text, [filename, recordsImported, uploadedBy || null]);
       return result.rows[0];
     } catch (err) {
-      if (err.code === '42P01') {
-        console.warn('[PenaltyRepository] penalty_upload_batches table does not exist yet.');
-        return { id: 0, filename, records_imported: recordsImported, uploaded_at: new Date() };
+      if (err.code === '42P01' || err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
+        console.warn('[PenaltyRepository] DB unavailable or penalty_upload_batches table missing, using in-memory store.');
+        return newBatch;
       }
       throw err;
     }
@@ -211,8 +232,8 @@ class PenaltyRepository {
       const result = await db.query(text, [limit]);
       return result.rows;
     } catch (err) {
-      if (err.code === '42P01') {
-        return [];
+      if (err.code === '42P01' || err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
+        return inMemoryBatches.slice(0, limit);
       }
       throw err;
     }
@@ -227,7 +248,7 @@ class PenaltyRepository {
       const result = await db.query(text);
       return parseInt(result.rows[0].count, 10);
     } catch (err) {
-      if (err.code === '42P01') {
+      if (err.code === '42P01' || err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
         return inMemoryPenalties.length;
       }
       return inMemoryPenalties.length;
@@ -243,7 +264,9 @@ class PenaltyRepository {
       const result = await db.query(text, [id]);
       return result.rows[0] || null;
     } catch (err) {
-      if (err.code === '42P01') {
+      if (err.code === '42P01' || err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
+        const idx = inMemoryBatches.findIndex(b => b.id === Number(id));
+        if (idx >= 0) return inMemoryBatches.splice(idx, 1)[0];
         return null;
       }
       throw err;
@@ -260,7 +283,7 @@ class PenaltyRepository {
       inMemoryPenalties.length = 0;
       return true;
     } catch (err) {
-      if (err.code === '42P01') {
+      if (err.code === '42P01' || err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
         inMemoryPenalties.length = 0;
         return true;
       }
@@ -275,9 +298,11 @@ class PenaltyRepository {
     const text = `DELETE FROM penalty_upload_batches`;
     try {
       await db.query(text);
+      inMemoryBatches.length = 0;
       return true;
     } catch (err) {
-      if (err.code === '42P01') {
+      if (err.code === '42P01' || err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
+        inMemoryBatches.length = 0;
         return true;
       }
       throw err;
