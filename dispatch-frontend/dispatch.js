@@ -433,7 +433,7 @@ const Dispatch = {
                     return;
                 }
 
-                let val = record[field.key];
+                let val = field.key === 'nett_commission' ? netComm : record[field.key];
                 const numVal = parseFloat(val);
 
                 if (!isCoreField) {

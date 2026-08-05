@@ -294,9 +294,9 @@ class SimplePdfGenerator {
       }
 
       // Calculations for Bottom Summary
+      const totalAddition = rawAdditions.reduce((sum, item) => sum + parseFloat(item.val || 0), 0);
       const totalDeduction = rawDeductions.reduce((sum, item) => sum + parseFloat(item.val || 0), 0);
-      const totalNetPay = parseFloat(record.nett_commission || 0);
-      const totalAddition = totalNetPay + totalDeduction;
+      const totalNetPay = Math.max(0, totalAddition - totalDeduction);
 
       const totAddText = formatCurrency(totalAddition).toUpperCase();
       const totAddX = getRightX(totAddText, 285, 8.5, true);
